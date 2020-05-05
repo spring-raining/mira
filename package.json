@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mdx-js/loader": "^1.6.1",
+    "@monaco-editor/react": "^3.3.0",
     "@next/mdx": "^9.3.6",
     "next": "^9.3.6",
     "react": "^16.13.1",

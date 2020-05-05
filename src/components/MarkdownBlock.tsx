@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Editor } from 'react-live';
 import unified from 'unified';
 import remarkParse from 'remark-parse';
 import remarkReact from 'remark-react';
+import { Editor } from './Editor';
 
 export const MarkdownBlock: React.FC<{ note: string }> = ({ note }) => {
   const [code, setCode] = useState(() => note);
@@ -18,7 +18,7 @@ export const MarkdownBlock: React.FC<{ note: string }> = ({ note }) => {
 
   return (
     <>
-      <Editor {...{ onChange }} language="markdown" value={code} />
+      <Editor {...{ onChange }} language="markdown" code={code} />
       {rendered || null}
     </>
   );
