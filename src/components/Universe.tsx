@@ -11,53 +11,84 @@ const createCodeBlock = (code: string) => {
   });
   const parsed = compiler.parse(code);
   const scriptTypes = ['jsx', 'import', 'export'];
-  const chunk = parsed.children.reduce(
-    (acc, node) => {
-      const head = acc.slice(0, acc.length - 1);
-      const tail = acc[acc.length - 1];
-      const last = tail.length > 0 && tail[tail.length - 1];
+  const asteroidMetaRe = /^asteroid=(\w+)$/;
+  console.log(parsed);
+  const chunk = parsed.children.reduce((acc, node) => {
+    const blockType = scriptTypes.includes(node.type)
+      ? 'script'
+      : node.type === 'code' && node.meta && asteroidMetaRe.test(node.meta)
+      ? 'asteroid'
+      : 'note';
+    if (acc.length === 0) {
+      return [
+        {
+          block: blockType,
+          children: [node],
+        },
+      ];
+    }
 
-      if (!last) {
-        return [...head, [node]];
-      }
-      if (scriptTypes.includes(node.type)) {
-        return scriptTypes.includes(last.type)
-          ? [...head, [...tail, node]]
-          : [...acc, [node]];
-      } else if (node.type === 'heading' && node.depth <= 3) {
-        return [...acc, [node]];
-      } else {
-        return scriptTypes.includes(last.type)
-          ? [...acc, [node]]
-          : [...head, [...tail, node]];
-      }
-    },
-    [[]]
-  );
-  return chunk
-    .filter((c) => c.length > 0)
-    .map((c) => {
-      const first = c[0];
-      const last = c[c.length - 1];
-      return {
-        block: scriptTypes.includes(c[0].type) ? 'script' : 'note',
-        text: code.slice(first.position.start.offset, last.position.end.offset),
-      };
-    });
+    const head = acc.slice(0, acc.length - 1);
+    const tail = acc[acc.length - 1];
+    if (blockType === 'asteroid') {
+      const match = node.meta.match(asteroidMetaRe);
+      return [
+        ...acc,
+        {
+          block: blockType,
+          children: [node],
+          id: match[1],
+        },
+      ];
+    } else if (
+      tail.block !== blockType ||
+      (node.type === 'heading' && node.depth <= 3)
+    ) {
+      return [
+        ...acc,
+        {
+          block: blockType,
+          children: [node],
+        },
+      ];
+    } else {
+      return [
+        ...head,
+        {
+          block: blockType,
+          children: [...tail.children, node],
+        },
+      ];
+    }
+  }, []);
+  return chunk.map((el) => {
+    const { children, block } = el;
+    const first = children[0];
+    const last = children[children.length - 1];
+    return {
+      ...el,
+      block,
+      text:
+        block === 'asteroid'
+          ? first.value
+          : code.slice(first.position.start.offset, last.position.end.offset),
+    };
+  });
 };
 
 export const Universe: React.FC<{ code?: string }> = ({ code }) => {
   const codeBlock = createCodeBlock(code);
+  console.log(codeBlock);
   return (
     <>
       <h1>Input</h1>
       <pre>{code}</pre>
       <h1>Output</h1>
       {codeBlock.map(({ block, text }, i) =>
-        block === 'script' ? (
-          <CodeBlock key={i} note={text} />
-        ) : (
+        block === 'note' ? (
           <MarkdownBlock key={i} note={text} />
+        ) : (
+          <CodeBlock key={i} note={text} />
         )
       )}
     </>

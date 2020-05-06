@@ -10,14 +10,6 @@ const LivedEditor = withLive<any>(({ live: { code, onChange } }) => {
 
 const Code = (props) => <div {...props} className="Code" />;
 
-const $run = (element) => {
-  if (typeof element === 'undefined') {
-    // errorCallback(new SyntaxError('`render` must be called with valid JSX.'));
-  } else {
-    // resultCallback(errorBoundary(element, errorCallback));
-  }
-};
-
 export const CodeBlock: React.FC<{ note: string }> = ({ note }) => {
   return (
     <CodeBlockProvider code={note} scope={{ Code }}>

@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
 import { Universe } from '../src/components/Universe';
 
 const text = `
@@ -8,6 +7,12 @@ const text = `
 this is the test
 
 #### foo
+
+\`\`\`js asteroid=1998SF36
+$run(() => (
+  <div>X</div>
+))
+\`\`\`
 
 <Code>{
 $run(() => (
