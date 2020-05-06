@@ -1,8 +1,8 @@
 import React from 'react';
-import { MDXProvider } from '@mdx-js/react';
-import mdx, { createCompiler } from '@mdx-js/mdx';
+import { createCompiler } from '@mdx-js/mdx';
 import { CodeBlock } from './CodeBlock';
 import { MarkdownBlock } from './MarkdownBlock';
+import * as UI from './ui';
 
 const createCodeBlock = (code: string) => {
   const compiler = createCompiler({
@@ -12,7 +12,6 @@ const createCodeBlock = (code: string) => {
   const parsed = compiler.parse(code);
   const scriptTypes = ['jsx', 'import', 'export'];
   const asteroidMetaRe = /^asteroid=(\w+)$/;
-  console.log(parsed);
   const chunk = parsed.children.reduce((acc, node) => {
     const blockType = scriptTypes.includes(node.type)
       ? 'script'
@@ -78,12 +77,9 @@ const createCodeBlock = (code: string) => {
 
 export const Universe: React.FC<{ code?: string }> = ({ code }) => {
   const codeBlock = createCodeBlock(code);
-  console.log(codeBlock);
   return (
     <>
-      <h1>Input</h1>
-      <pre>{code}</pre>
-      <h1>Output</h1>
+      <UI.Heading>Universe</UI.Heading>
       {codeBlock.map(({ block, text }, i) =>
         block === 'note' ? (
           <MarkdownBlock key={i} note={text} />

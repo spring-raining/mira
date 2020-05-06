@@ -6,7 +6,7 @@ export const Editor: React.FC<{
   language?: string;
   onChange?: (code: string) => void;
 }> = ({ code, language, onChange = () => {} }) => {
-  const lineHeight = 17;
+  const lineHeight = 18;
   const [height, setHeight] = useState(0);
   const [currentValue, setCurrentValue] = useState(() => code);
 
