@@ -9,9 +9,11 @@ this is the test
 
 #### foo
 
-<center>
+<Code>{
+$run(() => (
   <button>foo</button>
-</center>
+))
+}</Code>
 `;
 
 export default () => {
