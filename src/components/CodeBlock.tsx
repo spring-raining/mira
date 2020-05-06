@@ -1,10 +1,11 @@
-import React, { createContext } from 'react';
+import React, { useMemo } from 'react';
 import { LiveError, LivePreview, withLive } from 'react-live';
 import { evalCode } from 'react-live/dist/react-live';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from './Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
 import * as UI from './ui';
+import { Providence } from './Universe';
 
 const LivedEditor = withLive<any>(({ live: { code, onChange } }) => (
   <Editor code={code} language="javascript" onChange={onChange} />
@@ -25,11 +26,22 @@ const LivedError = withLive<any>(({ live: { error } }) =>
   ) : null
 );
 
-const Code = (props) => <div {...props} className="Code" />;
+export const CodeBlock: React.FC<{
+  note: string;
+  providence: Providence;
+  onProvidenceUpdate: (val: Providence) => void;
+  asteroidId?: string;
+}> = ({ note, asteroidId, providence, onProvidenceUpdate }) => {
+  const scope = useMemo(() => ({}), []);
 
-export const CodeBlock: React.FC<{ note: string }> = ({ note }) => {
   return (
-    <CodeBlockProvider code={note} scope={{ Code }}>
+    <CodeBlockProvider
+      code={note}
+      scope={scope}
+      asteroidId={asteroidId}
+      providence={providence}
+      onProvidenceUpdate={onProvidenceUpdate}
+    >
       <Block>
         <BlockEditorPane>
           <LivedEditor />

@@ -5,6 +5,7 @@ import { LiveContext } from 'react-live';
 import { transform as _transform } from 'buble';
 import assign from 'core-js/fn/object/assign';
 import { getRuntimeScope } from './runtimeScopes';
+import { Providence } from './Universe';
 
 const _poly = { assign };
 const evalCode = (code, scope) => {
@@ -22,7 +23,7 @@ const transform = (code) =>
       dangerousForOf: true,
       dangerousTaggedTemplateString: true,
     },
-  }).code;
+  });
 
 const errorBoundary = (errorCallback) => (Element) => {
   return class ErrorBoundary extends React.Component {
@@ -48,22 +49,21 @@ const renderElementAsync = (
     errorBoundary: errorBoundary(errorCallback),
   });
 
-  // if (!/render\s*\(/.test(code)) {
-  //   return errorCallback(
-  //     new SyntaxError('No-Inline evaluations must call `render`.')
-  //   );
-  // }
-
-  evalCode(transform(code), { ...scope, ...runtimeScope });
+  const transformed = transform(code);
+  return evalCode(transformed.code, { ...scope, ...runtimeScope });
 };
 
 export class CodeBlockProvider extends React.Component<{
   code: string;
   scope: object;
+  providence: Providence;
+  onProvidenceUpdate?: (val: Providence) => void;
+  asteroidId?: string;
   transformCode?: React.ReactNode;
 }> {
   static defaultProps = {
     code: '',
+    onProvidenceUpdate: () => {},
   };
 
   // eslint-disable-next-line camelcase
@@ -77,6 +77,7 @@ export class CodeBlockProvider extends React.Component<{
     code: prevCode,
     scope: prevScope,
     transformCode: prevTransformCode,
+    providence,
   }) {
     const { code, scope, transformCode } = this.props;
     if (
@@ -98,6 +99,7 @@ export class CodeBlockProvider extends React.Component<{
   };
 
   transpile = ({ code, scope, transformCode }) => {
+    const { providence, onProvidenceUpdate, asteroidId } = this.props;
     // Transpilation arguments
     const input = {
       code: transformCode ? transformCode(code) : code,
@@ -114,9 +116,25 @@ export class CodeBlockProvider extends React.Component<{
     try {
       this.setState({ ...state, element: null }); // Reset output for async (no inline) evaluation
 
-      renderElementAsync(input, renderElement, errorCallback);
+      const ret = renderElementAsync(input, renderElement, errorCallback);
+      if (asteroidId) {
+        onProvidenceUpdate({
+          ...providence,
+          asteroidReturn: {
+            ...providence.asteroidReturn,
+            [asteroidId]: typeof ret === 'object' ? ret : null,
+          },
+        });
+      }
     } catch (error) {
       this.setState({ ...state, error: error.toString() });
+      if (asteroidId) {
+        delete providence.asteroidReturn[asteroidId];
+        onProvidenceUpdate({
+          ...providence,
+          asteroidReturn: providence.asteroidReturn,
+        });
+      }
     }
   };
 

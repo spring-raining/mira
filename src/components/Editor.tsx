@@ -1,5 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import MonacoEditor, { EditorDidMount } from '@monaco-editor/react';
+import MonacoEditor, {
+  EditorDidMount,
+  monaco as _monaco,
+} from '@monaco-editor/react';
 
 export const Editor: React.FC<{
   code?: string;
@@ -11,10 +14,11 @@ export const Editor: React.FC<{
   const [currentValue, setCurrentValue] = useState(() => code);
 
   const [monaco, setMonaco] = useState(null);
+  const [editor, setEditor] = useState(null);
   const editorDidMount: EditorDidMount = useCallback(
-    (getEditorValue, monaco) => {
-      setMonaco(monaco);
-      monaco.onDidChangeModelContent(() => {
+    (getEditorValue, editor) => {
+      setEditor(editor);
+      editor.onDidChangeModelContent(() => {
         const value = getEditorValue();
         setCurrentValue(value);
         onChange(value);
@@ -25,32 +29,61 @@ export const Editor: React.FC<{
 
   useEffect(() => {
     if (!monaco) {
+      _monaco.init().then(setMonaco);
+    }
+  }, [monaco]);
+
+  useEffect(() => {
+    if (!monaco || !editor) {
+      return;
+    }
+
+    monaco.editor.defineTheme('myTheme', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#00000000',
+      },
+    });
+
+    //     monaco.languages.typescript.typescriptDefaults.addExtraLib(
+    //       `
+    //  declare module '*';
+    //  declare function $run(runner: any): void;
+    //        `,
+    //       'decls.d.ts'
+    //     );
+  }, [monaco, editor]);
+
+  useEffect(() => {
+    if (!editor) {
       return;
     }
     // https://github.com/microsoft/monaco-editor/issues/794
     let prevHeight = 0;
-    const updateEditorHeight = (monaco: any) => {
-      const el = monaco.getDomNode();
+    const updateEditorHeight = () => {
+      const el = editor.getDomNode();
       if (!el) {
         return;
       }
-      const lineCount = monaco.getModel()?.getLineCount() || 1;
-      const height = monaco.getTopForLineNumber(lineCount + 5) + lineHeight;
+      const lineCount = editor.getModel()?.getLineCount() || 1;
+      const height = editor.getTopForLineNumber(lineCount + 5) + lineHeight;
       if (prevHeight !== height) {
         prevHeight = height;
         requestAnimationFrame(() => {
           el.style.height = `${height}px`;
           setHeight(height);
-          monaco.layout();
+          editor.layout();
         });
       }
     };
-    updateEditorHeight(monaco);
-    monaco.onDidChangeModelDecorations(() => {
-      updateEditorHeight(monaco); // typing
-      requestAnimationFrame(() => updateEditorHeight(monaco)); // folding
+    updateEditorHeight();
+    editor.onDidChangeModelDecorations(() => {
+      updateEditorHeight(); // typing
+      requestAnimationFrame(updateEditorHeight); // folding
     });
-  }, [monaco]);
+  }, [editor]);
 
   return (
     <div style={{ height }}>
@@ -61,7 +94,11 @@ export const Editor: React.FC<{
           minimap: { enabled: false },
           lineHeight,
           scrollBeyondLastLine: false,
+          scrollbar: {
+            alwaysConsumeMouseWheel: false,
+          },
         }}
+        theme="myTheme"
         editorDidMount={editorDidMount}
       />
     </div>

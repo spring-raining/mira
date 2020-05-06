@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { createCompiler } from '@mdx-js/mdx';
 import { CodeBlock } from './CodeBlock';
 import { MarkdownBlock } from './MarkdownBlock';
 import * as UI from './ui';
+
+export interface Providence {
+  asteroidOrder: string[];
+  asteroidReturn: { [id: string]: object | null };
+}
 
 const createCodeBlock = (code: string) => {
   const compiler = createCompiler({
@@ -13,9 +18,10 @@ const createCodeBlock = (code: string) => {
   const scriptTypes = ['jsx', 'import', 'export'];
   const asteroidMetaRe = /^asteroid=(\w+)$/;
   const chunk = parsed.children.reduce((acc, node) => {
+    const asteroidMetaMatch = node.meta?.match(asteroidMetaRe);
     const blockType = scriptTypes.includes(node.type)
       ? 'script'
-      : node.type === 'code' && node.meta && asteroidMetaRe.test(node.meta)
+      : node.type === 'code' && node.meta && asteroidMetaMatch
       ? 'asteroid'
       : 'note';
     if (acc.length === 0) {
@@ -23,20 +29,24 @@ const createCodeBlock = (code: string) => {
         {
           block: blockType,
           children: [node],
+          ...(asteroidMetaMatch
+            ? {
+                id: asteroidMetaMatch[1],
+              }
+            : {}),
         },
       ];
     }
 
     const head = acc.slice(0, acc.length - 1);
     const tail = acc[acc.length - 1];
-    if (blockType === 'asteroid') {
-      const match = node.meta.match(asteroidMetaRe);
+    if (blockType === 'asteroid' && asteroidMetaMatch) {
       return [
         ...acc,
         {
           block: blockType,
           children: [node],
-          id: match[1],
+          id: asteroidMetaMatch[1],
         },
       ];
     } else if (
@@ -76,15 +86,44 @@ const createCodeBlock = (code: string) => {
 };
 
 export const Universe: React.FC<{ code?: string }> = ({ code }) => {
-  const codeBlock = createCodeBlock(code);
+  const [codeBlock, setCodeBlock] = useState([]);
+  const [providence, setProvidence] = useState<Providence>({
+    asteroidOrder: [],
+    asteroidReturn: {},
+  });
+
+  useEffect(() => {
+    const codeBlock = createCodeBlock(code || '');
+    setCodeBlock(codeBlock);
+    setProvidence({
+      asteroidOrder: codeBlock
+        .filter(({ block }) => block === 'asteroid')
+        .map(({ id }) => id),
+      asteroidReturn: {},
+    });
+  }, [code]);
+
   return (
     <>
       <UI.Heading>Universe</UI.Heading>
-      {codeBlock.map(({ block, text }, i) =>
+      {codeBlock.map(({ block, text, id }, i) =>
         block === 'note' ? (
           <MarkdownBlock key={i} note={text} />
+        ) : block === 'asteroid' ? (
+          <CodeBlock
+            key={i}
+            note={text}
+            asteroidId={id}
+            providence={providence}
+            onProvidenceUpdate={setProvidence}
+          />
         ) : (
-          <CodeBlock key={i} note={text} />
+          <CodeBlock
+            key={i}
+            note={text}
+            providence={providence}
+            onProvidenceUpdate={setProvidence}
+          />
         )
       )}
     </>
