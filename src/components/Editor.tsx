@@ -93,6 +93,7 @@ export const Editor: React.FC<{
         options={{
           minimap: { enabled: false },
           lineHeight,
+          lineNumbersMinChars: 8,
           scrollBeyondLastLine: false,
           scrollbar: {
             alwaysConsumeMouseWheel: false,

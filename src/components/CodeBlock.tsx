@@ -33,6 +33,10 @@ export const CodeBlock: React.FC<{
   asteroidId?: string;
 }> = ({ note, asteroidId, providence, onProvidenceUpdate }) => {
   const scope = useMemo(() => ({}), []);
+  const codeStatus =
+    asteroidId && asteroidId in providence.asteroidStatus
+      ? providence.asteroidStatus[asteroidId]
+      : null;
 
   return (
     <CodeBlockProvider
@@ -42,7 +46,7 @@ export const CodeBlock: React.FC<{
       providence={providence}
       onProvidenceUpdate={onProvidenceUpdate}
     >
-      <Block>
+      <Block pos="relative">
         <BlockEditorPane>
           <LivedEditor />
         </BlockEditorPane>
@@ -50,6 +54,11 @@ export const CodeBlock: React.FC<{
           <LivedError />
           <LivePreview />
         </BlockPreviewPane>
+        {codeStatus && (
+          <UI.Code pos="absolute" fontSize="xs">
+            {codeStatus}
+          </UI.Code>
+        )}
       </Block>
     </CodeBlockProvider>
   );

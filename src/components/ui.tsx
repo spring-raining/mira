@@ -1,6 +1,7 @@
 export {
   Box,
   Button,
+  Code,
   Flex,
   Grid,
   Heading,
