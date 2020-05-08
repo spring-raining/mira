@@ -13,7 +13,11 @@ export const getRuntimeScope = ({
     if (typeof element === 'undefined') {
       errorCallback(new SyntaxError('`$run` must return valid JSX.'));
     } else {
-      resultCallback(errorBoundary(element));
+      try {
+        resultCallback(errorBoundary(element));
+      } catch (error) {
+        errorCallback(error);
+      }
     }
   };
   return { $run };

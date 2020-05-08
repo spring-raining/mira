@@ -4,10 +4,12 @@ import { CodeBlock } from './CodeBlock';
 import { MarkdownBlock } from './MarkdownBlock';
 import * as UI from './ui';
 
+export type CodeBlockStatus = 'init' | 'live' | 'outdated' | 'running' | 'fail';
+
 export interface Providence {
   asteroidOrder: string[];
   asteroidReturn: { [id: string]: object | null };
-  asteroidStatus: { [id: string]: 'init' | 'live' | 'outdated' | 'running' };
+  asteroidStatus: { [id: string]: CodeBlockStatus };
 }
 
 export const Universe: React.FC<{ code?: string }> = ({ code }) => {
@@ -33,6 +35,24 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
     });
   }, [code]);
 
+  useEffect(() => {
+    console.log('>', providence);
+    const { asteroidStatus } = providence;
+    if (Object.values(asteroidStatus).some((status) => status === 'init')) {
+      setTimeout(() => {
+        setProvidence({
+          ...providence,
+          asteroidStatus: Object.entries(asteroidStatus).reduce(
+            (acc, [k, v]) => {
+              return { ...acc, [k]: v === 'init' ? 'running' : v };
+            },
+            {}
+          ),
+        });
+      }, 1000);
+    }
+  }, [providence]);
+
   return (
     <>
       <UI.Heading>Universe</UI.Heading>
@@ -48,12 +68,7 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
             onProvidenceUpdate={setProvidence}
           />
         ) : (
-          <CodeBlock
-            key={i}
-            note={text}
-            providence={providence}
-            onProvidenceUpdate={setProvidence}
-          />
+          <pre>{text}</pre>
         )
       )}
     </>

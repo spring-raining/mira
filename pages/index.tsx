@@ -14,6 +14,8 @@ $run(() => (
 ))
 \`\`\`
 \`\`\`js asteroid=1998SF39
+await new Promise(res => setTimeout(res,3000))
+console.log('ok')
 $run(() => (
   <div>Y</div>
 ))

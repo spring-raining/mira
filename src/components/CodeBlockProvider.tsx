@@ -5,39 +5,61 @@ import { LiveContext } from 'react-live';
 import { transform as _transform } from 'buble';
 import assign from 'core-js/fn/object/assign';
 import { getRuntimeScope } from './runtimeScopes';
-import { Providence } from './Universe';
+import { CodeBlockStatus } from './Universe';
+
+// eslint-disable-next-line no-new-func
+const AsyncFunctionShim = new Function(
+  'return Object.getPrototypeOf(async function(){}).constructor'
+)();
 
 const _poly = { assign };
 const evalCode = (code, scope) => {
   const scopeKeys = Object.keys(scope);
   const scopeValues = scopeKeys.map((key) => scope[key]);
-  // eslint-disable-next-line no-new-func
-  const res = new Function('_poly', 'React', ...scopeKeys, code);
-  return res(_poly, React, ...scopeValues);
+  try {
+    const res = new AsyncFunctionShim('_poly', 'React', ...scopeKeys, code);
+    return res(_poly, React, ...scopeValues);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 const transform = (code) =>
   _transform(code, {
     objectAssign: '_poly.assign',
     transforms: {
+      asyncAwait: false,
+      arrow: false,
       dangerousForOf: true,
       dangerousTaggedTemplateString: true,
     },
   });
 
 const errorBoundary = (errorCallback) => (Element) => {
-  return class ErrorBoundary extends React.Component {
+  return class ErrorBoundary extends React.Component<
+    {},
+    { hasError: boolean }
+  > {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false };
+    }
+    static getDerivedStateFromError(error) {
+      return { hasError: true };
+    }
     componentDidCatch(error) {
       errorCallback(error);
     }
-
     render() {
+      if (this.state.hasError) {
+        return null;
+      }
       return typeof Element === 'function' ? <Element /> : Element;
     }
   };
 };
 
-const renderElementAsync = (
+const renderElementAsync = async (
   { code = '', scope = {} },
   resultCallback,
   errorCallback
@@ -49,43 +71,46 @@ const renderElementAsync = (
     errorBoundary: errorBoundary(errorCallback),
   });
 
-  const transformed = transform(code);
-  return evalCode(transformed.code, { ...scope, ...runtimeScope });
+  try {
+    const transformed = transform(code);
+    return await evalCode(transformed.code, {
+      ...scope,
+      ...runtimeScope,
+    });
+  } catch (error) {
+    throw error;
+  }
 };
 
 export class CodeBlockProvider extends React.Component<{
   code: string;
   scope: object;
-  providence: Providence;
-  onProvidenceUpdate?: (val: Providence) => void;
+  status: CodeBlockStatus | null;
+  onRender: (result: Promise<object | null>) => void;
   asteroidId?: string;
   transformCode?: React.ReactNode;
 }> {
   static defaultProps = {
     code: '',
-    onProvidenceUpdate: () => {},
   };
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
-    const { code, scope, transformCode } = this.props;
-
-    this.transpile({ code, scope, transformCode });
-  }
-
-  componentDidUpdate({
-    code: prevCode,
-    scope: prevScope,
-    transformCode: prevTransformCode,
-    providence,
-  }) {
-    const { code, scope, transformCode } = this.props;
-    if (
-      code !== prevCode ||
-      scope !== prevScope ||
-      transformCode !== prevTransformCode
-    ) {
-      this.transpile({ code, scope, transformCode });
+  componentDidUpdate(prevProps) {
+    const {
+      code: prevCode,
+      scope: prevScope,
+      transformCode: prevTransformCode,
+      status: prevStatus,
+    } = prevProps;
+    const { code, scope, transformCode, status } = this.props;
+    if (prevStatus !== 'running' && status === 'running') {
+      if (
+        prevStatus !== 'live' ||
+        code !== prevCode ||
+        scope !== prevScope ||
+        transformCode !== prevTransformCode
+      ) {
+        this.transpile({ code, scope, transformCode });
+      }
     }
   }
 
@@ -99,7 +124,7 @@ export class CodeBlockProvider extends React.Component<{
   };
 
   transpile = ({ code, scope, transformCode }) => {
-    const { providence, onProvidenceUpdate, asteroidId } = this.props;
+    const { onRender } = this.props;
     // Transpilation arguments
     const input = {
       code: transformCode ? transformCode(code) : code,
@@ -113,29 +138,19 @@ export class CodeBlockProvider extends React.Component<{
     // State reset object
     const state = { unsafeWrapperError: undefined, error: undefined };
 
-    try {
-      this.setState({ ...state, element: null }); // Reset output for async (no inline) evaluation
-
-      const ret = renderElementAsync(input, renderElement, errorCallback);
-      if (asteroidId) {
-        onProvidenceUpdate({
-          ...providence,
-          asteroidReturn: {
-            ...providence.asteroidReturn,
-            [asteroidId]: typeof ret === 'object' ? ret : null,
-          },
-        });
-      }
-    } catch (error) {
-      this.setState({ ...state, error: error.toString() });
-      if (asteroidId) {
-        delete providence.asteroidReturn[asteroidId];
-        onProvidenceUpdate({
-          ...providence,
-          asteroidReturn: providence.asteroidReturn,
-        });
-      }
-    }
+    this.setState({ ...state, element: null }); // Reset output for async (no inline) evaluation
+    onRender(
+      new Promise((resolve, reject) => {
+        renderElementAsync(input, renderElement, errorCallback)
+          .then((ret) => {
+            resolve(typeof ret === 'object' ? ret : null);
+          })
+          .catch((error) => {
+            errorCallback(error);
+            reject(error);
+          });
+      })
+    );
   };
 
   render() {
