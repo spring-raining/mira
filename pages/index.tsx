@@ -18,7 +18,7 @@ return { x: 'x' }
 \`\`\`js asteroid=1998SF39
 await new Promise(res => setTimeout(res, 1000))
 $run(() => (
-  <div>Y</div>
+  <div>{x}</div>
 ))
 \`\`\`
 `;

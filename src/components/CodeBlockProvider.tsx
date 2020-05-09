@@ -104,7 +104,7 @@ export class CodeBlockProvider extends React.Component<{
     const { code, scope, transformCode, status } = this.props;
     if (prevStatus !== 'running' && status === 'running') {
       if (
-        prevStatus !== 'live' ||
+        (prevStatus !== 'live' && prevStatus !== 'outdated') ||
         code !== prevCode ||
         scope !== prevScope ||
         transformCode !== prevTransformCode

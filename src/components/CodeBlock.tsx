@@ -1,6 +1,13 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
 import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
+import { line as spinner } from 'cli-spinners';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from './Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
@@ -68,21 +75,45 @@ export const CodeBlock: React.FC<{
             runId !== runIdRef.current &&
             currentStatus.current !== 'running'
           ) {
-            return;
+            onEvaluateFinishRef.current(runId);
           }
           onEvaluateFinishRef.current(runId, evaluated);
         })
         .catch(() => {
-          if (
-            runId !== runIdRef.current &&
-            currentStatus.current !== 'running'
-          ) {
-            return;
-          }
           onEvaluateFinishRef.current(runId);
         });
     });
   }, [val, providence, asteroidId]);
+
+  const statusString = useMemo(() => {
+    const asteroid = providence.asteroid[asteroidId];
+    if (!asteroid) {
+      return null;
+    }
+    const { status, stepNo } = asteroid;
+    let str = '';
+    if (stepNo) {
+      str += `[${stepNo}]`;
+    }
+    if (status === 'outdated') {
+      str += '*';
+    }
+    return str;
+  }, [asteroidId, providence]);
+
+  const [loadingSpinner, setLoadingSpinner] = useState<string | null>(null);
+  useEffect(() => {
+    if (status === 'running') {
+      let frame = 0;
+      const id = setInterval(() => {
+        frame = (frame + 1) % spinner.frames.length;
+        setLoadingSpinner(spinner.frames[frame]);
+      }, 50);
+      return () => clearInterval(id);
+    } else {
+      setLoadingSpinner(null);
+    }
+  }, [status]);
 
   return (
     <CodeBlockProvider
@@ -99,9 +130,14 @@ export const CodeBlock: React.FC<{
           <LivedError />
           <LivePreview />
         </BlockPreviewPane>
-        {status && (
+        {statusString && (
           <UI.Code pos="absolute" fontSize="xs">
-            {status}
+            {statusString}
+          </UI.Code>
+        )}
+        {loadingSpinner && (
+          <UI.Code pos="absolute" fontSize="xs" left="0.5rem">
+            {loadingSpinner}
           </UI.Code>
         )}
       </Block>
