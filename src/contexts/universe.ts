@@ -1,10 +1,14 @@
 import { createContext } from 'react';
 import { MarkdownNote, ScriptNote, AsteroidNote } from '../remark/importMdx';
 
-type Brick =
-  | (Omit<MarkdownNote, 'children'> & { key: string })
-  | (Omit<ScriptNote, 'children'> & { key: string })
-  | (Omit<AsteroidNote, 'children'> & { key: string });
+interface BrickState {
+  brickId: string;
+}
+
+export type MarkdownBrick = Omit<MarkdownNote, 'children'> & BrickState;
+export type ScriptBrick = Omit<ScriptNote, 'children'> & BrickState;
+export type AsteroidBrick = Omit<AsteroidNote, 'children'> & BrickState;
+type Brick = MarkdownBrick | ScriptBrick | AsteroidBrick;
 
 export type CodeBlockStatus = 'init' | 'live' | 'outdated' | 'running';
 

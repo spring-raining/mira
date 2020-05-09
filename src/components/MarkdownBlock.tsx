@@ -3,6 +3,7 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import remarkReact from 'remark-react';
 import styled from '@emotion/styled';
+import { useEditorCallbacks } from './Universe/useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from './Editor';
 
@@ -139,10 +140,17 @@ const StyledMarkdownPreview = styled.div`
   }
 `;
 
-export const MarkdownBlock: React.FC<{ note: string }> = ({ note }) => {
+export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
+  brickId,
+  note,
+}) => {
+  const editorCallbacks = useEditorCallbacks({ brickId });
+
   const [code, setCode] = useState(() => note);
   const [rendered, setRendered] = useState(null);
+
   const onChange = useCallback(setCode, []);
+
   useEffect(() => {
     const rendered: any = unified()
       .use(remarkParse)
@@ -154,7 +162,14 @@ export const MarkdownBlock: React.FC<{ note: string }> = ({ note }) => {
   return (
     <Block>
       <BlockEditorPane>
-        <Editor {...{ onChange }} language="markdown" code={code} />
+        {brickId && (
+          <Editor
+            {...editorCallbacks}
+            {...{ onChange }}
+            language="markdown"
+            code={code}
+          />
+        )}
       </BlockEditorPane>
       <BlockPreviewPane>
         <StyledMarkdownPreview>{rendered || null}</StyledMarkdownPreview>

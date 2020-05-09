@@ -1,5 +1,4 @@
 import React, {
-  useState,
   useEffect,
   useCallback,
   useRef,
@@ -16,115 +15,10 @@ import {
 } from '../contexts/universe';
 import { importMdx, AsteroidNote } from '../remark/importMdx';
 import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
+import { useRuler, EvaluationEvent } from './Universe/useRuler';
 import { CodeBlock } from './CodeBlock';
 import { MarkdownBlock } from './MarkdownBlock';
 import * as UI from './ui';
-
-interface EvaluationEvent {
-  type: 'start' | 'finish';
-  asteroidId: string;
-  runId: string;
-  ret?: object | null;
-}
-
-const useRuler = ({ providence }: { providence: Providence }) => {
-  const [stepNum, setStepNum] = useState(0);
-  const [currentAsteroidId, setCurrentAsteroidId] = useState<string>();
-  const [currentRunId, setCurrentRunId] = useState<string>();
-
-  const arbitrate = useCallback(
-    ({ type, asteroidId, runId, ret }: EvaluationEvent): Providence => {
-      const { asteroidOrder } = providence;
-      const targetAsteroid = providence.asteroid[asteroidId];
-
-      if (type === 'start') {
-        let nextAsteroid: Providence['asteroid'] = {
-          ...providence.asteroid,
-          [asteroidId]: {
-            ...targetAsteroid,
-            status: 'running',
-          },
-        };
-        if (currentAsteroidId !== asteroidId) {
-          nextAsteroid[asteroidId].stepNo = stepNum + 1;
-          setStepNum(stepNum + 1);
-        }
-        const evaluatedIdx = asteroidOrder.findIndex((id) => id === asteroidId);
-        if (evaluatedIdx >= 0) {
-          nextAsteroid = asteroidOrder
-            .slice(evaluatedIdx + 1)
-            .reduce((acc, id) => {
-              const asteroid = nextAsteroid[id];
-              if (!asteroid || asteroid.status === 'init') {
-                return acc;
-              } else {
-                return { ...acc, [id]: { ...asteroid, status: 'outdated' } };
-              }
-            }, nextAsteroid);
-        }
-        setCurrentAsteroidId(asteroidId);
-        setCurrentRunId(runId);
-        return {
-          ...providence,
-          asteroid: nextAsteroid,
-        };
-      } else if (type === 'finish') {
-        if (currentRunId !== runId) {
-          return {
-            ...providence,
-            asteroid: {
-              ...providence.asteroid,
-              [asteroidId]: {
-                ...targetAsteroid,
-                status:
-                  currentAsteroidId === asteroidId ? 'running' : 'outdated',
-              },
-            },
-          };
-        }
-
-        let nextAsteroid: Providence['asteroid'] = {
-          ...providence.asteroid,
-          [asteroidId]: {
-            ...targetAsteroid,
-            status: 'live',
-            result: ret || null,
-          },
-        };
-        const evaluatedIdx = asteroidOrder.findIndex((id) => id === asteroidId);
-        if (evaluatedIdx >= 0) {
-          let aboveScope = asteroidOrder
-            .slice(0, evaluatedIdx)
-            .reduce((acc, id) => {
-              return {
-                ...acc,
-                ...(nextAsteroid[id]?.result || {}),
-              };
-            }, {});
-          providence.asteroidOrder.slice(evaluatedIdx + 1).reduce((acc, id) => {
-            nextAsteroid = {
-              ...nextAsteroid,
-              [id]: {
-                ...nextAsteroid[id],
-                scope: { ...acc, ...(ret || {}) },
-              },
-            };
-            return {
-              ...acc,
-              ...(providence.asteroid[id]?.result || {}),
-            };
-          }, aboveScope);
-        }
-        return {
-          ...providence,
-          asteroid: nextAsteroid,
-        };
-      }
-    },
-    [providence, stepNum, currentAsteroidId, currentRunId]
-  );
-  return { arbitrate };
-};
 
 interface UniverseProps {
   mdx?: string;
@@ -136,7 +30,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
     dispatch,
   } = useContext(UniverseContext);
 
-  const { arbitrate } = useRuler({ providence });
+  const { arbitrate } = useRuler({ bricks, providence });
 
   const evaluationEventStack = useRef<EvaluationEvent[]>([]);
   useEffect(() => {
@@ -196,7 +90,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
       asteroidOrder: asteroids.map(({ id }) => id),
     };
     dispatch({
-      bricks: codeBlock.map((block) => ({ ...block, key: nanoid() })),
+      bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
       providence,
     });
   }, [mdx]);
@@ -230,14 +124,15 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
     <>
       <UI.Heading>Universe</UI.Heading>
       {bricks.map((brick) => {
-        const { noteType, text, key } = brick;
+        const { noteType, text, brickId } = brick;
         if (noteType === 'markdown') {
-          return <MarkdownBlock key={key} note={text} />;
+          return <MarkdownBlock key={brickId} brickId={brickId} note={text} />;
         } else if (noteType === 'asteroid') {
           const { id } = brick as Omit<AsteroidNote, 'children'>;
           return (
             <CodeBlock
-              key={key}
+              key={brickId}
+              brickId={brickId}
               note={text}
               asteroidId={id}
               onEvaluateStart={(...v) => onEvaluateStart(id, ...v)}
@@ -245,10 +140,10 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
             />
           );
         } else {
-          return <pre key={key}>{text}</pre>;
+          return <pre key={brickId}>{text}</pre>;
         }
       })}
-      <UI.Flex justify="center">
+      <UI.Flex justify="center" my={6}>
         <NewBlockButtonSet />
       </UI.Flex>
     </>

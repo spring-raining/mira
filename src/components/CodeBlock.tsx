@@ -3,13 +3,18 @@ import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
 import { line as spinner } from 'cli-spinners';
 import { CodeBlockStatus, UniverseContext } from '../contexts/universe';
+import { useEditorCallbacks } from './Universe/useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
-import { Editor } from './Editor';
+import { Editor, EditorProps } from './Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
 import * as UI from './ui';
 
-const LivedEditor = withLive<any>(({ live: { code, onChange } }) => (
-  <Editor code={code} language="javascript" onChange={onChange} />
+const LivedEditor = withLive<
+  {
+    live?: { code: string; onChange: (code: string) => void };
+  } & Omit<EditorProps, 'code' | 'language' | 'onChange'>
+>(({ live: { code, onChange }, ...other }) => (
+  <Editor code={code} language="javascript" onChange={onChange} {...other} />
 ));
 
 const LivedError = withLive<any>(({ live: { error } }) =>
@@ -28,15 +33,17 @@ const LivedError = withLive<any>(({ live: { error } }) =>
 );
 
 export const CodeBlock: React.FC<{
+  brickId: string;
   note: string;
   asteroidId: string;
   // providence: Providence;
   onEvaluateStart: (runId: string) => void;
   onEvaluateFinish: (runId: string, ret?: object | null) => void;
-}> = ({ note, asteroidId, onEvaluateStart, onEvaluateFinish }) => {
+}> = ({ brickId, note, asteroidId, onEvaluateStart, onEvaluateFinish }) => {
   const {
     state: { providence },
   } = useContext(UniverseContext);
+  const editorCallbacks = useEditorCallbacks({ brickId });
   const [val, setVal] = useState<Promise<object | null>>();
   const scope = useMemo(() => providence.asteroid[asteroidId]?.scope || {}, [
     asteroidId,
@@ -121,7 +128,7 @@ export const CodeBlock: React.FC<{
     >
       <Block pos="relative">
         <BlockEditorPane>
-          <LivedEditor />
+          <LivedEditor {...editorCallbacks} />
         </BlockEditorPane>
         <BlockPreviewPane>
           <LivedError />

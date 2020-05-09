@@ -1,63 +1,26 @@
 import React, { useContext, useCallback } from 'react';
-import { nanoid } from 'nanoid';
 import { UniverseContext } from '../../contexts/universe';
-import { genAsteroidId } from '../../utils';
 import * as UI from '../ui';
+import { useRuler } from './useRuler';
 
 export const NewBlockButtonSet = () => {
   const {
-    state: {
-      bricks,
-      providence: { asteroid, asteroidOrder },
-    },
+    state: { bricks, providence },
     dispatch,
   } = useContext(UniverseContext);
+  const { insertCodeBlock, insertMarkdownBlock } = useRuler({
+    bricks,
+    providence,
+  });
 
   const addCodeBrick = useCallback(() => {
-    let asteroidId: string;
-    do {
-      asteroidId = genAsteroidId();
-    } while (asteroidId in asteroid);
+    dispatch(insertCodeBlock(bricks.length));
+  }, [dispatch, insertCodeBlock, bricks]);
 
-    const lastAsteroid = asteroid[asteroidOrder[asteroidOrder.length - 1]];
-    dispatch({
-      bricks: [
-        ...bricks,
-        {
-          key: nanoid(),
-          noteType: 'asteroid',
-          text: '',
-          id: asteroidId,
-        },
-      ],
-      providence: {
-        asteroid: {
-          ...asteroid,
-          [asteroidId]: {
-            result: null,
-            status: 'outdated',
-            scope: {
-              ...lastAsteroid.scope,
-              ...(lastAsteroid.result || {}),
-            },
-          },
-        },
-        asteroidOrder: [...asteroidOrder, asteroidId],
-      },
-    });
-  }, [bricks, asteroid, asteroidOrder]);
   const addMarkdownBrick = useCallback(() => {
-    dispatch({
-      bricks: [
-        ...bricks,
-        {
-          key: nanoid(),
-          noteType: 'markdown',
-          text: '',
-        },
-      ],
-    });
-  }, [bricks]);
+    dispatch(insertMarkdownBlock(bricks.length));
+  }, [dispatch, insertMarkdownBlock, bricks]);
+
   return (
     <UI.Flex>
       <UI.Button mx={2} borderRadius="full" onClick={addCodeBrick}>
