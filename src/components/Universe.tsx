@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useContext,
+  useReducer,
+} from 'react';
+import { nanoid } from 'nanoid';
+import {
+  Asteroid,
+  Providence,
+  UniverseContext,
+  universeContextInitialState,
+  universeContextReducer,
+} from '../contexts/universe';
 import { importMdx, AsteroidNote } from '../remark/importMdx';
+import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { CodeBlock } from './CodeBlock';
 import { MarkdownBlock } from './MarkdownBlock';
 import * as UI from './ui';
-
-export type CodeBlockStatus = 'init' | 'live' | 'outdated' | 'running';
-
-export interface Asteroid {
-  result: object | null;
-  status: CodeBlockStatus;
-  scope: object;
-  stepNo?: number;
-}
-
-export interface Providence {
-  asteroid: { [id: string]: Asteroid };
-  asteroidOrder: string[];
-}
 
 interface EvaluationEvent {
   type: 'start' | 'finish';
@@ -125,12 +126,16 @@ const useRuler = ({ providence }: { providence: Providence }) => {
   return { arbitrate };
 };
 
-export const Universe: React.FC<{ code?: string }> = ({ code }) => {
-  const [codeBlock, setCodeBlock] = useState([]);
-  const [providence, setProvidence] = useState<Providence>({
-    asteroid: {},
-    asteroidOrder: [],
-  });
+interface UniverseProps {
+  mdx?: string;
+}
+
+const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
+  const {
+    state: { bricks, providence },
+    dispatch,
+  } = useContext(UniverseContext);
+
   const { arbitrate } = useRuler({ providence });
 
   const evaluationEventStack = useRef<EvaluationEvent[]>([]);
@@ -142,7 +147,9 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
         return;
       }
       const event = evaluationEventStack.current.shift();
-      setProvidence(arbitrate(event));
+      dispatch({
+        providence: arbitrate(event),
+      });
 
       id = requestAnimationFrame(tick);
     };
@@ -171,12 +178,11 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
   );
 
   useEffect(() => {
-    const codeBlock = importMdx(code || '');
-    setCodeBlock(codeBlock);
+    const codeBlock = importMdx(mdx || '');
     const asteroids = codeBlock.filter(
-      ({ block }) => block === 'asteroid'
+      ({ noteType }) => noteType === 'asteroid'
     ) as AsteroidNote[];
-    setProvidence({
+    const providence: Providence = {
       asteroid: asteroids.reduce<{ [id: string]: Asteroid }>((acc, { id }) => {
         return {
           ...acc,
@@ -188,8 +194,12 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
         };
       }, {}),
       asteroidOrder: asteroids.map(({ id }) => id),
+    };
+    dispatch({
+      bricks: codeBlock.map((block) => ({ ...block, key: nanoid() })),
+      providence,
     });
-  }, [code]);
+  }, [mdx]);
 
   useEffect(() => {
     const { asteroidOrder, asteroid } = providence;
@@ -201,13 +211,15 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
     );
     if (initIdx >= 0 && (initIdx < runningIdx || runningIdx < 0)) {
       const runner = asteroid[asteroidOrder[initIdx]];
-      setProvidence({
-        ...providence,
-        asteroid: {
-          ...asteroid,
-          [asteroidOrder[initIdx]]: {
-            ...runner,
-            status: 'running',
+      dispatch({
+        providence: {
+          ...providence,
+          asteroid: {
+            ...asteroid,
+            [asteroidOrder[initIdx]]: {
+              ...runner,
+              status: 'running',
+            },
           },
         },
       });
@@ -217,22 +229,40 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
   return (
     <>
       <UI.Heading>Universe</UI.Heading>
-      {codeBlock.map(({ block, text, id }, i) =>
-        block === 'markdown' ? (
-          <MarkdownBlock key={i} note={text} />
-        ) : block === 'asteroid' ? (
-          <CodeBlock
-            key={id}
-            note={text}
-            asteroidId={id}
-            providence={providence}
-            onEvaluateStart={(...v) => onEvaluateStart(id, ...v)}
-            onEvaluateFinish={(...v) => onEvaluateFinish(id, ...v)}
-          />
-        ) : (
-          <pre>{text}</pre>
-        )
-      )}
+      {bricks.map((brick) => {
+        const { noteType, text, key } = brick;
+        if (noteType === 'markdown') {
+          return <MarkdownBlock key={key} note={text} />;
+        } else if (noteType === 'asteroid') {
+          const { id } = brick as Omit<AsteroidNote, 'children'>;
+          return (
+            <CodeBlock
+              key={key}
+              note={text}
+              asteroidId={id}
+              onEvaluateStart={(...v) => onEvaluateStart(id, ...v)}
+              onEvaluateFinish={(...v) => onEvaluateFinish(id, ...v)}
+            />
+          );
+        } else {
+          return <pre key={key}>{text}</pre>;
+        }
+      })}
+      <UI.Flex justify="center">
+        <NewBlockButtonSet />
+      </UI.Flex>
     </>
+  );
+};
+
+export const Universe: React.FC<UniverseProps> = (props) => {
+  const [state, dispatch] = useReducer(
+    universeContextReducer,
+    universeContextInitialState
+  );
+  return (
+    <UniverseContext.Provider value={{ state, dispatch }}>
+      <UniverseView {...props} />
+    </UniverseContext.Provider>
   );
 };

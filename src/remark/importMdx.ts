@@ -5,27 +5,27 @@ interface ASTNode {
 }
 
 export interface MarkdownNote {
-  block: 'markdown';
+  noteType: 'markdown';
   text: string;
   children: ASTNode[];
 }
 
 export interface ScriptNote {
-  block: 'script';
+  noteType: 'script';
   text: string;
   children: ASTNode[];
 }
 
 export interface AsteroidNote {
-  block: 'asteroid';
+  noteType: 'asteroid';
   text: string;
-  id: string;
   children: ASTNode[];
+  id: string;
 }
 
-export const importMdx = (
-  text: string
-): (MarkdownNote | ScriptNote | AsteroidNote)[] => {
+export type Note = MarkdownNote | ScriptNote | AsteroidNote;
+
+export const importMdx = (text: string): Note[] => {
   const compiler = createCompiler({
     remarkPlugins: [],
     rehypePlugins: [],
@@ -35,7 +35,7 @@ export const importMdx = (
   const asteroidMetaRe = /^asteroid=(\w+)$/;
   const chunk = parsed.children.reduce((acc, node) => {
     const asteroidMetaMatch = node.meta?.match(asteroidMetaRe);
-    const blockType = scriptTypes.includes(node.type)
+    const noteType = scriptTypes.includes(node.type)
       ? 'script'
       : node.type === 'code' && node.meta && asteroidMetaMatch
       ? 'asteroid'
@@ -43,7 +43,7 @@ export const importMdx = (
     if (acc.length === 0) {
       return [
         {
-          block: blockType,
+          noteType,
           children: [node],
           ...(asteroidMetaMatch
             ? {
@@ -56,23 +56,23 @@ export const importMdx = (
 
     const head = acc.slice(0, acc.length - 1);
     const tail = acc[acc.length - 1];
-    if (blockType === 'asteroid' && asteroidMetaMatch) {
+    if (noteType === 'asteroid' && asteroidMetaMatch) {
       return [
         ...acc,
         {
-          block: blockType,
+          noteType,
           children: [node],
           id: asteroidMetaMatch[1],
         },
       ];
     } else if (
-      tail.block !== blockType ||
+      tail.block !== noteType ||
       (node.type === 'heading' && node.depth <= 3)
     ) {
       return [
         ...acc,
         {
-          block: blockType,
+          noteType,
           children: [node],
         },
       ];
@@ -80,21 +80,21 @@ export const importMdx = (
       return [
         ...head,
         {
-          block: blockType,
+          noteType,
           children: [...tail.children, node],
         },
       ];
     }
   }, []);
   return chunk.map((el) => {
-    const { children, block } = el;
+    const { children, noteType } = el;
     const first = children[0];
     const last = children[children.length - 1];
     return {
       ...el,
-      block,
+      noteType,
       text:
-        block === 'asteroid'
+        noteType === 'asteroid'
           ? first.value
           : text.slice(first.position.start.offset, last.position.end.offset),
     };

@@ -1,18 +1,12 @@
-import React, {
-  useMemo,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from 'react';
+import React, { useMemo, useState, useEffect, useRef, useContext } from 'react';
 import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
 import { line as spinner } from 'cli-spinners';
+import { CodeBlockStatus, UniverseContext } from '../contexts/universe';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from './Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
 import * as UI from './ui';
-import { Providence, CodeBlockStatus } from './Universe';
 
 const LivedEditor = withLive<any>(({ live: { code, onChange } }) => (
   <Editor code={code} language="javascript" onChange={onChange} />
@@ -36,10 +30,13 @@ const LivedError = withLive<any>(({ live: { error } }) =>
 export const CodeBlock: React.FC<{
   note: string;
   asteroidId: string;
-  providence: Providence;
+  // providence: Providence;
   onEvaluateStart: (runId: string) => void;
   onEvaluateFinish: (runId: string, ret?: object | null) => void;
-}> = ({ note, asteroidId, providence, onEvaluateStart, onEvaluateFinish }) => {
+}> = ({ note, asteroidId, onEvaluateStart, onEvaluateFinish }) => {
+  const {
+    state: { providence },
+  } = useContext(UniverseContext);
   const [val, setVal] = useState<Promise<object | null>>();
   const scope = useMemo(() => providence.asteroid[asteroidId]?.scope || {}, [
     asteroidId,

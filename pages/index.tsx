@@ -29,7 +29,7 @@ export default () => {
       <Head>
         <title>Asteroid</title>
       </Head>
-      <Universe code={text} />
+      <Universe mdx={text} />
     </div>
   );
 };

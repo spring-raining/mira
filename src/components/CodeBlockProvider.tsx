@@ -4,8 +4,8 @@ import React from 'react';
 import { LiveContext } from 'react-live';
 import { transform as _transform } from 'buble';
 import assign from 'core-js/fn/object/assign';
+import { CodeBlockStatus } from '../contexts/universe';
 import { getRuntimeScope } from './runtimeScopes';
-import { CodeBlockStatus } from './Universe';
 
 // eslint-disable-next-line no-new-func
 const AsyncFunctionShim = new Function(
