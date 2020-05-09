@@ -1,12 +1,5 @@
-import React, {
-  useMemo,
-  useCallback,
-  useState,
-  useEffect,
-  useRef,
-} from 'react';
-import { LiveError, LivePreview, withLive } from 'react-live';
-import { evalCode } from 'react-live/dist/react-live';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from './Editor';
@@ -41,17 +34,15 @@ export const CodeBlock: React.FC<{
   onEvaluateFinish: (runId: string, ret?: object | null) => void;
 }> = ({ note, asteroidId, providence, onEvaluateStart, onEvaluateFinish }) => {
   const [val, setVal] = useState<Promise<object | null>>();
-  const scope = useMemo(() => providence.asteroidScope[asteroidId] || {}, [
+  const scope = useMemo(() => providence.asteroid[asteroidId]?.scope || {}, [
     asteroidId,
-    providence.asteroidScope,
+    providence.asteroid,
   ]);
 
-  const status =
-    asteroidId in providence.asteroidStatus
-      ? providence.asteroidStatus[asteroidId]
-      : null;
+  const status = providence.asteroid[asteroidId]?.status || null;
 
   // Evaluate code result
+  const currentStatus = useRef<CodeBlockStatus | null>();
   const currentVal = useRef<Promise<object | null>>();
   const runIdRef = useRef<string>();
   const onEvaluateFinishRef = useRef<
@@ -61,6 +52,7 @@ export const CodeBlock: React.FC<{
     if (currentVal.current === val) {
       return;
     }
+    currentStatus.current = status;
     currentVal.current = val;
     if (!val) {
       return;
@@ -72,13 +64,19 @@ export const CodeBlock: React.FC<{
     requestAnimationFrame(() => {
       val
         .then((evaluated) => {
-          if (runId !== runIdRef.current) {
+          if (
+            runId !== runIdRef.current &&
+            currentStatus.current !== 'running'
+          ) {
             return;
           }
           onEvaluateFinishRef.current(runId, evaluated);
         })
         .catch(() => {
-          if (runId !== runIdRef.current) {
+          if (
+            runId !== runIdRef.current &&
+            currentStatus.current !== 'running'
+          ) {
             return;
           }
           onEvaluateFinishRef.current(runId);

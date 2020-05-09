@@ -1,25 +1,28 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+
 import { importMdx, AsteroidNote } from '../remark/importMdx';
 import { CodeBlock } from './CodeBlock';
 import { MarkdownBlock } from './MarkdownBlock';
 import * as UI from './ui';
 
-export type CodeBlockStatus = 'init' | 'live' | 'outdated' | 'running' | 'fail';
+export type CodeBlockStatus = 'init' | 'live' | 'outdated' | 'running';
+
+export interface Asteroid {
+  result: object | null;
+  status: CodeBlockStatus;
+  scope: object;
+}
 
 export interface Providence {
+  asteroid: { [id: string]: Asteroid };
   asteroidOrder: string[];
-  asteroidReturn: { [id: string]: object | null };
-  asteroidStatus: { [id: string]: CodeBlockStatus };
-  asteroidScope: { [id: string]: object };
 }
 
 export const Universe: React.FC<{ code?: string }> = ({ code }) => {
   const [codeBlock, setCodeBlock] = useState([]);
   const [providence, setProvidence] = useState<Providence>({
+    asteroid: {},
     asteroidOrder: [],
-    asteroidReturn: {},
-    asteroidStatus: {},
-    asteroidScope: {},
   });
 
   useEffect(() => {
@@ -29,83 +32,116 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
       ({ block }) => block === 'asteroid'
     ) as AsteroidNote[];
     setProvidence({
-      asteroidOrder: asteroids.map(({ id }) => id),
-      asteroidReturn: {},
-      asteroidStatus: asteroids.reduce((acc, { id }) => {
-        return { ...acc, [id]: 'init' };
+      asteroid: asteroids.reduce<{ [id: string]: Asteroid }>((acc, { id }) => {
+        return {
+          ...acc,
+          [id]: {
+            result: null,
+            status: 'init',
+            scope: {},
+          },
+        };
       }, {}),
-      asteroidScope: {},
+      asteroidOrder: asteroids.map(({ id }) => id),
     });
   }, [code]);
 
   useEffect(() => {
-    const { asteroidOrder, asteroidStatus } = providence;
+    const { asteroidOrder, asteroid } = providence;
     const initIdx = asteroidOrder.findIndex(
-      (id) => id in asteroidStatus && asteroidStatus[id] === 'init'
+      (id) => asteroid[id]?.status === 'init'
     );
     const runningIdx = asteroidOrder.findIndex(
-      (id) => id in asteroidStatus && asteroidStatus[id] === 'running'
+      (id) => asteroid[id]?.status === 'running'
     );
     if (initIdx >= 0 && (initIdx < runningIdx || runningIdx < 0)) {
+      const runner = asteroid[asteroidOrder[initIdx]];
       setProvidence({
         ...providence,
-        asteroidStatus: {
-          ...asteroidStatus,
-          [asteroidOrder[initIdx]]: 'running',
+        asteroid: {
+          ...asteroid,
+          [asteroidOrder[initIdx]]: {
+            ...runner,
+            status: 'running',
+          },
         },
       });
     }
   }, [providence]);
 
-  const onEvaluateStart = useCallback(
-    (asteroidId: string, runId: string) => {},
-    [providence]
-  );
-
-  const onEvaluateFinish = useCallback(
-    (asteroidId: string, runId: string, ret?: object | null) => {
-      const nextAsteroidReturn = { ...providence.asteroidReturn };
-      if (ret !== undefined) {
-        nextAsteroidReturn[asteroidId] = ret;
-      } else {
-        delete nextAsteroidReturn[asteroidId];
+  const onEvaluateStart = useMemo(() => {
+    return (asteroidId: string, runId: string) => {
+      const { asteroidOrder } = providence;
+      let nextAsteroid: Providence['asteroid'] = {
+        ...providence.asteroid,
+        [asteroidId]: {
+          ...providence.asteroid[asteroidId],
+          status: 'running',
+        },
+      };
+      const evaluatedIdx = asteroidOrder.findIndex((id) => id === asteroidId);
+      if (evaluatedIdx >= 0) {
+        nextAsteroid = asteroidOrder
+          .slice(evaluatedIdx + 1)
+          .reduce((acc, id) => {
+            const asteroid = nextAsteroid[id];
+            if (!asteroid || asteroid.status === 'init') {
+              return acc;
+            } else {
+              return { ...acc, [id]: { ...asteroid, status: 'outdated' } };
+            }
+          }, nextAsteroid);
       }
+      setProvidence({
+        ...providence,
+        asteroid: nextAsteroid,
+      });
+    };
+  }, [providence]);
+
+  const onEvaluateFinish = useMemo(() => {
+    return (asteroidId: string, runId: string, ret?: object | null) => {
+      let nextAsteroid: Providence['asteroid'] = {
+        ...providence.asteroid,
+        [asteroidId]: {
+          ...providence.asteroid[asteroidId],
+          status: 'live',
+          result: ret || null,
+        },
+      };
       const evaluatedIdx = providence.asteroidOrder.findIndex(
         (id) => id === asteroidId
       );
-      let nextAsteroidScope = providence.asteroidScope;
       if (evaluatedIdx >= 0) {
         let aboveScope = providence.asteroidOrder
           .slice(0, evaluatedIdx + 1)
           .reduce((acc, id) => {
             return {
               ...acc,
-              ...(nextAsteroidReturn[id] || {}),
+              ...(nextAsteroid[id]?.result || {}),
             };
           }, {});
         providence.asteroidOrder.slice(evaluatedIdx + 1).reduce((acc, id) => {
-          nextAsteroidScope = {
-            ...nextAsteroidScope,
-            [id]: { ...acc, ...(ret || {}) },
+          nextAsteroid = {
+            ...nextAsteroid,
+            [id]: {
+              ...nextAsteroid[id],
+              scope: { ...acc, ...(ret || {}) },
+              status: nextAsteroid[id]?.status === 'init' ? 'init' : 'outdated',
+            },
           };
           return {
             ...acc,
-            ...(providence.asteroidReturn[id] || {}),
+            ...(providence.asteroid[id]?.result || {}),
           };
         }, aboveScope);
       }
       setProvidence({
         ...providence,
-        asteroidReturn: nextAsteroidReturn,
-        asteroidStatus: {
-          ...providence.asteroidStatus,
-          [asteroidId]: 'live',
-        },
-        asteroidScope: nextAsteroidScope,
+        asteroid: nextAsteroid,
       });
-    },
-    [providence]
-  );
+    };
+  }, [providence]);
 
   return (
     <>
@@ -115,7 +151,7 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
           <MarkdownBlock key={i} note={text} />
         ) : block === 'asteroid' ? (
           <CodeBlock
-            key={i}
+            key={id}
             note={text}
             asteroidId={id}
             providence={providence}
