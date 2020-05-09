@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { LiveError, LivePreview, withLive } from 'react-live';
 import { evalCode } from 'react-live/dist/react-live';
+import { nanoid } from 'nanoid';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from './Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
@@ -34,82 +35,53 @@ const LivedError = withLive<any>(({ live: { error } }) =>
 
 export const CodeBlock: React.FC<{
   note: string;
-  providence: Providence;
-  onProvidenceUpdate: (val: Providence) => void;
   asteroidId: string;
-}> = ({ note, asteroidId, providence, onProvidenceUpdate }) => {
+  providence: Providence;
+  onEvaluateStart: (runId: string) => void;
+  onEvaluateFinish: (runId: string, ret?: object | null) => void;
+}> = ({ note, asteroidId, providence, onEvaluateStart, onEvaluateFinish }) => {
   const [val, setVal] = useState<Promise<object | null>>();
-  const [status, setStatus] = useState<CodeBlockStatus | null>(() =>
-    asteroidId in providence.asteroidStatus
-      ? providence.asteroidStatus[asteroidId]
-      : null
-  );
-  const scope = useMemo(() => ({}), []);
-  const statusString =
+  const scope = useMemo(() => providence.asteroidScope[asteroidId] || {}, [
+    asteroidId,
+    providence.asteroidScope,
+  ]);
+
+  const status =
     asteroidId in providence.asteroidStatus
       ? providence.asteroidStatus[asteroidId]
       : null;
 
-  useEffect(() => {
-    setStatus(
-      asteroidId in providence.asteroidStatus
-        ? providence.asteroidStatus[asteroidId]
-        : null
-    );
-  }, [providence.asteroidStatus, asteroidId]);
-
   // Evaluate code result
   const currentVal = useRef<Promise<object | null>>();
-  const currentProvidence = useRef<Providence>(providence);
+  const runIdRef = useRef<string>();
+  const onEvaluateFinishRef = useRef<
+    (runId: string, ret?: object | null) => void
+  >();
   useEffect(() => {
-    currentProvidence.current = providence;
     if (currentVal.current === val) {
       return;
     }
     currentVal.current = val;
-    setStatus('running');
+    if (!val) {
+      return;
+    }
+    const runId = nanoid();
+    runIdRef.current = runId;
+    onEvaluateFinishRef.current = onEvaluateFinish;
+    onEvaluateStart(runId);
     requestAnimationFrame(() => {
-      const p = currentProvidence.current || providence;
-      const asteroidReturn = { ...p.asteroidReturn };
-      delete asteroidReturn[asteroidId];
-      onProvidenceUpdate({
-        ...p,
-        asteroidReturn,
-        asteroidStatus: {
-          ...p.asteroidStatus,
-          [asteroidId]: 'running',
-        },
-      });
       val
         .then((evaluated) => {
-          if (currentVal.current !== val) {
+          if (runId !== runIdRef.current) {
             return;
           }
-          const p = currentProvidence.current || providence;
-          onProvidenceUpdate({
-            ...p,
-            asteroidReturn: {
-              ...p.asteroidReturn,
-              [asteroidId]: evaluated,
-            },
-            asteroidStatus: {
-              ...p.asteroidStatus,
-              [asteroidId]: 'live',
-            },
-          });
+          onEvaluateFinishRef.current(runId, evaluated);
         })
-        .catch((e) => {
-          if (currentVal.current !== val) {
+        .catch(() => {
+          if (runId !== runIdRef.current) {
             return;
           }
-          const p = currentProvidence.current || providence;
-          onProvidenceUpdate({
-            ...p,
-            asteroidStatus: {
-              ...p.asteroidStatus,
-              [asteroidId]: 'live',
-            },
-          });
+          onEvaluateFinishRef.current(runId);
         });
     });
   }, [val, providence, asteroidId]);
@@ -129,9 +101,9 @@ export const CodeBlock: React.FC<{
           <LivedError />
           <LivePreview />
         </BlockPreviewPane>
-        {statusString && (
+        {status && (
           <UI.Code pos="absolute" fontSize="xs">
-            {statusString}
+            {status}
           </UI.Code>
         )}
       </Block>

@@ -10,6 +10,7 @@ export interface Providence {
   asteroidOrder: string[];
   asteroidReturn: { [id: string]: object | null };
   asteroidStatus: { [id: string]: CodeBlockStatus };
+  asteroidScope: { [id: string]: object };
 }
 
 export const Universe: React.FC<{ code?: string }> = ({ code }) => {
@@ -18,6 +19,7 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
     asteroidOrder: [],
     asteroidReturn: {},
     asteroidStatus: {},
+    asteroidScope: {},
   });
 
   useEffect(() => {
@@ -32,26 +34,78 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
       asteroidStatus: asteroids.reduce((acc, { id }) => {
         return { ...acc, [id]: 'init' };
       }, {}),
+      asteroidScope: {},
     });
   }, [code]);
 
   useEffect(() => {
-    console.log('>', providence);
-    const { asteroidStatus } = providence;
-    if (Object.values(asteroidStatus).some((status) => status === 'init')) {
-      setTimeout(() => {
-        setProvidence({
-          ...providence,
-          asteroidStatus: Object.entries(asteroidStatus).reduce(
-            (acc, [k, v]) => {
-              return { ...acc, [k]: v === 'init' ? 'running' : v };
-            },
-            {}
-          ),
-        });
-      }, 1000);
+    const { asteroidOrder, asteroidStatus } = providence;
+    const initIdx = asteroidOrder.findIndex(
+      (id) => id in asteroidStatus && asteroidStatus[id] === 'init'
+    );
+    const runningIdx = asteroidOrder.findIndex(
+      (id) => id in asteroidStatus && asteroidStatus[id] === 'running'
+    );
+    if (initIdx >= 0 && (initIdx < runningIdx || runningIdx < 0)) {
+      setProvidence({
+        ...providence,
+        asteroidStatus: {
+          ...asteroidStatus,
+          [asteroidOrder[initIdx]]: 'running',
+        },
+      });
     }
   }, [providence]);
+
+  const onEvaluateStart = useCallback(
+    (asteroidId: string, runId: string) => {},
+    [providence]
+  );
+
+  const onEvaluateFinish = useCallback(
+    (asteroidId: string, runId: string, ret?: object | null) => {
+      const nextAsteroidReturn = { ...providence.asteroidReturn };
+      if (ret !== undefined) {
+        nextAsteroidReturn[asteroidId] = ret;
+      } else {
+        delete nextAsteroidReturn[asteroidId];
+      }
+      const evaluatedIdx = providence.asteroidOrder.findIndex(
+        (id) => id === asteroidId
+      );
+      let nextAsteroidScope = providence.asteroidScope;
+      if (evaluatedIdx >= 0) {
+        let aboveScope = providence.asteroidOrder
+          .slice(0, evaluatedIdx + 1)
+          .reduce((acc, id) => {
+            return {
+              ...acc,
+              ...(nextAsteroidReturn[id] || {}),
+            };
+          }, {});
+        providence.asteroidOrder.slice(evaluatedIdx + 1).reduce((acc, id) => {
+          nextAsteroidScope = {
+            ...nextAsteroidScope,
+            [id]: { ...acc, ...(ret || {}) },
+          };
+          return {
+            ...acc,
+            ...(providence.asteroidReturn[id] || {}),
+          };
+        }, aboveScope);
+      }
+      setProvidence({
+        ...providence,
+        asteroidReturn: nextAsteroidReturn,
+        asteroidStatus: {
+          ...providence.asteroidStatus,
+          [asteroidId]: 'live',
+        },
+        asteroidScope: nextAsteroidScope,
+      });
+    },
+    [providence]
+  );
 
   return (
     <>
@@ -65,7 +119,9 @@ export const Universe: React.FC<{ code?: string }> = ({ code }) => {
             note={text}
             asteroidId={id}
             providence={providence}
-            onProvidenceUpdate={setProvidence}
+            // onProvidenceUpdate={setProvidence}
+            onEvaluateStart={(...v) => onEvaluateStart(id, ...v)}
+            onEvaluateFinish={(...v) => onEvaluateFinish(id, ...v)}
           />
         ) : (
           <pre>{text}</pre>
