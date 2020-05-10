@@ -7,8 +7,6 @@ export const Block: React.FC<FlexProps & { active?: boolean }> = ({
 }) => (
   <UI.Flex
     my={8}
-    px={4}
-    py={3}
     w="100%"
     {...other}
     bg={active ? 'gray.100' : 'gray.50'}
@@ -16,10 +14,10 @@ export const Block: React.FC<FlexProps & { active?: boolean }> = ({
   />
 );
 
-export const BlockEditorPane = (props) => <UI.Box w="50%" mx={2} {...props} />;
+export const BlockEditorPane = (props) => (
+  <UI.Box w="50%" p={4} pr={0} {...props} />
+);
 
-export const BlockPreviewPane = ({ children, ...props }) => (
-  <UI.Box w="50%" mx={2} {...props}>
-    {children}
-  </UI.Box>
+export const BlockPreviewPane = (props) => (
+  <UI.Box w="50%" bg="gray.100" px={4} {...props} />
 );

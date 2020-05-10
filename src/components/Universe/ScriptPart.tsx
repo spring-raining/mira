@@ -20,7 +20,12 @@ export const ScriptPart: React.FC<{ note: ScriptBrick }> = ({ note }) => {
       {importNode.map((ast, i) => (
         <UI.Flex key={i} align="center">
           <UI.Box flex={0} mr={6}>
-            <UI.Tag size="sm" variant="outline" rounded="full">
+            <UI.Tag
+              size="sm"
+              variant="outline"
+              variantColor="purple"
+              rounded="full"
+            >
               Module
             </UI.Tag>
           </UI.Box>

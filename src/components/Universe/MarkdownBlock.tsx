@@ -61,6 +61,7 @@ const StyledMarkdownPreview = styled.div`
 
   ul,
   ol {
+    margin: 1rem 0;
     padding-inline-start: 1.5em;
   }
 
@@ -173,7 +174,7 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
           />
         )}
       </BlockEditorPane>
-      <BlockPreviewPane>
+      <BlockPreviewPane py={2}>
         <StyledMarkdownPreview>{rendered || null}</StyledMarkdownPreview>
       </BlockPreviewPane>
     </Block>

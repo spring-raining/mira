@@ -2,6 +2,8 @@ import Head from 'next/head';
 import { Universe } from '../src/components/Universe';
 
 const text = `
+# Asteroid
+
 \`\`\`js asteroid=1998SF37
 await new Promise(res => setTimeout(res, 1000))
 $run(() => (

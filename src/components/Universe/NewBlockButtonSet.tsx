@@ -18,11 +18,21 @@ export const NewBlockButtonSet = () => {
 
   return (
     <UI.Flex>
-      <UI.Button mx={2} borderRadius="full" onClick={addCodeBrick}>
+      <UI.Button
+        mx={2}
+        rounded="full"
+        variantColor="purple"
+        onClick={addCodeBrick}
+      >
         <UI.Icon name="add" mr={2} />
         Code
       </UI.Button>
-      <UI.Button mx={2} borderRadius="full" onClick={addMarkdownBrick}>
+      <UI.Button
+        mx={2}
+        rounded="full"
+        variantColor="purple"
+        onClick={addMarkdownBrick}
+      >
         <UI.Icon name="add" mr={2} />
         Note
       </UI.Button>

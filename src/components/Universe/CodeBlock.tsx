@@ -20,6 +20,7 @@ const LivedEditor = withLive<
 const LivedError = withLive<any>(({ live: { error } }) =>
   error ? (
     <UI.Box
+      my={4}
       p={2}
       rounded="md"
       fontSize="70%"
@@ -128,29 +129,29 @@ export const CodeBlock: React.FC<{
       scope={scope}
       onRender={setVal}
     >
-      <Block pos="relative" active={state.activeBrick === brickId}>
-        <BlockEditorPane>
+      <Block active={state.activeBrick === brickId}>
+        <BlockEditorPane pos="relative">
+          {statusString && (
+            <UI.Code pos="absolute" fontSize="xs" backgroundColor="transparent">
+              {statusString}
+            </UI.Code>
+          )}
+          {loadingSpinner && (
+            <UI.Code
+              pos="absolute"
+              fontSize="xs"
+              backgroundColor="transparent"
+              left="0.5rem"
+            >
+              {loadingSpinner}
+            </UI.Code>
+          )}
           <LivedEditor {...editorCallbacks} />
         </BlockEditorPane>
         <BlockPreviewPane>
           <LivedError />
           <LivePreview />
         </BlockPreviewPane>
-        {statusString && (
-          <UI.Code pos="absolute" fontSize="xs" backgroundColor="transparent">
-            {statusString}
-          </UI.Code>
-        )}
-        {loadingSpinner && (
-          <UI.Code
-            pos="absolute"
-            fontSize="xs"
-            backgroundColor="transparent"
-            left="0.5rem"
-          >
-            {loadingSpinner}
-          </UI.Code>
-        )}
       </Block>
     </CodeBlockProvider>
   );
