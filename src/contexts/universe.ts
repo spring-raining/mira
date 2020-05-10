@@ -1,10 +1,5 @@
 import { createContext } from 'react';
-import {
-  MarkdownNote,
-  ScriptNote,
-  AsteroidNote,
-  ASTNode,
-} from '../remark/importMdx';
+import { MarkdownNote, ScriptNote, AsteroidNote, ASTNode } from '../mdx';
 
 interface BrickState {
   brickId: string;
@@ -62,6 +57,5 @@ export const universeContextReducer = (
     ...state,
     ...action,
   };
-  console.log(newState);
   return newState;
 };

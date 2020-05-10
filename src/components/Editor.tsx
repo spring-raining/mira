@@ -6,13 +6,13 @@ import MonacoEditor, {
   Monaco,
 } from '@monaco-editor/react';
 
-const useAsyncEvent = (callback: (v: any) => void) => {
-  const eventStack = useRef<any[]>([]);
+const useAsyncEvent = (callback: (...args: any[]) => void) => {
+  const eventStack = useRef<any[][]>([]);
   useEffect(() => {
     let id: number;
     const tick = () => {
       if (eventStack.current.length > 0) {
-        callback(eventStack.current.shift());
+        callback(...eventStack.current.shift());
       }
       id = requestAnimationFrame(tick);
     };
@@ -20,8 +20,8 @@ const useAsyncEvent = (callback: (v: any) => void) => {
     return () => cancelAnimationFrame(id);
   }, [callback]);
 
-  const handler = useCallback(() => {
-    eventStack.current.push(true);
+  const handler = useCallback((...args) => {
+    eventStack.current.push(args);
   }, []);
   return handler;
 };
@@ -49,7 +49,6 @@ export const Editor: React.FC<EditorProps> = ({
 }) => {
   const lineHeight = 18;
   const [height, setHeight] = useState(0);
-  const [currentValue, setCurrentValue] = useState(() => code);
   const [initialOptions, setInitialOptions] = useState<object>(null);
 
   const [monaco, setMonaco] = useState<Monaco>(null);
@@ -59,6 +58,7 @@ export const Editor: React.FC<EditorProps> = ({
   const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
   const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
   const focusHandler = useAsyncEvent(onFocus);
+  const changeHandler = useAsyncEvent(onChange);
 
   // 1. get Monaco instance
   useEffect(() => {
@@ -136,8 +136,7 @@ export const Editor: React.FC<EditorProps> = ({
     );
     editor.onDidChangeModelContent(() => {
       const value = getEditorValue();
-      setCurrentValue(value);
-      onChange(value);
+      changeHandler(value);
     });
     editor.onDidFocusEditorText(focusHandler);
   };

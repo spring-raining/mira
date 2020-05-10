@@ -18,8 +18,12 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
   );
 
   const onCreateNewBlockCommand = useCallback(() => {
-    const idx = bricks.findIndex((brick) => brick.brickId === brickId);
+    let idx = bricks.findIndex((brick) => brick.brickId === brickId);
     if (0 <= idx) {
+      if (idx < bricks.length - 1 && bricks[idx + 1].noteType === 'script') {
+        // skip next script brick
+        idx += 1;
+      }
       const newState = insertCodeBlock(idx + 1);
       const newBrickId = newState.bricks[idx + 1].brickId;
       dispatch(newState);
@@ -61,11 +65,29 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
     });
   }, [brickId, dispatch]);
 
+  const onChange = useCallback(
+    (text) => {
+      dispatch({
+        bricks: state.bricks.map((brick) =>
+          brick.brickId === brickId
+            ? {
+                ...brick,
+                text,
+                children: null,
+              }
+            : brick
+        ),
+      });
+    },
+    [brickId, state, dispatch]
+  );
+
   return {
     onEditorUpdate,
     onCreateNewBlockCommand,
     onMoveForwardCommand,
     onMoveBackwardCommand,
     onFocus,
+    onChange,
   };
 };

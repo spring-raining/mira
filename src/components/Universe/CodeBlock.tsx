@@ -1,4 +1,11 @@
-import React, { useMemo, useState, useEffect, useRef, useContext } from 'react';
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useContext,
+  useCallback,
+} from 'react';
 import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
 import { line as spinner } from 'cli-spinners';
@@ -12,10 +19,26 @@ import * as UI from '../ui';
 const LivedEditor = withLive<
   {
     live?: { code: string; onChange: (code: string) => void };
-  } & Omit<EditorProps, 'code' | 'language' | 'onChange'>
->(({ live: { code, onChange }, ...other }) => (
-  <Editor code={code} language="javascript" onChange={onChange} {...other} />
-));
+  } & Omit<EditorProps, 'code' | 'language'>
+>(({ live: { code, onChange }, ...other }) => {
+  const handleChange = useCallback(
+    (text) => {
+      if (other.onChange) {
+        other.onChange(text);
+      }
+      onChange(text);
+    },
+    [onChange, other.onChange]
+  );
+  return (
+    <Editor
+      {...other}
+      code={code}
+      language="javascript"
+      onChange={handleChange}
+    />
+  );
+});
 
 const LivedError = withLive<any>(({ live: { error } }) =>
   error ? (
@@ -130,7 +153,17 @@ export const CodeBlock: React.FC<{
       onRender={setVal}
     >
       <Block active={state.activeBrick === brickId}>
-        <BlockEditorPane pos="relative">
+        <BlockEditorPane
+          pos="relative"
+          borderLeft="0.5rem solid"
+          borderColor={
+            status === 'live'
+              ? 'blue.500'
+              : status === 'outdated'
+              ? 'orange.500'
+              : 'gray.400'
+          }
+        >
           {statusString && (
             <UI.Code pos="absolute" fontSize="xs" backgroundColor="transparent">
               {statusString}

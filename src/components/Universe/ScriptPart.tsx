@@ -10,7 +10,6 @@ const Link = (href, text, key) => (
 );
 
 export const ScriptPart: React.FC<{ note: ScriptBrick }> = ({ note }) => {
-  console.log(note);
   const importNode = (note.children || []).filter(
     (ast) => ast.type === 'import'
   );

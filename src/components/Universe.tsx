@@ -14,12 +14,10 @@ import {
   universeContextReducer,
   ScriptBrick,
 } from '../contexts/universe';
-import {
-  importMdx,
-  collectImports,
-  AsteroidNote,
-  ScriptNote,
-} from '../remark/importMdx';
+import { AsteroidNote, ScriptNote } from '../mdx';
+import { importMdx } from '../mdx/io';
+import { collectImports } from '../mdx/module';
+import { ToolBar } from './Universe/ToolBar';
 import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { useRuler, EvaluationEvent } from './Universe/useRuler';
 import { CodeBlock } from './Universe/CodeBlock';
@@ -79,7 +77,6 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   useEffect(() => {
     (async () => {
       const codeBlock = importMdx(mdx || '');
-      console.log(codeBlock);
       const modules = await collectImports(
         codeBlock.filter(
           ({ noteType }) => noteType === 'script'
@@ -139,8 +136,8 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   }, [providence]);
 
   return (
-    <>
-      <UI.Heading>Universe</UI.Heading>
+    <UI.Box w="100%">
+      <ToolBar title="asteroid.mdx" />
       {bricks.map((brick) => {
         const { noteType, text, brickId } = brick;
         if (noteType === 'markdown') {
@@ -164,7 +161,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
       <UI.Flex justify="center" my={6}>
         <NewBlockButtonSet />
       </UI.Flex>
-    </>
+    </UI.Box>
   );
 };
 

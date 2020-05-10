@@ -152,7 +152,13 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   const [code, setCode] = useState(() => note);
   const [rendered, setRendered] = useState(null);
 
-  const onChange = useCallback(setCode, []);
+  const onChange = useCallback(
+    (note) => {
+      editorCallbacks.onChange(note);
+      setCode(note);
+    },
+    [editorCallbacks.onChange]
+  );
 
   useEffect(() => {
     const rendered: any = unified()
@@ -170,7 +176,7 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
             {...editorCallbacks}
             {...{ onChange }}
             language="markdown"
-            code={code}
+            code={note}
           />
         )}
       </BlockEditorPane>

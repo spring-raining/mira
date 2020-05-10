@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import { Universe } from '../src/components/Universe';
+import * as UI from '../src/components/ui';
 
 const text = `
 # Asteroid
@@ -12,7 +13,9 @@ $run(() => (
 return { x: 'x' }
 \`\`\`
 
-<div><Asteroid_1998SF37/></div>
+<div><Asteroid_1998SF37 /></div>
+
+<div></div>
 
 \`\`\`js asteroid=1998SF39
 await new Promise(res => setTimeout(res, 1000))
@@ -21,7 +24,7 @@ $run(() => (
 ))
 \`\`\`
 
-<div><Asteroid_1998SF39/></div>
+<div><Asteroid_1998SF39 /></div>
 
 import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module';
 
@@ -37,15 +40,22 @@ path.moveTo(start);
 path.lineTo(start.add([200, -50]));
 \`\`\`
 
-<div><Asteroid_1998SF36/></div>
+<div><Asteroid_1998SF36 /></div>
 `;
 
 export default () => {
   return (
-    <div className="container">
+    <div>
       <Head>
         <title>Asteroid</title>
       </Head>
+
+      <UI.Box mx={6} my={12} minH="30vmin">
+        <UI.Heading>Asteroid</UI.Heading>
+        <UI.Text fontSize="lg">
+          JavaScript & Markdown live editor on your browser
+        </UI.Text>
+      </UI.Box>
       <Universe mdx={text} />
     </div>
   );
