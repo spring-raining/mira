@@ -2,12 +2,12 @@ import React, { useMemo, useState, useEffect, useRef, useContext } from 'react';
 import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
 import { line as spinner } from 'cli-spinners';
-import { CodeBlockStatus, UniverseContext } from '../contexts/universe';
-import { useEditorCallbacks } from './Universe/useEditorCallbacks';
+import { CodeBlockStatus, UniverseContext } from '../../contexts/universe';
+import { useEditorCallbacks } from './useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
-import { Editor, EditorProps } from './Editor';
+import { Editor, EditorProps } from '../Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
-import * as UI from './ui';
+import * as UI from '../ui';
 
 const LivedEditor = withLive<
   {

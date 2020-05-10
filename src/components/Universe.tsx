@@ -21,8 +21,8 @@ import {
 } from '../remark/importMdx';
 import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { useRuler, EvaluationEvent } from './Universe/useRuler';
-import { CodeBlock } from './CodeBlock';
-import { MarkdownBlock } from './MarkdownBlock';
+import { CodeBlock } from './Universe/CodeBlock';
+import { MarkdownBlock } from './Universe/MarkdownBlock';
 import * as UI from './ui';
 
 interface UniverseProps {

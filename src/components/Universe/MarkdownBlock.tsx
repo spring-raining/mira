@@ -3,9 +3,9 @@ import unified from 'unified';
 import remarkParse from 'remark-parse';
 import remarkReact from 'remark-react';
 import styled from '@emotion/styled';
-import { useEditorCallbacks } from './Universe/useEditorCallbacks';
+import { useEditorCallbacks } from './useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
-import { Editor } from './Editor';
+import { Editor } from '../Editor';
 
 // Styles for Exported markdown
 const StyledMarkdownPreview = styled.div`

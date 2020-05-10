@@ -1,4 +1,4 @@
-import * as UI from './ui';
+import * as UI from '../ui';
 
 export const Block = (props) => (
   <UI.Flex my={8} px={4} py={3} w="100%" {...props} bg="gray.100" />
