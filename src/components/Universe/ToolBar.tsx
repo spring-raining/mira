@@ -4,7 +4,30 @@ import { exportMdx } from '../../mdx/io';
 import * as UI from '../ui';
 
 export const ToolBar: React.FC<{ title?: string }> = ({ title }) => {
-  const { state } = useContext(UniverseContext);
+  const { state, dispatch } = useContext(UniverseContext);
+
+  const onRunButtonClick = useCallback(() => {
+    const { providence } = state;
+    dispatch({
+      providence: {
+        ...providence,
+        asteroid: Object.entries(providence.asteroid).reduce(
+          (acc, [k, asteroid]) => {
+            return {
+              ...acc,
+              [k]: {
+                ...asteroid,
+                result: null,
+                status: 'init',
+                scope: {},
+              },
+            };
+          },
+          {}
+        ),
+      },
+    });
+  }, [state, dispatch]);
 
   const onExportButtonClick = useCallback(() => {
     const mdx = exportMdx(state);
@@ -40,6 +63,7 @@ export const ToolBar: React.FC<{ title?: string }> = ({ title }) => {
           rounded="full"
           variant="outline"
           variantColor="purple"
+          onClick={onRunButtonClick}
         >
           <UI.Icon name="chevron-right" size="1.5rem" />
           Run
