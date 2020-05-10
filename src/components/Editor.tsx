@@ -1,10 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { editor } from 'monaco-editor';
 import MonacoEditor, {
   EditorDidMount,
   monaco as _monaco,
   Monaco,
 } from '@monaco-editor/react';
+
+const useAsyncEvent = (callback: (v: any) => void) => {
+  const eventStack = useRef<any[]>([]);
+  useEffect(() => {
+    let id: number;
+    const tick = () => {
+      if (eventStack.current.length > 0) {
+        callback(eventStack.current.shift());
+      }
+      id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [callback]);
+
+  const handler = useCallback(() => {
+    eventStack.current.push(true);
+  }, []);
+  return handler;
+};
 
 export interface EditorProps {
   code?: string;
@@ -32,6 +52,10 @@ export const Editor: React.FC<EditorProps> = ({
 
   const [monaco, setMonaco] = useState<Monaco>(null);
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>(null);
+
+  const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
+  const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
+  const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
 
   // 1. get Monaco instance
   useEffect(() => {
@@ -97,15 +121,15 @@ export const Editor: React.FC<EditorProps> = ({
     onEditorUpdate(editor);
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-      onCreateNewBlockCommand
+      createNewBlockCommandHandler
     );
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow,
-      onMoveBackwardCommand
+      moveBackwardCommandHandler
     );
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow,
-      onMoveForwardCommand
+      moveForwardCommandHandler
     );
     editor.onDidChangeModelContent(() => {
       const value = getEditorValue();
