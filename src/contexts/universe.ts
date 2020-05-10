@@ -22,6 +22,7 @@ export interface Asteroid {
 export interface Providence {
   asteroid: { [id: string]: Asteroid };
   asteroidOrder: string[];
+  modules: { [name: string]: any };
 }
 
 export interface UniverseContextState {
@@ -41,6 +42,7 @@ export const universeContextInitialState: UniverseContextState = {
   providence: {
     asteroid: {},
     asteroidOrder: [],
+    modules: {},
   },
 };
 

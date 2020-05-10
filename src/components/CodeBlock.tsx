@@ -45,10 +45,13 @@ export const CodeBlock: React.FC<{
   } = useContext(UniverseContext);
   const editorCallbacks = useEditorCallbacks({ brickId });
   const [val, setVal] = useState<Promise<object | null>>();
-  const scope = useMemo(() => providence.asteroid[asteroidId]?.scope || {}, [
-    asteroidId,
-    providence.asteroid,
-  ]);
+  const scope = useMemo(
+    () => ({
+      ...providence.modules,
+      ...(providence.asteroid[asteroidId]?.scope || {}),
+    }),
+    [asteroidId, providence.asteroid, providence.modules]
+  );
 
   const status = providence.asteroid[asteroidId]?.status || null;
 

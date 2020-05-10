@@ -13,7 +13,12 @@ import {
   universeContextInitialState,
   universeContextReducer,
 } from '../contexts/universe';
-import { importMdx, AsteroidNote } from '../remark/importMdx';
+import {
+  importMdx,
+  collectImports,
+  AsteroidNote,
+  ScriptNote,
+} from '../remark/importMdx';
 import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { useRuler, EvaluationEvent } from './Universe/useRuler';
 import { CodeBlock } from './CodeBlock';
@@ -72,27 +77,39 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   );
 
   useEffect(() => {
-    const codeBlock = importMdx(mdx || '');
-    const asteroids = codeBlock.filter(
-      ({ noteType }) => noteType === 'asteroid'
-    ) as AsteroidNote[];
-    const providence: Providence = {
-      asteroid: asteroids.reduce<{ [id: string]: Asteroid }>((acc, { id }) => {
-        return {
-          ...acc,
-          [id]: {
-            result: null,
-            status: 'init',
-            scope: {},
+    (async () => {
+      const codeBlock = importMdx(mdx || '');
+      const modules = await collectImports(
+        codeBlock.filter(
+          ({ noteType }) => noteType === 'script'
+        ) as ScriptNote[]
+      );
+
+      const asteroids = codeBlock.filter(
+        ({ noteType }) => noteType === 'asteroid'
+      ) as AsteroidNote[];
+      const providence: Providence = {
+        asteroid: asteroids.reduce<{ [id: string]: Asteroid }>(
+          (acc, { id }) => {
+            return {
+              ...acc,
+              [id]: {
+                result: null,
+                status: 'init',
+                scope: {},
+              },
+            };
           },
-        };
-      }, {}),
-      asteroidOrder: asteroids.map(({ id }) => id),
-    };
-    dispatch({
-      bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
-      providence,
-    });
+          {}
+        ),
+        asteroidOrder: asteroids.map(({ id }) => id),
+        modules,
+      };
+      dispatch({
+        bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
+        providence,
+      });
+    })();
   }, [mdx]);
 
   useEffect(() => {

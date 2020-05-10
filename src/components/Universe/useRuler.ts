@@ -143,6 +143,7 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
           ...bricks.slice(index),
         ],
         providence: {
+          ...providence,
           asteroid: {
             ...asteroid,
             [asteroidId]: {

@@ -2,6 +2,8 @@ import Head from 'next/head';
 import { Universe } from '../src/components/Universe';
 
 const text = `
+import {Component, render} from 'https://cdn.pika.dev/preact';
+
 \`\`\`js asteroid=1998SF36
 await new Promise(res => setTimeout(res, 1000))
 $run(() => (

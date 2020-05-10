@@ -106,7 +106,9 @@ export class CodeBlockProvider extends React.Component<{
       if (
         (prevStatus !== 'live' && prevStatus !== 'outdated') ||
         code !== prevCode ||
-        scope !== prevScope ||
+        // shallow compare
+        Object.keys(scope).length !== Object.keys(prevScope).length ||
+        Object.keys(scope).some((k) => scope[k] !== prevScope[k]) ||
         transformCode !== prevTransformCode
       ) {
         this.transpile({ code, scope, transformCode });
