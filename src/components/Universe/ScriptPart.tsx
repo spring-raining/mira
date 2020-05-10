@@ -17,7 +17,7 @@ export const ScriptPart: React.FC<{ note: ScriptBrick }> = ({ note }) => {
   return (
     <UI.Box my={8} px={4} w="100%" fontSize="sm">
       {importNode.map((ast, i) => (
-        <UI.Flex key={i} align="center">
+        <UI.Flex key={i} align="center" overflow="auto">
           <UI.Box flex={0} mr={6}>
             <UI.Tag
               size="sm"
