@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { Universe } from '../src/components/Universe';
 import * as UI from '../src/components/ui';
+import pkg from '../package.json';
 
 const mdx = `
 # Asteroid
@@ -91,6 +92,21 @@ export default () => {
         </UI.Text>
       </UI.Box>
       <Universe mdx={mdx} />
+      <UI.Flex w="100%" my={12} justify="center">
+        <UI.Box mx={2}>Asteroid v{pkg.version}</UI.Box>/
+        <UI.Box mx={2}>
+          <UI.Link href="https://github.com/spring-raining/asteroid" isExternal>
+            Code
+          </UI.Link>
+        </UI.Box>
+        /
+        <UI.Box mx={2}>
+          ©&nbsp;
+          <UI.Link href="https://github.com/spring-raining" isExternal>
+            spring-raining
+          </UI.Link>
+        </UI.Box>
+      </UI.Flex>
     </div>
   );
 };
