@@ -1,0 +1,24 @@
+{
+  "name": "@asteroid-pkg/paper",
+  "version": "0.12.4",
+  "description": "ESM bundle for paper",
+  "main": "dist/paper-core.cjs.js",
+  "module": "dist/paper-core.esm.js",
+  "types": "node_modules/paper/dist/paper.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "prebuild": "cp node_modules/paper/dist/paper-core.js src/paper-core.js && echo 'export default paper' >> src/paper-core.js",
+    "build": "rollup -c",
+    "prepublish": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "paper": "0.12.4"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^7.1.3",
+    "rollup": "^2.8.2"
+  }
+}
