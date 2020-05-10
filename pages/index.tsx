@@ -10,7 +10,7 @@ Jupyter-like JavaScript REPL editor
 
 ![](https://media.giphy.com/media/W5g5W5hMkzrJQDpN3P/giphy.gif)
 
-\`\`\`js asteroid=1998SF37
+\`\`\`jsx asteroid=1998SF37
 await $run(() => (
   <p style={{padding: 8, fontSize: 30, background: 'orange'}}>
     Asteroid renders React components!
@@ -27,7 +27,7 @@ return { x: 'word' }
 
 <div></div>
 
-\`\`\`js asteroid=1998SF39
+\`\`\`jsx asteroid=1998SF39
 await $run(() => x)
 \`\`\`
 
@@ -38,7 +38,7 @@ await $run(() => x)
 
 import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module';
 
-\`\`\`js asteroid=1998SF36
+\`\`\`jsx asteroid=1998SF36
 await $run(() => <canvas id="canvas" />);
 
 const canvas = document.getElementById('canvas');
@@ -53,7 +53,7 @@ path.lineTo(start.add([200, -50]));
 <div><Asteroid_1998SF36 /></div>
 
 
-\`\`\`js asteroid=1958PG15
+\`\`\`jsx asteroid=1958PG15
 const {Path} = paper;
 await $run(() => <canvas id="canvas2" />);
 

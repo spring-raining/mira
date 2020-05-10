@@ -89,7 +89,7 @@ export const exportMdx = ({ bricks }: UniverseContextState): string => {
       return;
     }
     if (brick.noteType === 'asteroid') {
-      mdx += `\`\`\`js asteroid=${brick.id}
+      mdx += `\`\`\`jsx asteroid=${brick.id}
 ${brick.text.replace('```', '')}
 \`\`\`
 
