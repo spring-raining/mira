@@ -1,8 +1,14 @@
 import { createContext } from 'react';
-import { MarkdownNote, ScriptNote, AsteroidNote } from '../remark/importMdx';
+import {
+  MarkdownNote,
+  ScriptNote,
+  AsteroidNote,
+  ASTNode,
+} from '../remark/importMdx';
 
 interface BrickState {
   brickId: string;
+  children?: ASTNode[];
 }
 
 export type MarkdownBrick = Omit<MarkdownNote, 'children'> & BrickState;

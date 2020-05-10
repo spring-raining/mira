@@ -21,6 +21,7 @@
     "next": "^9.3.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-linkify": "^1.0.0-alpha",
     "react-live": "^2.2.2",
     "remark-parse": "^8.0.2",
     "remark-react": "^7.0.1"

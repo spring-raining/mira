@@ -1,6 +1,6 @@
 import { createCompiler } from '@mdx-js/mdx';
 
-interface ASTNode {
+export interface ASTNode {
   [field: string]: any;
 }
 

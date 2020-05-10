@@ -8,6 +8,7 @@ export {
   Icon,
   Image,
   Link,
+  Tag,
   Text,
   useTheme,
 } from '@chakra-ui/core';

@@ -11,7 +11,8 @@ export const Block: React.FC<FlexProps & { active?: boolean }> = ({
     py={3}
     w="100%"
     {...other}
-    bg={active ? 'gray.50' : 'gray.100'}
+    bg={active ? 'gray.100' : 'gray.50'}
+    boxShadow={active && 'sm'}
   />
 );
 

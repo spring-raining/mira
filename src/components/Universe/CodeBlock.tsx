@@ -137,12 +137,17 @@ export const CodeBlock: React.FC<{
           <LivePreview />
         </BlockPreviewPane>
         {statusString && (
-          <UI.Code pos="absolute" fontSize="xs">
+          <UI.Code pos="absolute" fontSize="xs" backgroundColor="transparent">
             {statusString}
           </UI.Code>
         )}
         {loadingSpinner && (
-          <UI.Code pos="absolute" fontSize="xs" left="0.5rem">
+          <UI.Code
+            pos="absolute"
+            fontSize="xs"
+            backgroundColor="transparent"
+            left="0.5rem"
+          >
             {loadingSpinner}
           </UI.Code>
         )}

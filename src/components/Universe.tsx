@@ -12,6 +12,7 @@ import {
   UniverseContext,
   universeContextInitialState,
   universeContextReducer,
+  ScriptBrick,
 } from '../contexts/universe';
 import {
   importMdx,
@@ -23,6 +24,7 @@ import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { useRuler, EvaluationEvent } from './Universe/useRuler';
 import { CodeBlock } from './Universe/CodeBlock';
 import { MarkdownBlock } from './Universe/MarkdownBlock';
+import { ScriptPart } from './Universe/ScriptPart';
 import * as UI from './ui';
 
 interface UniverseProps {
@@ -77,6 +79,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   useEffect(() => {
     (async () => {
       const codeBlock = importMdx(mdx || '');
+      console.log(codeBlock);
       const modules = await collectImports(
         codeBlock.filter(
           ({ noteType }) => noteType === 'script'
@@ -154,8 +157,8 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
               onEvaluateFinish={(...v) => onEvaluateFinish(id, ...v)}
             />
           );
-        } else {
-          return <pre key={brickId}>{text}</pre>;
+        } else if (noteType === 'script') {
+          return <ScriptPart key={brickId} note={brick as ScriptBrick} />;
         }
       })}
       <UI.Flex justify="center" my={6}>
