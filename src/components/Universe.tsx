@@ -30,12 +30,10 @@ interface UniverseProps {
 }
 
 const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
-  const {
-    state: { bricks, providence },
-    dispatch,
-  } = useContext(UniverseContext);
+  const { state, dispatch } = useContext(UniverseContext);
 
-  const { arbitrate } = useRuler({ bricks, providence });
+  const { bricks, providence } = state;
+  const { arbitrate } = useRuler(state);
 
   const evaluationEventStack = useRef<EvaluationEvent[]>([]);
   useEffect(() => {

@@ -34,6 +34,7 @@ export interface EditorProps {
   onCreateNewBlockCommand?: () => void;
   onMoveForwardCommand?: () => void;
   onMoveBackwardCommand?: () => void;
+  onFocus?: () => void;
 }
 
 export const Editor: React.FC<EditorProps> = ({
@@ -44,6 +45,7 @@ export const Editor: React.FC<EditorProps> = ({
   onCreateNewBlockCommand = () => {},
   onMoveForwardCommand = () => {},
   onMoveBackwardCommand = () => {},
+  onFocus = () => {},
 }) => {
   const lineHeight = 18;
   const [height, setHeight] = useState(0);
@@ -56,6 +58,7 @@ export const Editor: React.FC<EditorProps> = ({
   const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
   const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
   const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
+  const focusHandler = useAsyncEvent(onFocus);
 
   // 1. get Monaco instance
   useEffect(() => {
@@ -136,6 +139,7 @@ export const Editor: React.FC<EditorProps> = ({
       setCurrentValue(value);
       onChange(value);
     });
+    editor.onDidFocusEditorText(focusHandler);
   };
 
   useEffect(() => {

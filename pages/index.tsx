@@ -2,14 +2,6 @@ import Head from 'next/head';
 import { Universe } from '../src/components/Universe';
 
 const text = `
-import {Component, render} from 'https://cdn.pika.dev/preact';
-
-\`\`\`js asteroid=1998SF36
-await new Promise(res => setTimeout(res, 1000))
-$run(() => (
-  <div>Y</div>
-))
-\`\`\`
 \`\`\`js asteroid=1998SF37
 await new Promise(res => setTimeout(res, 1000))
 $run(() => (
@@ -22,6 +14,21 @@ await new Promise(res => setTimeout(res, 1000))
 $run(() => (
   <div>{x}</div>
 ))
+\`\`\`
+
+import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module';
+
+\`\`\`js asteroid=1998SF36
+$run(() => <canvas id="canvas" />);
+
+const canvas = document.getElementById('canvas');
+paper.setup(canvas);
+const path = new paper.Path();
+path.strokeColor = "black";
+var start = new paper.Point(100, 100);
+path.moveTo(start);
+path.lineTo(start.add([200, -50]));
+paper.view.draw();
 \`\`\`
 `;
 

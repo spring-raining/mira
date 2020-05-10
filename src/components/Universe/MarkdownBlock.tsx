@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useContext } from 'react';
 import unified from 'unified';
 import remarkParse from 'remark-parse';
 import remarkReact from 'remark-react';
 import styled from '@emotion/styled';
+import { UniverseContext } from '../../contexts/universe';
 import { useEditorCallbacks } from './useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from '../Editor';
@@ -144,6 +145,7 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   brickId,
   note,
 }) => {
+  const { state } = useContext(UniverseContext);
   const editorCallbacks = useEditorCallbacks({ brickId });
 
   const [code, setCode] = useState(() => note);
@@ -160,7 +162,7 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   }, [code]);
 
   return (
-    <Block>
+    <Block active={state.activeBrick === brickId}>
       <BlockEditorPane>
         {brickId && (
           <Editor

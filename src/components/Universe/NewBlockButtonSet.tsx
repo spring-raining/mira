@@ -4,14 +4,9 @@ import * as UI from '../ui';
 import { useRuler } from './useRuler';
 
 export const NewBlockButtonSet = () => {
-  const {
-    state: { bricks, providence },
-    dispatch,
-  } = useContext(UniverseContext);
-  const { insertCodeBlock, insertMarkdownBlock } = useRuler({
-    bricks,
-    providence,
-  });
+  const { state, dispatch } = useContext(UniverseContext);
+  const { bricks } = state;
+  const { insertCodeBlock, insertMarkdownBlock } = useRuler(state);
 
   const addCodeBrick = useCallback(() => {
     dispatch(insertCodeBlock(bricks.length));

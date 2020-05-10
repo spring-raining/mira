@@ -28,6 +28,7 @@ export interface Providence {
 export interface UniverseContextState {
   bricks: Brick[];
   providence: Providence;
+  activeBrick: string | null;
 }
 
 export type UniverseContextAction = Partial<UniverseContextState>;
@@ -44,6 +45,7 @@ export const universeContextInitialState: UniverseContextState = {
     asteroidOrder: [],
     modules: {},
   },
+  activeBrick: null,
 };
 
 export const universeContextReducer = (
@@ -54,5 +56,6 @@ export const universeContextReducer = (
     ...state,
     ...action,
   };
+  console.log(newState);
   return newState;
 };

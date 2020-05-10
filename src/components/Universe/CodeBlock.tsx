@@ -40,9 +40,8 @@ export const CodeBlock: React.FC<{
   onEvaluateStart: (runId: string) => void;
   onEvaluateFinish: (runId: string, ret?: object | null) => void;
 }> = ({ brickId, note, asteroidId, onEvaluateStart, onEvaluateFinish }) => {
-  const {
-    state: { providence },
-  } = useContext(UniverseContext);
+  const { state } = useContext(UniverseContext);
+  const { providence } = state;
   const editorCallbacks = useEditorCallbacks({ brickId });
   const [val, setVal] = useState<Promise<object | null>>();
   const scope = useMemo(
@@ -129,7 +128,7 @@ export const CodeBlock: React.FC<{
       scope={scope}
       onRender={setVal}
     >
-      <Block pos="relative">
+      <Block pos="relative" active={state.activeBrick === brickId}>
         <BlockEditorPane>
           <LivedEditor {...editorCallbacks} />
         </BlockEditorPane>
