@@ -2,29 +2,38 @@ import Head from 'next/head';
 import { Universe } from '../src/components/Universe';
 import * as UI from '../src/components/ui';
 
-const text = `
+const mdx = `
 # Asteroid
 
+Jupyter-like JavaScript REPL editor
+
+![](https://media.giphy.com/media/W5g5W5hMkzrJQDpN3P/giphy.gif)
+
 \`\`\`js asteroid=1998SF37
-await new Promise(res => setTimeout(res, 1000))
-$run(() => (
-  <div>Y</div>
+await $run(() => (
+  <p style={{padding: 8, fontSize: 30, background: 'orange'}}>
+    Asteroid renders React components!
+  </p>
 ))
-return { x: 'x' }
+
+return { x: 'word' }
 \`\`\`
 
 <div><Asteroid_1998SF37 /></div>
 
+
+
+
 <div></div>
 
 \`\`\`js asteroid=1998SF39
-await new Promise(res => setTimeout(res, 1000))
-$run(() => (
-  <div>{x}</div>
-))
+await $run(() => x)
 \`\`\`
 
 <div><Asteroid_1998SF39 /></div>
+
+
+
 
 import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module';
 
@@ -41,6 +50,31 @@ path.lineTo(start.add([200, -50]));
 \`\`\`
 
 <div><Asteroid_1998SF36 /></div>
+
+
+\`\`\`js asteroid=1958PG15
+const {Path} = paper;
+await $run(() => <canvas id="canvas2" />);
+
+const canvas = document.getElementById('canvas2');
+paper.setup(canvas);
+
+var path = new Path.Rectangle({
+	point: [30, 30],
+	size: [75, 75],
+	strokeColor: 'black',
+	fillColor: 'red',
+});
+
+paper.view.onFrame = (event) => {
+	path.rotate(3);
+	path.fillColor.hue += 1;
+}
+\`\`\`
+
+<div><Asteroid_1958PG15 /></div>
+
+
 `;
 
 export default () => {
@@ -56,7 +90,7 @@ export default () => {
           JavaScript & Markdown live editor on your browser
         </UI.Text>
       </UI.Box>
-      <Universe mdx={text} />
+      <Universe mdx={mdx} />
     </div>
   );
 };

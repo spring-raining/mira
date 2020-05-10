@@ -43,7 +43,7 @@ export const importMdx = (text: string): Note[] => {
         },
       ];
     } else if (
-      tail.block !== noteType ||
+      tail.noteType !== noteType ||
       (node.type === 'heading' && node.depth <= 3)
     ) {
       return [
