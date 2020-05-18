@@ -30,6 +30,7 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
       // wait creating new editor
       setTimeout(() => {
         editorRefs[newBrickId]?.focus();
+        editorRefs[newBrickId]?.getContainerDomNode().scrollIntoView(false);
       }, 200);
     }
   }, [state, brickId, dispatch]);
@@ -42,6 +43,9 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
         .find((b) => editorRefs[b.brickId]);
       if (nextBrick) {
         editorRefs[nextBrick.brickId]?.focus();
+        editorRefs[nextBrick.brickId]
+          ?.getContainerDomNode()
+          .scrollIntoView(false);
       }
     }
   }, [state, brickId]);
@@ -55,6 +59,11 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
         .find((b) => editorRefs[b.brickId]);
       if (prevBrick) {
         editorRefs[prevBrick.brickId]?.focus();
+        editorRefs[prevBrick.brickId]
+          ?.getContainerDomNode()
+          .scrollIntoView(true);
+        // scroll downward by header height
+        window.scrollBy(0, -100);
       }
     }
   }, [state, brickId]);
