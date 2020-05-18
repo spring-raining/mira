@@ -125,7 +125,6 @@ const StyledIntro = styled(UI.Box)<{
 export default () => {
   const { colorMode } = useColorMode();
   const theme = useTheme();
-  console.log(theme);
   return (
     <div>
       <Head>

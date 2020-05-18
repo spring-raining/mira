@@ -51,6 +51,7 @@ export const Editor: React.FC<EditorProps> = ({
   const lineHeight = 18;
   const [height, setHeight] = useState(0);
   const [initialOptions, setInitialOptions] = useState<object>(null);
+  const [initialCode] = useState(() => code);
 
   const [monaco, setMonaco] = useState<Monaco>(null);
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>(null);
@@ -176,7 +177,7 @@ export const Editor: React.FC<EditorProps> = ({
     <div style={{ height }}>
       {initialOptions && (
         <MonacoEditor
-          value={code}
+          value={initialCode}
           language={language}
           options={initialOptions}
           theme="myTheme"
