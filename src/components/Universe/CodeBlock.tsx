@@ -158,7 +158,7 @@ export const CodeBlock: React.FC<{
           borderLeft="0.5rem solid"
           borderColor={
             status === 'live'
-              ? 'blue.500'
+              ? 'cyan.500'
               : status === 'outdated'
               ? 'orange.500'
               : 'gray.400'

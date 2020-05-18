@@ -5,6 +5,7 @@ import MonacoEditor, {
   monaco as _monaco,
   Monaco,
 } from '@monaco-editor/react';
+import theme from '../theme';
 
 const useAsyncEvent = (callback: (...args: any[]) => void) => {
   const eventStack = useRef<any[][]>([]);
@@ -105,6 +106,7 @@ export const Editor: React.FC<EditorProps> = ({
         //   monaco.Uri.from({ schema: 'file', path: `file_${nanoid()}.${ext}` })
         // ),
         minimap: { enabled: false },
+        fontFamily: theme.fonts.mono,
         lineHeight,
         lineNumbersMinChars: 8,
         scrollBeyondLastLine: false,
