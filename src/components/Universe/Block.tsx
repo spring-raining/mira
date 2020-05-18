@@ -15,8 +15,10 @@ export const Block: React.FC<FlexProps & { active?: boolean }> = ({
   />
 );
 
-export const BlockEditorPane = (props) => (
-  <UI.Box w={['100%', '100%', '50%', '50%']} p={4} pr={0} {...props} />
+export const BlockEditorPane = ({ children, ...props }) => (
+  <UI.Box w={['100%', '100%', '50%', '50%']} p={4} pr={0} {...props}>
+    <UI.Box ml={['-40px', 0, 0, 0]}>{children}</UI.Box>
+  </UI.Box>
 );
 
 export const BlockPreviewPane = (props) => (

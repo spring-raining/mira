@@ -156,7 +156,9 @@ export const Editor: React.FC<EditorProps> = ({
         return;
       }
       const lineCount = editor.getModel()?.getLineCount() || 1;
-      const height = editor.getTopForLineNumber(lineCount + 5) + lineHeight;
+      const height =
+        editor.getTopForLineNumber(lineCount + 5) + lineHeight + 10;
+
       if (prevHeight !== height) {
         prevHeight = height;
         requestAnimationFrame(() => {
@@ -174,7 +176,7 @@ export const Editor: React.FC<EditorProps> = ({
   }, [editor]);
 
   return (
-    <div style={{ height }}>
+    <div style={{ height: '100%' }}>
       {initialOptions && (
         <MonacoEditor
           value={initialCode}

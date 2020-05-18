@@ -164,21 +164,22 @@ export const CodeBlock: React.FC<{
               : 'gray.400'
           }
         >
-          {statusString && (
-            <UI.Code pos="absolute" fontSize="xs" backgroundColor="transparent">
-              {statusString}
-            </UI.Code>
-          )}
-          {loadingSpinner && (
-            <UI.Code
-              pos="absolute"
-              fontSize="xs"
-              backgroundColor="transparent"
-              left="0.5rem"
-            >
-              {loadingSpinner}
-            </UI.Code>
-          )}
+          <UI.Box
+            top={[0, 3, 3, 3]}
+            position={['relative', 'absolute', 'absolute', 'absolute']}
+            ml={['40px', 0, 0, 0]}
+          >
+            {loadingSpinner && (
+              <UI.Code fontSize="xs" backgroundColor="transparent">
+                {loadingSpinner}
+              </UI.Code>
+            )}
+            {statusString && (
+              <UI.Code fontSize="xs" backgroundColor="transparent">
+                {statusString}
+              </UI.Code>
+            )}
+          </UI.Box>
           <LivedEditor {...editorCallbacks} />
         </BlockEditorPane>
         <BlockPreviewPane>
