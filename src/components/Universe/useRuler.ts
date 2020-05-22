@@ -148,6 +148,21 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
     [bricks, providence]
   );
 
+  const resetAsteroidResult = useCallback(
+    (): Providence => ({
+      ...providence,
+      asteroid: Object.entries(providence.asteroid).reduce((acc, [k, v]) => {
+        acc[k] = {
+          result: null,
+          status: 'outdated',
+          scope: {},
+        };
+        return acc;
+      }, {} as Providence['asteroid']),
+    }),
+    [providence]
+  );
+
   const insertCodeBlock = useCallback(
     (index: number): Pick<UniverseContextState, 'bricks' | 'providence'> => {
       const { asteroid } = providence;
@@ -266,5 +281,6 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
     moveBlock,
     deleteBlock,
     revalueProvidence,
+    resetAsteroidResult,
   };
 };

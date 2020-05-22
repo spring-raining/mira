@@ -1,4 +1,5 @@
 import { createCompiler } from '@mdx-js/mdx';
+import { nanoid } from 'nanoid';
 import { UniverseContextState, AsteroidBrick } from './../contexts/universe';
 import { Note } from '.';
 
@@ -12,6 +13,8 @@ export const importMdx = (mdxString: string): Note[] => {
   const asteroidDivRe = /^<div><Asteroid_(\w+)\s*\/><\/div>$/;
   const asteroidMetaRe = /^asteroid=(\w+)$/;
   const chunk = parsed.children.reduce((acc, node) => {
+    // set identical id for each node
+    node.id = nanoid();
     const asteroidMetaMatch = node.meta?.match(asteroidMetaRe);
     const noteType = scriptTypes.includes(node.type)
       ? 'script'

@@ -75,10 +75,13 @@ export const CodeBlock: React.FC<{
   const [val, setVal] = useState<Promise<object | null>>();
   const scope = useMemo(
     () => ({
-      ...providence.modules,
+      ...providence.imports.reduce(
+        (acc, { modules }) => ({ ...acc, ...(modules || {}) }),
+        {}
+      ),
       ...(providence.asteroid[asteroidId]?.scope || {}),
     }),
-    [asteroidId, providence.asteroid, providence.modules]
+    [asteroidId, providence.asteroid, providence.imports]
   );
 
   const status = providence.asteroid[asteroidId]?.status || null;

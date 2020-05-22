@@ -20,10 +20,20 @@ export interface Asteroid {
   stepNo?: number;
 }
 
+export interface ImportDefinition {
+  id: string;
+  moduleSpecifier: string;
+  importBinding: { [key: string]: string };
+  namespaceImport: string | null;
+  modules?: { [name: string]: any };
+  importError?: Error;
+}
+
 export interface Providence {
   asteroid: { [id: string]: Asteroid };
   asteroidOrder: string[];
-  modules: { [name: string]: any };
+  // modules: { [name: string]: any };
+  imports: ImportDefinition[];
 }
 
 export interface UniverseContextState {
@@ -44,7 +54,7 @@ export const universeContextInitialState: UniverseContextState = {
   providence: {
     asteroid: {},
     asteroidOrder: [],
-    modules: {},
+    imports: [],
   },
   activeBrick: null,
 };

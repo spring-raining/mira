@@ -1,4 +1,5 @@
 export interface ASTNode {
+  id: string;
   [field: string]: any;
 }
 

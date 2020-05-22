@@ -16,7 +16,7 @@ import {
 } from '../contexts/universe';
 import { AsteroidNote, ScriptNote } from '../mdx';
 import { importMdx } from '../mdx/io';
-import { collectImports } from '../mdx/module';
+import { collectImports, loadModule } from '../mdx/module';
 import { ToolBar } from './Universe/ToolBar';
 import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { useRuler, EvaluationEvent } from './Universe/useRuler';
@@ -77,12 +77,13 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   useEffect(() => {
     (async () => {
       const codeBlock = importMdx(mdx || '');
-      console.log(codeBlock);
-      const modules = await collectImports(
+      const importDefs = collectImports(
         codeBlock.filter(
           ({ noteType }) => noteType === 'script'
         ) as ScriptNote[]
       );
+      const imports = await Promise.all(importDefs.map(loadModule));
+      console.log(imports);
 
       const asteroids = codeBlock.filter(
         ({ noteType }) => noteType === 'asteroid'
@@ -102,7 +103,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
           {}
         ),
         asteroidOrder: asteroids.map(({ id }) => id),
-        modules,
+        imports,
       };
       dispatch({
         bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
