@@ -12,6 +12,11 @@ import { line as spinner } from 'cli-spinners';
 import { CodeBlockStatus, UniverseContext } from '../../contexts/universe';
 import { useEditorCallbacks } from './useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
+import {
+  InsertBlockToolbar,
+  ManipulateBlockToolbar,
+  ToolbarContainer,
+} from './BlockToolBar';
 import { Editor, EditorProps } from '../Editor';
 import { CodeBlockProvider } from './CodeBlockProvider';
 import * as UI from '../ui';
@@ -145,6 +150,17 @@ export const CodeBlock: React.FC<{
     }
   }, [status]);
 
+  const brickIndex = useMemo(
+    () => state.bricks.findIndex((brick) => brick.brickId === brickId),
+    [state.bricks, brickId]
+  );
+  const [hover, setHover] = useState(false);
+
+  const blockCallbacks = {
+    onMouseOver: useCallback(() => setHover(true), []),
+    onMouseOut: useCallback(() => setHover(false), []),
+  };
+
   return (
     <CodeBlockProvider
       {...{ status }}
@@ -152,7 +168,7 @@ export const CodeBlock: React.FC<{
       scope={scope}
       onRender={setVal}
     >
-      <Block active={state.activeBrick === brickId}>
+      <Block active={state.activeBrick === brickId} {...blockCallbacks}>
         <BlockEditorPane
           pos="relative"
           borderLeft="0.5rem solid"
@@ -165,7 +181,7 @@ export const CodeBlock: React.FC<{
           }
         >
           <UI.Box
-            top={[0, 3, 3, 3]}
+            top={[0, 28, 28, 28]}
             position={['relative', 'absolute', 'absolute', 'absolute']}
             ml={['40px', 0, 0, 0]}
           >
@@ -186,6 +202,17 @@ export const CodeBlock: React.FC<{
           <LivedError />
           <LivePreview />
         </BlockPreviewPane>
+        {brickIndex === 0 && (
+          <ToolbarContainer side="top" left={0} show={hover}>
+            <InsertBlockToolbar index={0} />
+          </ToolbarContainer>
+        )}
+        <ToolbarContainer side="bottom" left={0} show={hover}>
+          <InsertBlockToolbar index={brickIndex + 1} />
+        </ToolbarContainer>
+        <ToolbarContainer side="bottom" right={0} show={hover}>
+          <ManipulateBlockToolbar index={brickIndex} />
+        </ToolbarContainer>
       </Block>
     </CodeBlockProvider>
   );

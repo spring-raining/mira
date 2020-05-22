@@ -31,7 +31,6 @@ export const ToolBar: React.FC<{ title?: string }> = ({ title }) => {
 
   const onExportButtonClick = useCallback(() => {
     const mdx = exportMdx(state);
-    console.log(mdx);
 
     // download file
     const blob = new Blob([mdx], { type: 'text/plain' });

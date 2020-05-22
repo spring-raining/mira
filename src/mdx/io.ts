@@ -2,13 +2,14 @@ import { createCompiler } from '@mdx-js/mdx';
 import { UniverseContextState, AsteroidBrick } from './../contexts/universe';
 import { Note } from '.';
 
-export const importMdx = (text: string): Note[] => {
+export const importMdx = (mdxString: string): Note[] => {
   const compiler = createCompiler({
     remarkPlugins: [],
     rehypePlugins: [],
   });
-  const parsed = compiler.parse(text);
+  const parsed = compiler.parse(mdxString);
   const scriptTypes = ['jsx', 'import', 'export'];
+  const asteroidDivRe = /^<div><Asteroid_(\w+)\s*\/><\/div>$/;
   const asteroidMetaRe = /^asteroid=(\w+)$/;
   const chunk = parsed.children.reduce((acc, node) => {
     const asteroidMetaMatch = node.meta?.match(asteroidMetaRe);
@@ -17,6 +18,12 @@ export const importMdx = (text: string): Note[] => {
       : node.type === 'code' && node.meta && asteroidMetaMatch
       ? 'asteroid'
       : 'markdown';
+
+    // Strip the inserted asteroid components
+    if (node.type === 'jsx' && asteroidDivRe.test(node.value)) {
+      return acc;
+    }
+
     if (acc.length === 0) {
       return [
         {
@@ -65,15 +72,18 @@ export const importMdx = (text: string): Note[] => {
   }, []);
   return chunk.map((el) => {
     const { children, noteType } = el;
-    const first = children[0];
-    const last = children[children.length - 1];
+    const text =
+      noteType === 'asteroid'
+        ? children[0].value
+        : children
+            .map(({ position }) =>
+              mdxString.slice(position.start.offset, position.end.offset)
+            )
+            .join('\n\n');
     return {
       ...el,
       noteType,
-      text:
-        noteType === 'asteroid'
-          ? first.value
-          : text.slice(first.position.start.offset, last.position.end.offset),
+      text,
     };
   });
 };
@@ -100,11 +110,6 @@ ${asteroidDiv(brick.id)}
     }
     if (brick.noteType === 'script') {
       let { text } = brick;
-      const prevAsteroidId = i > 0 && (bricks[i - 1] as AsteroidBrick).id;
-      if (prevAsteroidId) {
-        const re = new RegExp(`^\s*${asteroidDiv(prevAsteroidId)}`);
-        text = text.replace(re, '');
-      }
       mdx += text ? text + '\n\n' : '\n';
       return;
     }

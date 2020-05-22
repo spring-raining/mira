@@ -6,6 +6,7 @@ export {
   Grid,
   Heading,
   Icon,
+  IconButton,
   Image,
   Link,
   Tag,

@@ -4,6 +4,7 @@ import {
   UniverseContextState,
   Providence,
   AsteroidBrick,
+  Asteroid,
 } from '../../contexts/universe';
 import { genAsteroidId } from '../../utils';
 
@@ -111,6 +112,42 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
     [providence, stepNum, currentAsteroidId, currentRunId]
   );
 
+  const revalueProvidence = useCallback(
+    (newBricks: UniverseContextState['bricks']): Providence => {
+      const prev = bricks.filter(
+        ({ noteType }) => noteType === 'asteroid'
+      ) as AsteroidBrick[];
+      const next = newBricks.filter(
+        ({ noteType }) => noteType === 'asteroid'
+      ) as AsteroidBrick[];
+
+      const nextProvidence: Providence = {
+        ...providence,
+        asteroid: {},
+        asteroidOrder: [],
+      };
+      let dirty = false;
+      let lastScope: object = {};
+      next.forEach((brick, i) => {
+        if (brick.id !== prev[i].id) {
+          dirty = true;
+        }
+        nextProvidence.asteroidOrder.push(brick.id);
+        const asteroid: Asteroid = dirty
+          ? {
+              result: null,
+              status: 'outdated',
+              scope: { ...lastScope },
+            }
+          : providence.asteroid[brick.id];
+        nextProvidence.asteroid[brick.id] = asteroid;
+        lastScope = asteroid.scope;
+      });
+      return nextProvidence;
+    },
+    [bricks, providence]
+  );
+
   const insertCodeBlock = useCallback(
     (index: number): Pick<UniverseContextState, 'bricks' | 'providence'> => {
       const { asteroid } = providence;
@@ -183,5 +220,51 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
     [bricks]
   );
 
-  return { arbitrate, insertCodeBlock, insertMarkdownBlock };
+  const moveBlock = useCallback(
+    (index: number, offset: number): Partial<UniverseContextState> => {
+      if (
+        index < 0 ||
+        index > bricks.length - 1 ||
+        index + offset < 0 ||
+        index + offset > bricks.length - 1
+      ) {
+        return { bricks };
+      }
+      const target = bricks[index];
+      const picked = [...bricks.slice(0, index), ...bricks.slice(index + 1)];
+      const newBricks = [
+        ...picked.slice(0, index + offset),
+        target,
+        ...picked.slice(index + offset),
+      ];
+      return {
+        bricks: newBricks,
+        providence: revalueProvidence(newBricks),
+      };
+    },
+    [bricks, revalueProvidence]
+  );
+
+  const deleteBlock = useCallback(
+    (index: number): Partial<UniverseContextState> => {
+      if (index < 0 || index > bricks.length - 1) {
+        return { bricks };
+      }
+      const newBricks = [...bricks.slice(0, index), ...bricks.slice(index + 1)];
+      return {
+        bricks: newBricks,
+        providence: revalueProvidence(newBricks),
+      };
+    },
+    [bricks, revalueProvidence]
+  );
+
+  return {
+    arbitrate,
+    insertCodeBlock,
+    insertMarkdownBlock,
+    moveBlock,
+    deleteBlock,
+    revalueProvidence,
+  };
 };

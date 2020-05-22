@@ -77,6 +77,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   useEffect(() => {
     (async () => {
       const codeBlock = importMdx(mdx || '');
+      console.log(codeBlock);
       const modules = await collectImports(
         codeBlock.filter(
           ({ noteType }) => noteType === 'script'

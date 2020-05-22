@@ -1,9 +1,20 @@
-import React, { useState, useCallback, useEffect, useContext } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useContext,
+  useMemo,
+} from 'react';
 import unified from 'unified';
 import remarkParse from 'remark-parse';
 import remarkReact from 'remark-react';
 import styled from '@emotion/styled';
 import { UniverseContext } from '../../contexts/universe';
+import {
+  InsertBlockToolbar,
+  ManipulateBlockToolbar,
+  ToolbarContainer,
+} from './BlockToolBar';
 import { useEditorCallbacks } from './useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
 import { Editor } from '../Editor';
@@ -148,9 +159,19 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
 }) => {
   const { state } = useContext(UniverseContext);
   const editorCallbacks = useEditorCallbacks({ brickId });
+  const brickIndex = useMemo(
+    () => state.bricks.findIndex((brick) => brick.brickId === brickId),
+    [state.bricks, brickId]
+  );
 
   const [code, setCode] = useState(() => note);
   const [rendered, setRendered] = useState(null);
+  const [hover, setHover] = useState(false);
+
+  const blockCallbacks = {
+    onMouseOver: useCallback(() => setHover(true), []),
+    onMouseOut: useCallback(() => setHover(false), []),
+  };
 
   const onChange = useCallback(
     (note) => {
@@ -169,7 +190,7 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   }, [code]);
 
   return (
-    <Block active={state.activeBrick === brickId}>
+    <Block active={state.activeBrick === brickId} {...blockCallbacks}>
       <BlockEditorPane>
         {brickId && (
           <Editor
@@ -183,6 +204,17 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
       <BlockPreviewPane py={2}>
         <StyledMarkdownPreview>{rendered || null}</StyledMarkdownPreview>
       </BlockPreviewPane>
+      {brickIndex === 0 && (
+        <ToolbarContainer side="top" left={0} show={hover}>
+          <InsertBlockToolbar index={0} />
+        </ToolbarContainer>
+      )}
+      <ToolbarContainer side="bottom" left={0} show={hover}>
+        <InsertBlockToolbar index={brickIndex + 1} />
+      </ToolbarContainer>
+      <ToolbarContainer side="bottom" right={0} show={hover}>
+        <ManipulateBlockToolbar index={brickIndex} />
+      </ToolbarContainer>
     </Block>
   );
 };
