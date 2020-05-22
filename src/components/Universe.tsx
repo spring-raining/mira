@@ -83,7 +83,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
         ) as ScriptNote[]
       );
       const imports = await Promise.all(importDefs.map(loadModule));
-      console.log(imports);
+      console.log(codeBlock, imports);
 
       const asteroids = codeBlock.filter(
         ({ noteType }) => noteType === 'asteroid'

@@ -21,10 +21,15 @@ export interface Asteroid {
 }
 
 export interface ImportDefinition {
-  id: string;
   moduleSpecifier: string;
   importBinding: { [key: string]: string };
   namespaceImport: string | null;
+}
+
+export interface ImportPart {
+  id: string;
+  text: string;
+  definitions: ImportDefinition[];
   modules?: { [name: string]: any };
   importError?: Error;
 }
@@ -32,8 +37,7 @@ export interface ImportDefinition {
 export interface Providence {
   asteroid: { [id: string]: Asteroid };
   asteroidOrder: string[];
-  // modules: { [name: string]: any };
-  imports: ImportDefinition[];
+  imports: ImportPart[];
 }
 
 export interface UniverseContextState {

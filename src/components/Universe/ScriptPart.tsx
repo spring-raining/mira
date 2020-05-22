@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useMemo } from 'react';
 import Linkify from 'react-linkify';
 import { UniverseContext, ScriptBrick } from '../../contexts/universe';
 import * as UI from '../ui';
@@ -48,6 +48,16 @@ const ScriptToolButtonSet: React.FC<{ id: string }> = ({ id }) => {
 };
 
 export const ScriptPart: React.FC<{ note: ScriptBrick }> = ({ note }) => {
+  const { state } = useContext(UniverseContext);
+  const importMap = useMemo(
+    () =>
+      state.providence.imports.reduce((acc, mod) => {
+        acc[mod.id] = mod;
+        return acc;
+      }, {}),
+    [state.providence.imports]
+  );
+
   const [hover, setHover] = useState(false);
   const blockCallbacks = {
     onMouseOver: useCallback(() => setHover(true), []),
@@ -58,31 +68,47 @@ export const ScriptPart: React.FC<{ note: ScriptBrick }> = ({ note }) => {
       {note.children.map((ast, index) => {
         if (ast.type === 'import') {
           return (
-            <UI.Flex key={index} align="center">
-              <UI.Box flexBasis="6rem">
-                <UI.Tag
-                  size="sm"
-                  variant="outline"
-                  variantColor="purple"
-                  rounded="full"
+            <UI.Box key={index} w="100%">
+              <UI.Flex align="center">
+                <UI.Box flexBasis="6rem">
+                  <UI.Tag
+                    size="sm"
+                    variant="outline"
+                    variantColor="purple"
+                    rounded="full"
+                  >
+                    Module
+                  </UI.Tag>
+                </UI.Box>
+                <UI.Box flex={1} overflowX="auto" my={2}>
+                  <pre>
+                    <Linkify componentDecorator={Link}>{ast.value}</Linkify>
+                  </pre>
+                </UI.Box>
+                <UI.Box
+                  flex={0}
+                  opacity={hover ? 1 : 0}
+                  pointerEvents={hover ? 'auto' : 'none'}
+                  transition="all ease-out 80ms"
                 >
-                  Module
-                </UI.Tag>
-              </UI.Box>
-              <UI.Box flex={1} overflowX="auto">
-                <pre>
-                  <Linkify componentDecorator={Link}>{ast.value}</Linkify>
-                </pre>
-              </UI.Box>
-              <UI.Box
-                flex={0}
-                opacity={hover ? 1 : 0}
-                pointerEvents={hover ? 'auto' : 'none'}
-                transition="all ease-out 80ms"
-              >
-                <ScriptToolButtonSet id={ast.id} />
-              </UI.Box>
-            </UI.Flex>
+                  <ScriptToolButtonSet id={ast.id} />
+                </UI.Box>
+              </UI.Flex>
+              {importMap[ast.id]?.importError && (
+                <UI.Box
+                  mb={2}
+                  ml="6rem"
+                  p={2}
+                  rounded="md"
+                  fontSize="70%"
+                  lineHeight="1.25"
+                  color="white"
+                  bg="red.600"
+                >
+                  <pre>{importMap[ast.id].importError.toString()}</pre>
+                </UI.Box>
+              )}
+            </UI.Box>
           );
         }
         return (
