@@ -7,6 +7,7 @@ export {
   Heading,
   Icon,
   IconButton,
+  Input,
   Image,
   Link,
   Tag,

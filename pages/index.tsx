@@ -6,6 +6,8 @@ import * as UI from '../src/components/ui';
 import pkg from '../package.json';
 
 const mdx = `
+import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module'
+
 # Asteroid
 
 Jupyter-like JavaScript REPL editor
@@ -24,21 +26,11 @@ return { x: 'word' }
 
 <div><Asteroid_1998SF37 /></div>
 
-
-
-
-<div></div>
-
 \`\`\`jsx asteroid=1998SF39
 await $run(() => x)
 \`\`\`
 
 <div><Asteroid_1998SF39 /></div>
-
-
-
-
-import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module';
 
 \`\`\`jsx asteroid=1998SF36
 await $run(() => <canvas id="canvas" />);

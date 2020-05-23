@@ -1,6 +1,10 @@
 import { createCompiler } from '@mdx-js/mdx';
 import { nanoid } from 'nanoid';
-import { UniverseContextState, AsteroidBrick } from './../contexts/universe';
+import {
+  UniverseContextState,
+  AsteroidBrick,
+  ScriptBrick,
+} from './../contexts/universe';
 import { Note } from '.';
 
 export const importMdx = (mdxString: string): Note[] => {
@@ -92,11 +96,19 @@ export const importMdx = (mdxString: string): Note[] => {
 };
 
 const asteroidDiv = (id: string) => `<div><Asteroid_${id} /></div>`;
-export const exportMdx = ({ bricks }: UniverseContextState): string => {
+export const exportMdx = ({
+  bricks,
+  userScript,
+}: UniverseContextState): string => {
   let mdx = '';
 
-  console.log(bricks);
-  bricks.forEach((brick, i) => {
+  const firstScriptBrick: ScriptBrick = {
+    ...userScript,
+    text: userScript.children
+      .map(({ value }) => (value || '') as string)
+      .join('\n\n'),
+  };
+  [firstScriptBrick, ...bricks].forEach((brick, i) => {
     if (brick.noteType === 'markdown') {
       mdx += brick.text + '\n\n';
       return;

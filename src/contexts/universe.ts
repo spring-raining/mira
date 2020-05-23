@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import { nanoid } from 'nanoid';
 import { MarkdownNote, ScriptNote, AsteroidNote, ASTNode } from '../mdx';
 
 interface BrickState {
@@ -43,6 +44,7 @@ export interface Providence {
 export interface UniverseContextState {
   bricks: Brick[];
   providence: Providence;
+  userScript: Omit<ScriptBrick, 'text'>;
   activeBrick: string | null;
 }
 
@@ -59,6 +61,11 @@ export const universeContextInitialState: UniverseContextState = {
     asteroid: {},
     asteroidOrder: [],
     imports: [],
+  },
+  userScript: {
+    noteType: 'script',
+    brickId: nanoid(),
+    children: [],
   },
   activeBrick: null,
 };

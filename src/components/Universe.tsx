@@ -13,6 +13,7 @@ import {
   universeContextInitialState,
   universeContextReducer,
   ScriptBrick,
+  UniverseContextState,
 } from '../contexts/universe';
 import { AsteroidNote, ScriptNote } from '../mdx';
 import { importMdx } from '../mdx/io';
@@ -22,8 +23,49 @@ import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
 import { useRuler, EvaluationEvent } from './Universe/useRuler';
 import { CodeBlock } from './Universe/CodeBlock';
 import { MarkdownBlock } from './Universe/MarkdownBlock';
-import { ScriptPart } from './Universe/ScriptPart';
+import { ScriptPart, UserScriptPart } from './Universe/ScriptPart';
 import * as UI from './ui';
+
+const buildInitialUniverse = async (
+  mdx?: string
+): Promise<Partial<UniverseContextState>> => {
+  let codeBlock = importMdx(mdx || '');
+
+  const importDefs = collectImports(
+    codeBlock.filter(({ noteType }) => noteType === 'script') as ScriptNote[]
+  );
+  const imports = await Promise.all(importDefs.map(loadModule));
+
+  let userScript: UniverseContextState['userScript'] | null = null;
+  const [firstBlock, ...latterBlocks] = codeBlock;
+  if (firstBlock?.noteType === 'script') {
+    codeBlock = latterBlocks;
+    userScript = { ...firstBlock, brickId: nanoid() };
+  }
+
+  const asteroids = codeBlock.filter(
+    ({ noteType }) => noteType === 'asteroid'
+  ) as AsteroidNote[];
+  const providence: Providence = {
+    asteroid: asteroids.reduce<{ [id: string]: Asteroid }>((acc, { id }) => {
+      return {
+        ...acc,
+        [id]: {
+          result: null,
+          status: 'init',
+          scope: {},
+        },
+      };
+    }, {}),
+    asteroidOrder: asteroids.map(({ id }) => id),
+    imports,
+  };
+  return {
+    bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
+    providence,
+    ...(userScript && { userScript }),
+  };
+};
 
 interface UniverseProps {
   mdx?: string;
@@ -76,39 +118,8 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
 
   useEffect(() => {
     (async () => {
-      const codeBlock = importMdx(mdx || '');
-      const importDefs = collectImports(
-        codeBlock.filter(
-          ({ noteType }) => noteType === 'script'
-        ) as ScriptNote[]
-      );
-      const imports = await Promise.all(importDefs.map(loadModule));
-      console.log(codeBlock, imports);
-
-      const asteroids = codeBlock.filter(
-        ({ noteType }) => noteType === 'asteroid'
-      ) as AsteroidNote[];
-      const providence: Providence = {
-        asteroid: asteroids.reduce<{ [id: string]: Asteroid }>(
-          (acc, { id }) => {
-            return {
-              ...acc,
-              [id]: {
-                result: null,
-                status: 'init',
-                scope: {},
-              },
-            };
-          },
-          {}
-        ),
-        asteroidOrder: asteroids.map(({ id }) => id),
-        imports,
-      };
-      dispatch({
-        bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
-        providence,
-      });
+      const state = await buildInitialUniverse(mdx);
+      dispatch(state);
     })();
   }, [mdx]);
 
@@ -140,7 +151,8 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
   return (
     <UI.Box w="100%">
       <ToolBar title="asteroid.mdx" />
-      {bricks.map((brick) => {
+      <UserScriptPart />
+      {bricks.map((brick, i) => {
         const { noteType, text, brickId } = brick;
         if (noteType === 'markdown') {
           return <MarkdownBlock key={brickId} brickId={brickId} note={text} />;
