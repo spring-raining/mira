@@ -201,7 +201,7 @@ export const CodeBlock: React.FC<{
           </UI.Box>
           <LivedEditor {...editorCallbacks} />
         </BlockEditorPane>
-        <BlockPreviewPane>
+        <BlockPreviewPane sticky>
           <LivedError />
           <LivePreview />
         </BlockPreviewPane>

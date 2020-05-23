@@ -5,6 +5,16 @@ import { useRuler } from './useRuler';
 
 const editorRefs: { [key: string]: editor.IStandaloneCodeEditor } = {};
 
+const hasIntersect = (
+  el: HTMLElement,
+  { top = 0, bottom = 0 }: { top?: number; bottom?: number } = {}
+): boolean => {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top <= window.innerHeight + bottom && rect.top + rect.height >= top
+  );
+};
+
 export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
   const { state, dispatch } = useContext(UniverseContext);
   const { insertCodeBlock } = useRuler(state);
@@ -43,9 +53,12 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
         .find((b) => editorRefs[b.brickId]);
       if (nextBrick) {
         editorRefs[nextBrick.brickId]?.focus();
-        editorRefs[nextBrick.brickId]
-          ?.getContainerDomNode()
-          .scrollIntoView(false);
+        const containerDom = editorRefs[
+          nextBrick.brickId
+        ]?.getContainerDomNode();
+        if (containerDom && !hasIntersect(containerDom)) {
+          containerDom.scrollIntoView(false);
+        }
       }
     }
   }, [state, brickId]);
@@ -59,11 +72,14 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
         .find((b) => editorRefs[b.brickId]);
       if (prevBrick) {
         editorRefs[prevBrick.brickId]?.focus();
-        editorRefs[prevBrick.brickId]
-          ?.getContainerDomNode()
-          .scrollIntoView(true);
-        // scroll downward by header height
-        window.scrollBy(0, -100);
+        const containerDom = editorRefs[
+          prevBrick.brickId
+        ]?.getContainerDomNode();
+        if (containerDom && !hasIntersect(containerDom, { top: 100 })) {
+          containerDom.scrollIntoView(true);
+          // scroll downward by header height
+          window.scrollBy(0, -100);
+        }
       }
     }
   }, [state, brickId]);

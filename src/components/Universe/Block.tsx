@@ -1,4 +1,4 @@
-import { FlexProps } from '@chakra-ui/core';
+import { FlexProps, BoxProps } from '@chakra-ui/core';
 import * as UI from '../ui';
 
 export const Block: React.FC<FlexProps & { active?: boolean }> = ({
@@ -29,7 +29,11 @@ export const BlockEditorPane = ({ children, ...props }) => (
   </UI.Box>
 );
 
-export const BlockPreviewPane = (props) => (
+export const BlockPreviewPane: React.FC<
+  BoxProps & {
+    sticky?: boolean;
+  }
+> = ({ sticky, ...other }) => (
   <UI.Box
     w={['100%', '100%', '50%', '50%']}
     bg="gray.100"
@@ -39,6 +43,11 @@ export const BlockPreviewPane = (props) => (
     borderLeft="0.5rem solid"
     borderColor="gray.500"
     borderLeftWidth={['0.5rem', '0.5rem', 0, 0]}
-    {...props}
+    {...(sticky && {
+      maxHeight: '90vh',
+      position: 'sticky',
+      top: '4.5rem',
+    })}
+    {...other}
   />
 );
