@@ -1,10 +1,12 @@
 import React, { useContext, useCallback } from 'react';
+import { useColorMode } from '@chakra-ui/core';
 import { UniverseContext } from '../../contexts/universe';
 import { exportMdx } from '../../mdx/io';
 import * as UI from '../ui';
 
 export const ToolBar: React.FC<{ title?: string }> = ({ title }) => {
   const { state, dispatch } = useContext(UniverseContext);
+  const { colorMode } = useColorMode();
 
   const onRunButtonClick = useCallback(() => {
     const { providence } = state;
@@ -49,7 +51,7 @@ export const ToolBar: React.FC<{ title?: string }> = ({ title }) => {
       py={4}
       position="sticky"
       top={0}
-      bg="white"
+      bg={colorMode === 'light' ? 'white' : 'gray.800'}
       boxShadow="md"
       zIndex={100 /* override monaco-editor z-index */}
       justify="space-between"

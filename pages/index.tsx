@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import styled from '@emotion/styled';
-import { useColorMode, useTheme } from '@chakra-ui/core';
+import { useColorMode } from '@chakra-ui/core';
 import { Universe } from '../src/components/Universe';
 import * as UI from '../src/components/ui';
 import pkg from '../package.json';
@@ -116,7 +116,6 @@ const StyledIntro = styled(UI.Box)<{
 
 export default () => {
   const { colorMode } = useColorMode();
-  const theme = useTheme();
   return (
     <div>
       <Head>

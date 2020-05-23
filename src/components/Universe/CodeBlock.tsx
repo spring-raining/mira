@@ -9,6 +9,7 @@ import React, {
 import { LivePreview, withLive } from 'react-live';
 import { nanoid } from 'nanoid';
 import { line as spinner } from 'cli-spinners';
+import { useColorMode } from '@chakra-ui/core';
 import { CodeBlockStatus, UniverseContext } from '../../contexts/universe';
 import { useEditorCallbacks } from './useEditorCallbacks';
 import { Block, BlockEditorPane, BlockPreviewPane } from './Block';
@@ -72,6 +73,7 @@ export const CodeBlock: React.FC<{
   const { state } = useContext(UniverseContext);
   const { providence } = state;
   const editorCallbacks = useEditorCallbacks({ brickId });
+  const { colorMode } = useColorMode();
   const [val, setVal] = useState<Promise<object | null>>();
   const scope = useMemo(
     () => ({
@@ -177,10 +179,16 @@ export const CodeBlock: React.FC<{
           borderLeft="0.5rem solid"
           borderColor={
             status === 'live'
-              ? 'cyan.500'
+              ? colorMode === 'light'
+                ? 'cyan.500'
+                : 'cyan.600'
               : status === 'outdated'
-              ? 'orange.500'
-              : 'gray.400'
+              ? colorMode === 'light'
+                ? 'orange.500'
+                : 'orange.600'
+              : colorMode === 'light'
+              ? 'gray.400'
+              : 'gray.600'
           }
         >
           <UI.Box

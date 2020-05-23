@@ -1,5 +1,5 @@
 import React, { useContext, useCallback } from 'react';
-import { FlexProps } from '@chakra-ui/core';
+import { useColorMode, FlexProps } from '@chakra-ui/core';
 import { UniverseContext } from '../../contexts/universe';
 import * as UI from '../ui';
 import { useRuler } from './useRuler';
@@ -25,6 +25,7 @@ export const ToolbarContainer: React.FC<
 export const InsertBlockToolbar: React.FC<{ index: number }> = ({ index }) => {
   const { state, dispatch } = useContext(UniverseContext);
   const ruler = useRuler(state);
+  const { colorMode } = useColorMode();
 
   const insertCodeBlock = useCallback(() => {
     dispatch(ruler.insertCodeBlock(index));
@@ -41,7 +42,7 @@ export const InsertBlockToolbar: React.FC<{ index: number }> = ({ index }) => {
         rounded="full"
         variant="outline"
         variantColor="purple"
-        bg="white"
+        bg={colorMode === 'light' ? 'white' : 'gray.900'}
         size="sm"
         onClick={insertCodeBlock}
       >
@@ -53,7 +54,7 @@ export const InsertBlockToolbar: React.FC<{ index: number }> = ({ index }) => {
         rounded="full"
         variant="outline"
         variantColor="purple"
-        bg="white"
+        bg={colorMode === 'light' ? 'white' : 'gray.900'}
         size="sm"
         onClick={insertMarkdownBlock}
       >
@@ -69,6 +70,7 @@ export const ManipulateBlockToolbar: React.FC<{ index: number }> = ({
 }) => {
   const { state, dispatch } = useContext(UniverseContext);
   const ruler = useRuler(state);
+  const { colorMode } = useColorMode();
 
   const moveBlockToBackward = useCallback(() => {
     dispatch(ruler.moveBlock(index, -1));
@@ -90,7 +92,7 @@ export const ManipulateBlockToolbar: React.FC<{ index: number }> = ({
         rounded="full"
         variant="outline"
         variantColor="purple"
-        bg="white"
+        bg={colorMode === 'light' ? 'white' : 'gray.900'}
         icon="arrow-up"
         fontSize="1.5rem"
         onClick={moveBlockToBackward}
@@ -101,7 +103,7 @@ export const ManipulateBlockToolbar: React.FC<{ index: number }> = ({
         rounded="full"
         variant="outline"
         variantColor="purple"
-        bg="white"
+        bg={colorMode === 'light' ? 'white' : 'gray.900'}
         icon="arrow-down"
         fontSize="1.5rem"
         onClick={moveBlockToForward}
@@ -112,7 +114,7 @@ export const ManipulateBlockToolbar: React.FC<{ index: number }> = ({
         rounded="full"
         variant="outline"
         variantColor="red"
-        bg="white"
+        bg={colorMode === 'light' ? 'white' : 'gray.900'}
         icon="close"
         onClick={deleteBlock}
       />

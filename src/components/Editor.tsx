@@ -5,6 +5,7 @@ import MonacoEditor, {
   monaco as _monaco,
   Monaco,
 } from '@monaco-editor/react';
+import { useColorMode } from '@chakra-ui/core';
 import theme from '../theme';
 
 const useAsyncEvent = (callback: (...args: any[]) => void) => {
@@ -48,6 +49,7 @@ export const Editor: React.FC<EditorProps> = ({
   onMoveBackwardCommand = () => {},
   onFocus = () => {},
 }) => {
+  const { colorMode } = useColorMode();
   const lineHeight = 18;
   const [height, setHeight] = useState(0);
   const [initialOptions, setInitialOptions] = useState<object>(null);
@@ -67,8 +69,16 @@ export const Editor: React.FC<EditorProps> = ({
     if (!monaco) {
       _monaco.init().then(setMonaco);
     } else {
-      monaco.editor.defineTheme('myTheme', {
+      monaco.editor.defineTheme('myLightTheme', {
         base: 'vs',
+        inherit: true,
+        rules: [],
+        colors: {
+          'editor.background': '#00000000',
+        },
+      });
+      monaco.editor.defineTheme('myDarkTheme', {
+        base: 'vs-dark',
         inherit: true,
         rules: [],
         colors: {
@@ -182,7 +192,7 @@ export const Editor: React.FC<EditorProps> = ({
           value={initialCode}
           language={language}
           options={initialOptions}
-          theme="myTheme"
+          theme={colorMode === 'light' ? 'myLightTheme' : 'myDarkTheme'}
           editorDidMount={editorDidMount}
           loading={<></>}
         />
