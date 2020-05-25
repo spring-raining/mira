@@ -4,13 +4,13 @@ import { MarkdownNote, ScriptNote, AsteroidNote, ASTNode } from '../mdx';
 
 interface BrickState {
   brickId: string;
-  children?: ASTNode[];
+  children?: ASTNode[] | null;
 }
 
 export type MarkdownBrick = Omit<MarkdownNote, 'children'> & BrickState;
 export type ScriptBrick = Omit<ScriptNote, 'children'> & BrickState;
 export type AsteroidBrick = Omit<AsteroidNote, 'children'> & BrickState;
-type Brick = MarkdownBrick | ScriptBrick | AsteroidBrick;
+export type Brick = MarkdownBrick | ScriptBrick | AsteroidBrick;
 
 export type CodeBlockStatus = 'init' | 'live' | 'outdated' | 'running';
 

@@ -51,9 +51,15 @@ export const getImportBinding = (
 };
 
 export const collectImports = (scripts: ScriptNote[]): ImportPart[] => {
+  type ImportASTNode = ASTNode & {
+    type: 'import';
+    value: string;
+  };
   const imports = scripts
     .reduce<ASTNode[]>((acc, { children }) => [...acc, ...children], [])
-    .filter((node) => node.type === 'import');
+    .filter<ImportASTNode>(
+      (node): node is ImportASTNode => node.type === 'import'
+    );
 
   const getImportDef = (term: string): ImportDefinition | undefined => {
     const matched = term.trim().match(importRe);
@@ -87,8 +93,8 @@ export const collectImports = (scripts: ScriptNote[]): ImportPart[] => {
       text: value,
       definitions: value
         .split('\n')
-        .map(getImportDef)
-        .filter((v) => !!v),
+        .map((term) => getImportDef(term))
+        .filter<ImportDefinition>((v): v is ImportDefinition => !!v),
     })
   );
   return collection;
@@ -100,7 +106,7 @@ export const loadModule = async (
   // const { moduleSpecifier, importBinding, namespaceImport } = definition;
   try {
     const loadCache: Record<string, any> = {};
-    let modules = {};
+    let modules: { [name: string]: any } = {};
     for (let definition of importPart.definitions) {
       const { moduleSpecifier, importBinding, namespaceImport } = definition;
       if (!(moduleSpecifier in loadCache)) {

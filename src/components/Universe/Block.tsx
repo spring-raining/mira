@@ -21,13 +21,13 @@ export const Block: React.FC<FlexProps & { active?: boolean }> = ({
           ? 'blackAlpha.600'
           : 'blackAlpha.400'
       }
-      boxShadow={active && 'sm'}
+      boxShadow={active ? 'sm' : null}
       flexDirection={['column', 'column', 'row', 'row']}
     />
   );
 };
 
-export const BlockEditorPane = ({ children, ...props }) => (
+export const BlockEditorPane: React.FC<BoxProps> = ({ children, ...props }) => (
   <UI.Box
     w={['100%', '100%', '50%', '50%']}
     pl={4}
@@ -49,7 +49,7 @@ export const BlockPreviewPane: React.FC<
   return (
     <UI.Box
       w={['100%', '100%', '50%', '50%']}
-      bg={colorMode === 'light' && 'gray.100'}
+      bg={colorMode === 'light' ? 'gray.100' : null}
       px={4}
       py={[4, 4, 0, 0]}
       overflow="auto"

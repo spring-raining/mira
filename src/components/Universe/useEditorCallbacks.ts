@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react';
 import type { editor } from 'monaco-editor';
-import { UniverseContext } from '../../contexts/universe';
+import { UniverseContext, Brick } from '../../contexts/universe';
 import { useRuler } from './useRuler';
 
 const editorRefs: { [key: string]: editor.IStandaloneCodeEditor } = {};
@@ -93,7 +93,7 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
   const onChange = useCallback(
     (text) => {
       dispatch({
-        bricks: state.bricks.map((brick) =>
+        bricks: state.bricks.map<Brick>((brick) =>
           brick.brickId === brickId
             ? {
                 ...brick,

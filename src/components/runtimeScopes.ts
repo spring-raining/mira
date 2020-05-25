@@ -9,7 +9,7 @@ export const getRuntimeScope = ({
   errorCallback: (error: Error) => void;
   errorBoundary: (element: any) => React.ReactNode;
 }) => {
-  const $run = (element) => {
+  const $run = (element: any) => {
     if (typeof element === 'undefined') {
       errorCallback(new SyntaxError('`$run` must return valid JSX.'));
     } else {

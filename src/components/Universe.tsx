@@ -85,7 +85,7 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
         id = requestAnimationFrame(tick);
         return;
       }
-      const event = evaluationEventStack.current.shift();
+      const event = evaluationEventStack.current.shift()!;
       dispatch({
         providence: arbitrate(event),
       });

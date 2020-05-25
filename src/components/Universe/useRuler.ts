@@ -56,7 +56,7 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
           ...providence,
           asteroid: nextAsteroid,
         };
-      } else if (type === 'finish') {
+      } else {
         if (currentRunId !== runId) {
           return {
             ...providence,
@@ -168,12 +168,16 @@ export const useRuler = ({ bricks, providence }: UniverseContextState) => {
       const { asteroid } = providence;
       const preAsteroidOrder = bricks
         .slice(0, index)
-        .filter(({ noteType }) => noteType === 'asteroid')
-        .map(({ id }: AsteroidBrick) => id);
+        .filter<AsteroidBrick>(
+          (brick): brick is AsteroidBrick => brick.noteType === 'asteroid'
+        )
+        .map(({ id }) => id);
       const postAsteroidOrder = bricks
         .slice(index)
-        .filter(({ noteType }) => noteType === 'asteroid')
-        .map(({ id }: AsteroidBrick) => id);
+        .filter<AsteroidBrick>(
+          (brick): brick is AsteroidBrick => brick.noteType === 'asteroid'
+        )
+        .map(({ id }) => id);
       const lastAsteroid =
         preAsteroidOrder.length > 0 &&
         asteroid[preAsteroidOrder[preAsteroidOrder.length - 1]];

@@ -12,8 +12,8 @@ export const ToolbarContainer: React.FC<
     zIndex={1}
     px={6}
     py={2}
-    top={side === 'top' && 0}
-    bottom={side === 'bottom' && 0}
+    top={side === 'top' ? 0 : null}
+    bottom={side === 'bottom' ? 0 : null}
     transform={`translateY(${(side === 'top' ? -1 : 1) * (show ? 50 : 40)}%)`}
     opacity={show ? 1 : 0}
     pointerEvents={show ? 'auto' : 'none'}

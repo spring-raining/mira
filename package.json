@@ -29,8 +29,11 @@
     "remark-react": "^7.0.1"
   },
   "devDependencies": {
+    "@types/buble": "^0.19.2",
+    "@types/mdx-js__react": "^1.5.2",
     "@types/node": "^13.13.4",
     "@types/react": "^16.9.34",
+    "@types/react-linkify": "^1.0.0",
     "monaco-editor": "^0.20.0",
     "typescript": "^3.8.3"
   }

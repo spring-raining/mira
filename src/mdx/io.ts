@@ -1,24 +1,28 @@
 import { createCompiler } from '@mdx-js/mdx';
 import { nanoid } from 'nanoid';
+import type { Parent } from 'unist';
 import {
   UniverseContextState,
   AsteroidBrick,
   ScriptBrick,
 } from './../contexts/universe';
-import { Note } from '.';
+import { Note, ASTNode } from '.';
 
 export const importMdx = (mdxString: string): Note[] => {
   const compiler = createCompiler({
     remarkPlugins: [],
     rehypePlugins: [],
   });
-  const parsed = compiler.parse(mdxString);
+  const parsed: Parent = compiler.parse(mdxString);
   const scriptTypes = ['jsx', 'import', 'export'];
   const asteroidDivRe = /^<div><Asteroid_(\w+)\s*\/><\/div>$/;
   const asteroidMetaRe = /^asteroid=(\w+)$/;
-  const chunk = parsed.children.reduce((acc, node) => {
+  const chunk = parsed.children.reduce((acc, _node) => {
     // set identical id for each node
-    node.id = nanoid();
+    const node: ASTNode = {
+      id: nanoid(),
+      ..._node,
+    };
     const asteroidMetaMatch = node.meta?.match(asteroidMetaRe);
     const noteType = scriptTypes.includes(node.type)
       ? 'script'
@@ -42,7 +46,7 @@ export const importMdx = (mdxString: string): Note[] => {
               }
             : {}),
         },
-      ];
+      ] as Note[];
     }
 
     const head = acc.slice(0, acc.length - 1);
@@ -55,7 +59,7 @@ export const importMdx = (mdxString: string): Note[] => {
           children: [node],
           id: asteroidMetaMatch[1],
         },
-      ];
+      ] as Note[];
     } else if (
       tail.noteType !== noteType ||
       (node.type === 'heading' && node.depth <= 3)
@@ -66,7 +70,7 @@ export const importMdx = (mdxString: string): Note[] => {
           noteType,
           children: [node],
         },
-      ];
+      ] as Note[];
     } else {
       return [
         ...head,
@@ -74,9 +78,9 @@ export const importMdx = (mdxString: string): Note[] => {
           noteType,
           children: [...tail.children, node],
         },
-      ];
+      ] as Note[];
     }
-  }, []);
+  }, [] as Note[]);
   return chunk.map((el) => {
     const { children, noteType } = el;
     const text =
@@ -91,7 +95,7 @@ export const importMdx = (mdxString: string): Note[] => {
       ...el,
       noteType,
       text,
-    };
+    } as Note;
   });
 };
 
@@ -104,7 +108,7 @@ export const exportMdx = ({
 
   const firstScriptBrick: ScriptBrick = {
     ...userScript,
-    text: userScript.children
+    text: (userScript.children || [])
       .map(({ value }) => (value || '') as string)
       .join('\n\n'),
   };

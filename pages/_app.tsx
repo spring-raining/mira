@@ -6,7 +6,7 @@ import { MDXProvider } from '@mdx-js/react';
 import theme from '../src/theme';
 
 const MyApp = ({ Component, pageProps }: AppProps) => (
-  <MDXProvider>
+  <MDXProvider components={{}}>
     <ThemeProvider theme={theme}>
       <ColorModeProvider value="light">
         <Head>

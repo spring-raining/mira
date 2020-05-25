@@ -14,7 +14,7 @@ const useAsyncEvent = (callback: (...args: any[]) => void) => {
     let id: number;
     const tick = () => {
       if (eventStack.current.length > 0) {
-        callback(...eventStack.current.shift());
+        callback(...eventStack.current.shift()!);
       }
       id = requestAnimationFrame(tick);
     };
@@ -52,11 +52,13 @@ export const Editor: React.FC<EditorProps> = ({
   const { colorMode } = useColorMode();
   const lineHeight = 18;
   const [height, setHeight] = useState(0);
-  const [initialOptions, setInitialOptions] = useState<object>(null);
+  const [initialOptions, setInitialOptions] = useState<object | null>(null);
   const [initialCode] = useState(() => code);
 
-  const [monaco, setMonaco] = useState<Monaco>(null);
-  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>(null);
+  const [monaco, setMonaco] = useState<Monaco | null>(null);
+  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
+    null
+  );
 
   const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
   const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
@@ -133,6 +135,9 @@ export const Editor: React.FC<EditorProps> = ({
     getEditorValue,
     editor: editor.IStandaloneCodeEditor
   ) => {
+    if (!monaco) {
+      return;
+    }
     setEditor(editor);
     onEditorUpdate(editor);
     editor.addCommand(

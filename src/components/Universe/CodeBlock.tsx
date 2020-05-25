@@ -26,20 +26,23 @@ const LivedEditor = withLive<
   {
     live?: { code: string; onChange: (code: string) => void };
   } & Omit<EditorProps, 'code' | 'language'>
->(({ live: { code, onChange }, ...other }) => {
+>(({ live, ...other }) => {
   const handleChange = useCallback(
     (text) => {
       if (other.onChange) {
         other.onChange(text);
       }
-      onChange(text);
+      live?.onChange(text);
     },
-    [onChange, other.onChange]
+    [live?.onChange, other.onChange]
   );
+  if (!live) {
+    return null;
+  }
   return (
     <Editor
       {...other}
-      code={code}
+      code={live.code}
       language="javascript"
       onChange={handleChange}
     />
@@ -115,12 +118,12 @@ export const CodeBlock: React.FC<{
             runId !== runIdRef.current &&
             currentStatus.current !== 'running'
           ) {
-            onEvaluateFinishRef.current(runId);
+            onEvaluateFinishRef.current!(runId);
           }
-          onEvaluateFinishRef.current(runId, evaluated);
+          onEvaluateFinishRef.current!(runId, evaluated);
         })
         .catch(() => {
-          onEvaluateFinishRef.current(runId);
+          onEvaluateFinishRef.current!(runId);
         });
     });
   }, [val, providence, asteroidId]);

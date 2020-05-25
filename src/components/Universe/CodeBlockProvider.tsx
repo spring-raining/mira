@@ -13,7 +13,7 @@ const AsyncFunctionShim = new Function(
 )();
 
 const _poly = { assign };
-const evalCode = (code, scope) => {
+const evalCode = (code: string, scope: Record<string, any>) => {
   const scopeKeys = Object.keys(scope);
   const scopeValues = scopeKeys.map((key) => scope[key]);
   try {
@@ -24,7 +24,7 @@ const evalCode = (code, scope) => {
   }
 };
 
-const transform = (code) =>
+const transform = (code: string) =>
   _transform(code, {
     objectAssign: '_poly.assign',
     transforms: {
@@ -32,22 +32,24 @@ const transform = (code) =>
       arrow: false,
       dangerousForOf: true,
       dangerousTaggedTemplateString: true,
-    },
+    } as any,
   });
 
-const errorBoundary = (errorCallback) => (Element) => {
+const errorBoundary = (errorCallback: (error: Error) => void) => (
+  Element: React.ReactNode
+) => {
   return class ErrorBoundary extends React.Component<
     {},
     { hasError: boolean }
   > {
-    constructor(props) {
+    constructor(props: {}) {
       super(props);
       this.state = { hasError: false };
     }
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError() {
       return { hasError: true };
     }
-    componentDidCatch(error) {
+    componentDidCatch(error: Error) {
       errorCallback(error);
     }
     render() {
@@ -61,8 +63,8 @@ const errorBoundary = (errorCallback) => (Element) => {
 
 const renderElementAsync = async (
   { code = '', scope = {} },
-  resultCallback,
-  errorCallback
+  resultCallback: (result: React.ReactNode) => void,
+  errorCallback: (error: Error) => void
   // eslint-disable-next-line consistent-return
 ) => {
   const runtimeScope = getRuntimeScope({
@@ -82,19 +84,21 @@ const renderElementAsync = async (
   }
 };
 
-export class CodeBlockProvider extends React.Component<{
+interface CodeBlockProviderProps {
   code: string;
-  scope: object;
+  scope: Record<string, any>;
   status: CodeBlockStatus | null;
   onRender: (result: Promise<object | null>) => void;
   asteroidId?: string;
-  transformCode?: React.ReactNode;
-}> {
+  transformCode?: (code: string) => string;
+}
+
+export class CodeBlockProvider extends React.Component<CodeBlockProviderProps> {
   static defaultProps = {
     code: '',
   };
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: CodeBlockProviderProps) {
     const {
       code: prevCode,
       scope: prevScope,
@@ -116,16 +120,24 @@ export class CodeBlockProvider extends React.Component<{
     }
   }
 
-  onChange = (code) => {
+  onChange = (code: string) => {
     const { scope, transformCode } = this.props;
     this.transpile({ code, scope, transformCode });
   };
 
-  onError = (error) => {
+  onError = (error: Error) => {
     this.setState({ error: error.toString() });
   };
 
-  transpile = ({ code, scope, transformCode }) => {
+  transpile = ({
+    code,
+    scope,
+    transformCode,
+  }: {
+    code: string;
+    scope: Record<string, any>;
+    transformCode?: (code: string) => string;
+  }) => {
     const { onRender } = this.props;
     // Transpilation arguments
     const input = {
@@ -133,9 +145,10 @@ export class CodeBlockProvider extends React.Component<{
       scope,
     };
 
-    const errorCallback = (err) =>
+    const errorCallback = (err: Error) =>
       this.setState({ element: undefined, error: err.toString() });
-    const renderElement = (element) => this.setState({ ...state, element });
+    const renderElement = (element: React.ReactNode) =>
+      this.setState({ ...state, element });
 
     // State reset object
     const state = { unsafeWrapperError: undefined, error: undefined };

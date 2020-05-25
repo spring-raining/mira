@@ -9,7 +9,7 @@ import { randomInt } from '../../utils';
 import * as UI from '../ui';
 import { useRuler } from './useRuler';
 
-const Link = (href, text, key) => (
+const Link = (href: string, text: string, key: number) => (
   <UI.Link href={href} key={key} isExternal>
     {text}
   </UI.Link>
@@ -39,7 +39,7 @@ const ScriptToolButtonSet: React.FC<{ id: string }> = ({ id }) => {
       },
       userScript: {
         ...state.userScript,
-        children: state.userScript.children.filter((c) => c.id !== id),
+        children: (state.userScript.children || []).filter((c) => c.id !== id),
       },
     });
   }, [resetAsteroidResult, state, dispatch, id]);
@@ -65,7 +65,7 @@ export const ScriptPart: React.FC<{ note: Omit<ScriptBrick, 'text'> }> = ({
       state.providence.imports.reduce((acc, mod) => {
         acc[mod.id] = mod;
         return acc;
-      }, {}),
+      }, {} as { [id: string]: any }),
     [state.providence.imports]
   );
 
@@ -76,7 +76,7 @@ export const ScriptPart: React.FC<{ note: Omit<ScriptBrick, 'text'> }> = ({
   };
   return (
     <UI.Box {...blockCallbacks} my="-1rem" px={4} py={4} w="100%" fontSize="sm">
-      {note.children.map((ast, index) => {
+      {(note.children || []).map((ast, index) => {
         if (ast.type === 'import') {
           return (
             <UI.Box key={index} w="100%">
@@ -160,7 +160,7 @@ const ImportModuleForm: React.FC<{
     onSubmit,
   };
 
-  const importClauseValidate = (value) => {
+  const importClauseValidate = (value: string) => {
     if (value.trim().length > 0) {
       const ret = getImportBinding(value.trim());
       if (!ret) {
@@ -168,7 +168,7 @@ const ImportModuleForm: React.FC<{
       }
     }
   };
-  const moduleSpecifierValidate = (value) => {
+  const moduleSpecifierValidate = (value: string) => {
     if (value.trim().length === 0) {
       return 'module specifier required';
     } else if (value.includes("'") || value.includes('"')) {
@@ -205,7 +205,7 @@ const ImportModuleForm: React.FC<{
               >
                 import
                 <Field name="importClause" validate={importClauseValidate}>
-                  {({ field }) => (
+                  {({ field }: any) => (
                     <UI.Input
                       {...field}
                       size="sm"
@@ -223,7 +223,7 @@ const ImportModuleForm: React.FC<{
                   name="moduleSpecifier"
                   validate={moduleSpecifierValidate}
                 >
-                  {({ field }) => (
+                  {({ field }: any) => (
                     <UI.Input
                       {...field}
                       size="sm"
@@ -284,7 +284,7 @@ export const UserScriptPart = () => {
       const importDef = !!importClause
         ? {
             moduleSpecifier,
-            ...getImportBinding(importClause),
+            ...getImportBinding(importClause)!,
           }
         : {
             moduleSpecifier,
