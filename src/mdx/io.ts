@@ -103,7 +103,7 @@ const asteroidDiv = (id: string) => `<div><Asteroid_${id} /></div>`;
 export const exportMdx = ({
   bricks,
   userScript,
-}: UniverseContextState): string => {
+}: Pick<UniverseContextState, 'bricks' | 'userScript'>): string => {
   let mdx = '';
 
   const firstScriptBrick: ScriptBrick = {
