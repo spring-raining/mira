@@ -3,11 +3,13 @@ import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { ThemeProvider, ColorModeProvider, CSSReset } from '@chakra-ui/core';
 import { MDXProvider } from '@mdx-js/react';
+import { setFileSystem } from '../src/actions/workspace';
 import {
   WorkspaceContext,
   workspaceContextReducer,
   workspaceContextInitialState,
 } from '../src/contexts/workspace';
+import { createFileSystemService } from '../src/services/fs';
 import theme from '../src/theme';
 
 const withGlobalProvider = (App: React.ComponentType<AppProps>) => (
@@ -31,14 +33,12 @@ const withGlobalProvider = (App: React.ComponentType<AppProps>) => (
 };
 
 const MyApp: React.FC<AppProps> = ({ Component, pageProps }: AppProps) => {
-  const {
-    state: { fs },
-  } = useContext(WorkspaceContext);
+  const { dispatch } = useContext(WorkspaceContext);
   useEffect(() => {
     if (process.browser) {
-      fs.init('asteroidfs');
+      dispatch(setFileSystem(createFileSystemService('asteroidfs')));
     }
-  }, []);
+  }, [dispatch]);
 
   return (
     <>

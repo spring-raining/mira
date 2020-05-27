@@ -1,11 +1,15 @@
+import { useContext, useEffect, useState } from 'react';
 import Head from 'next/head';
 import styled from '@emotion/styled';
 import { useColorMode } from '@chakra-ui/core';
+import { setProjects } from '../src/actions/workspace';
 import { Universe } from '../src/components/Universe';
 import * as UI from '../src/components/ui';
+import { WorkspaceContext } from '../src/contexts/workspace';
 import pkg from '../package.json';
 
-const mdx = `
+const defaultProjectName = 'asteroid';
+const defaultMdx = `
 import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module'
 
 # Asteroid
@@ -115,7 +119,34 @@ const StyledIntro = styled(UI.Box)<{
 });
 
 export default () => {
+  const {
+    state: { fs },
+    dispatch,
+  } = useContext(WorkspaceContext);
   const { colorMode } = useColorMode();
+  const [initialMdx, setInitialMdx] = useState<string | null>(null);
+  useEffect(() => {
+    if (!fs || !dispatch) {
+      return;
+    }
+    fs.listProjects()
+      .then((projects) =>
+        Promise.all(
+          projects.map(async (project) => ({
+            ...project,
+            mdx: await fs.loadProject(project.name),
+          }))
+        )
+      )
+      .then((projects) => {
+        const asteroidPrj = projects.find(
+          ({ name }) => name === defaultProjectName
+        );
+        setInitialMdx(asteroidPrj?.mdx || defaultMdx);
+        dispatch(setProjects(projects));
+      });
+  }, [fs, dispatch]);
+
   return (
     <div>
       <Head>
@@ -135,7 +166,9 @@ export default () => {
           </UI.Text>
         </UI.Box>
       </StyledIntro>
-      <Universe mdx={mdx} />
+      {initialMdx != null && (
+        <Universe projectName={defaultProjectName} mdx={initialMdx} />
+      )}
       <UI.Flex w="100%" my={12} justify="center">
         <UI.Box mx={2}>Asteroid v{pkg.version}</UI.Box>/
         <UI.Box mx={2}>

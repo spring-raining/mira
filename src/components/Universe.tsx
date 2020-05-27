@@ -6,6 +6,7 @@ import React, {
   useReducer,
 } from 'react';
 import { nanoid } from 'nanoid';
+import { updateProject } from '../actions/workspace';
 import {
   Asteroid,
   Providence,
@@ -15,8 +16,9 @@ import {
   ScriptBrick,
   UniverseContextState,
 } from '../contexts/universe';
+import { WorkspaceContext } from '../contexts/workspace';
 import { AsteroidNote, ScriptNote } from '../mdx';
-import { importMdx } from '../mdx/io';
+import { importMdx, exportMdx } from '../mdx/io';
 import { collectImports, loadModule } from '../mdx/module';
 import { ToolBar } from './Universe/ToolBar';
 import { NewBlockButtonSet } from './Universe/NewBlockButtonSet';
@@ -68,13 +70,15 @@ const buildInitialUniverse = async (
 };
 
 interface UniverseProps {
+  projectName: string;
   mdx?: string;
 }
 
-const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
+const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
   const { state, dispatch } = useContext(UniverseContext);
+  const workspace = useContext(WorkspaceContext);
 
-  const { bricks, providence } = state;
+  const { bricks, providence, userScript } = state;
   const { arbitrate } = useRuler(state);
 
   const evaluationEventStack = useRef<EvaluationEvent[]>([]);
@@ -148,9 +152,20 @@ const UniverseView: React.FC<UniverseProps> = ({ mdx }) => {
     }
   }, [providence]);
 
+  useEffect(() => {
+    // Auto save after editing
+    const timeoutId = setTimeout(() => {
+      const mdx = exportMdx({ bricks, userScript });
+      workspace.dispatch(updateProject({ name: projectName, mdx }));
+    }, 2000);
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [bricks, userScript, workspace.dispatch, projectName]);
+
   return (
     <UI.Box w="100%">
-      <ToolBar title="asteroid.mdx" />
+      <ToolBar title={`${projectName}.mdx`} />
       <UserScriptPart />
       {bricks.map((brick, i) => {
         const { noteType, text, brickId } = brick;
