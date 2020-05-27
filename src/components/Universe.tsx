@@ -4,6 +4,7 @@ import React, {
   useRef,
   useContext,
   useReducer,
+  useState,
 } from 'react';
 import { nanoid } from 'nanoid';
 import { updateProject } from '../actions/workspace';
@@ -80,6 +81,9 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
 
   const { bricks, providence, userScript } = state;
   const { arbitrate } = useRuler(state);
+  const [initialized, setInitialized] = useState(false);
+  const [initializedBrickIds, setInitializedBrickIds] = useState<string[]>([]);
+  const [ready, setReady] = useState(false);
 
   const evaluationEventStack = useRef<EvaluationEvent[]>([]);
   useEffect(() => {
@@ -99,6 +103,15 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
     id = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(id);
   }, [providence]);
+
+  const onBrickReady = useCallback(
+    (brickId: string) => {
+      if (!initializedBrickIds.includes(brickId)) {
+        setInitializedBrickIds([...initializedBrickIds, brickId]);
+      }
+    },
+    [initializedBrickIds]
+  );
 
   const onEvaluateStart = useCallback((asteroidId: string, runId: string) => {
     evaluationEventStack.current.push({
@@ -121,13 +134,34 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
   );
 
   useEffect(() => {
+    setInitialized(false);
+    setReady(false);
     (async () => {
       const state = await buildInitialUniverse(mdx);
       dispatch(state);
+      setInitializedBrickIds([]);
+      setInitialized(true);
     })();
   }, [mdx]);
 
   useEffect(() => {
+    if (!initialized || ready) {
+      return;
+    }
+    const ids = bricks
+      .filter(
+        ({ noteType }) => noteType === 'markdown' || noteType === 'asteroid'
+      )
+      .map(({ brickId }) => brickId);
+    if (ids.every((id) => initializedBrickIds.includes(id))) {
+      setReady(true);
+    }
+  }, [initialized, ready, bricks, initializedBrickIds]);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
     const { asteroidOrder, asteroid } = providence;
     const initIdx = asteroidOrder.findIndex(
       (id) => asteroid[id]?.status === 'init'
@@ -150,9 +184,12 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
         },
       });
     }
-  }, [providence]);
+  }, [ready, providence]);
 
   useEffect(() => {
+    if (!ready) {
+      return;
+    }
     // Auto save after editing
     const timeoutId = setTimeout(() => {
       const mdx = exportMdx({ bricks, userScript });
@@ -161,35 +198,54 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [bricks, userScript, workspace.dispatch, projectName]);
+  }, [ready, bricks, userScript, workspace.dispatch, projectName]);
 
   return (
     <UI.Box w="100%">
       <ToolBar title={`${projectName}.mdx`} />
-      <UserScriptPart />
-      {bricks.map((brick, i) => {
-        const { noteType, text, brickId } = brick;
-        if (noteType === 'markdown') {
-          return <MarkdownBlock key={brickId} brickId={brickId} note={text} />;
-        } else if (noteType === 'asteroid') {
-          const { id } = brick as Omit<AsteroidNote, 'children'>;
-          return (
-            <CodeBlock
-              key={brickId}
-              brickId={brickId}
-              note={text}
-              asteroidId={id}
-              onEvaluateStart={(...v) => onEvaluateStart(id, ...v)}
-              onEvaluateFinish={(...v) => onEvaluateFinish(id, ...v)}
-            />
-          );
-        } else if (noteType === 'script') {
-          return <ScriptPart key={brickId} note={brick as ScriptBrick} />;
-        }
-      })}
-      <UI.Flex justify="center" my={6}>
-        <NewBlockButtonSet />
-      </UI.Flex>
+      {!ready && (
+        <UI.Flex justify="center" my={8}>
+          <UI.Spinner size="xl" thickness="4px" color="purple.500" />
+        </UI.Flex>
+      )}
+      <UI.Box
+        visibility={ready ? 'visible' : 'hidden'}
+        height={ready ? 'auto' : 0}
+        overflowY="hidden"
+      >
+        <UserScriptPart />
+        {bricks.map((brick, i) => {
+          const { noteType, text, brickId } = brick;
+          if (noteType === 'markdown') {
+            return (
+              <MarkdownBlock
+                key={brickId}
+                brickId={brickId}
+                note={text}
+                onReady={() => onBrickReady(brickId)}
+              />
+            );
+          } else if (noteType === 'asteroid') {
+            const { id } = brick as Omit<AsteroidNote, 'children'>;
+            return (
+              <CodeBlock
+                key={brickId}
+                brickId={brickId}
+                note={text}
+                asteroidId={id}
+                onReady={() => onBrickReady(brickId)}
+                onEvaluateStart={(...v) => onEvaluateStart(id, ...v)}
+                onEvaluateFinish={(...v) => onEvaluateFinish(id, ...v)}
+              />
+            );
+          } else if (noteType === 'script') {
+            return <ScriptPart key={brickId} note={brick as ScriptBrick} />;
+          }
+        })}
+        <UI.Flex justify="center" my={6}>
+          <NewBlockButtonSet />
+        </UI.Flex>
+      </UI.Box>
     </UI.Box>
   );
 };

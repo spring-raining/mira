@@ -7,6 +7,7 @@ import MonacoEditor, {
 } from '@monaco-editor/react';
 import { useColorMode } from '@chakra-ui/core';
 import theme from '../theme';
+import { Box } from './ui';
 
 const useAsyncEvent = (callback: (...args: any[]) => void) => {
   const eventStack = useRef<any[][]>([]);
@@ -32,6 +33,7 @@ export interface EditorProps {
   code?: string;
   language?: 'javascript' | 'markdown';
   onEditorUpdate?: (editor: any) => void;
+  onReady?: () => void;
   onChange?: (code: string) => void;
   onCreateNewBlockCommand?: () => void;
   onMoveForwardCommand?: () => void;
@@ -43,6 +45,7 @@ export const Editor: React.FC<EditorProps> = ({
   code,
   language,
   onEditorUpdate = () => {},
+  onReady = () => {},
   onChange = () => {},
   onCreateNewBlockCommand = () => {},
   onMoveForwardCommand = () => {},
@@ -59,6 +62,7 @@ export const Editor: React.FC<EditorProps> = ({
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
     null
   );
+  const [ready, setReady] = useState(false);
 
   const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
   const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
@@ -178,8 +182,8 @@ export const Editor: React.FC<EditorProps> = ({
         prevHeight = height;
         requestAnimationFrame(() => {
           el.style.height = `${height}px`;
-          setHeight(height);
           editor.layout();
+          setHeight(height);
         });
       }
     };
@@ -190,8 +194,15 @@ export const Editor: React.FC<EditorProps> = ({
     });
   }, [editor]);
 
+  useEffect(() => {
+    if (height > 0 && !ready) {
+      setReady(true);
+      onReady();
+    }
+  }, [height, ready, onReady]);
+
   return (
-    <div style={{ height: '100%' }}>
+    <Box height="100%" visibility={ready ? 'visible' : 'hidden'}>
       {initialOptions && (
         <MonacoEditor
           value={initialCode}
@@ -202,6 +213,6 @@ export const Editor: React.FC<EditorProps> = ({
           loading={<></>}
         />
       )}
-    </div>
+    </Box>
   );
 };

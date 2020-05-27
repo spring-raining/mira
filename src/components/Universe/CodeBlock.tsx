@@ -69,15 +69,23 @@ export const CodeBlock: React.FC<{
   brickId: string;
   note: string;
   asteroidId: string;
-  // providence: Providence;
   onEvaluateStart: (runId: string) => void;
   onEvaluateFinish: (runId: string, ret?: object | null) => void;
-}> = ({ brickId, note, asteroidId, onEvaluateStart, onEvaluateFinish }) => {
+  onReady?: () => void;
+}> = ({
+  brickId,
+  note,
+  asteroidId,
+  onEvaluateStart,
+  onEvaluateFinish,
+  onReady = () => {},
+}) => {
   const { state } = useContext(UniverseContext);
   const { providence } = state;
   const editorCallbacks = useEditorCallbacks({ brickId });
   const { colorMode } = useColorMode();
   const [val, setVal] = useState<Promise<object | null>>();
+  const [ready, setReady] = useState(false);
   const scope = useMemo(
     () => ({
       ...providence.imports.reduce(
@@ -90,6 +98,12 @@ export const CodeBlock: React.FC<{
   );
 
   const status = providence.asteroid[asteroidId]?.status || null;
+
+  useEffect(() => {
+    if (ready) {
+      onReady();
+    }
+  }, [ready, onReady]);
 
   // Evaluate code result
   const currentStatus = useRef<CodeBlockStatus | null>();
@@ -176,7 +190,13 @@ export const CodeBlock: React.FC<{
       scope={scope}
       onRender={setVal}
     >
-      <Block active={state.activeBrick === brickId} {...blockCallbacks}>
+      <Block
+        active={state.activeBrick === brickId}
+        {...blockCallbacks}
+        visibility={ready ? 'visible' : 'hidden'}
+        height={ready ? 'auto' : 0}
+      >
+        {' '}
         <BlockEditorPane
           pos="relative"
           borderLeft="0.5rem solid"
@@ -210,7 +230,7 @@ export const CodeBlock: React.FC<{
               </UI.Code>
             )}
           </UI.Box>
-          <LivedEditor {...editorCallbacks} />
+          <LivedEditor {...editorCallbacks} onReady={() => setReady(true)} />
         </BlockEditorPane>
         <BlockPreviewPane sticky>
           <LivedError />

@@ -153,10 +153,11 @@ const StyledMarkdownPreview = styled.div`
   }
 `;
 
-export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
-  brickId,
-  note,
-}) => {
+export const MarkdownBlock: React.FC<{
+  brickId: string;
+  note: string;
+  onReady?: () => void;
+}> = ({ brickId, note, onReady = () => {} }) => {
   const { state } = useContext(UniverseContext);
   const editorCallbacks = useEditorCallbacks({ brickId });
   const brickIndex = useMemo(
@@ -167,6 +168,7 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   const [code, setCode] = useState(() => note);
   const [rendered, setRendered] = useState(null);
   const [hover, setHover] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const blockCallbacks = {
     onMouseOver: useCallback(() => setHover(true), []),
@@ -182,6 +184,12 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   );
 
   useEffect(() => {
+    if (ready) {
+      onReady();
+    }
+  }, [ready, onReady]);
+
+  useEffect(() => {
     const rendered: any = unified()
       .use(remarkParse)
       .use(remarkReact)
@@ -190,12 +198,18 @@ export const MarkdownBlock: React.FC<{ brickId: string; note: string }> = ({
   }, [code]);
 
   return (
-    <Block active={state.activeBrick === brickId} {...blockCallbacks}>
+    <Block
+      active={state.activeBrick === brickId}
+      {...blockCallbacks}
+      visibility={ready ? 'visible' : 'hidden'}
+      height={ready ? 'auto' : 0}
+    >
       <BlockEditorPane>
         {brickId && (
           <Editor
             {...editorCallbacks}
             {...{ onChange }}
+            onReady={() => setReady(true)}
             language="markdown"
             code={note}
           />

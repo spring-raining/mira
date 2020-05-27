@@ -10,6 +10,7 @@ export {
   Input,
   Image,
   Link,
+  Spinner,
   Tag,
   Text,
   useTheme,
