@@ -211,7 +211,7 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
       <UI.Box
         visibility={ready ? 'visible' : 'hidden'}
         height={ready ? 'auto' : 0}
-        overflowY="hidden"
+        overflowY={ready ? 'initial' : 'hidden'}
       >
         <UserScriptPart />
         {bricks.map((brick, i) => {
