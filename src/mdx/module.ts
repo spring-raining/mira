@@ -3,8 +3,8 @@ import { ScriptNote, ASTNode } from '.';
 
 // http://www.ecma-international.org/ecma-262/6.0/#sec-imports
 const importRe = /^import(?:(.+)from)?\s*('([^']+)'|"([^"]+)")[\s;]*$/;
-const namedImportsRe = /(?:([A-Za-z_$][^\s\{\}]*),)?\s*\{([^\}]+)\}/;
-const namespaceImportRe = /(?:([A-Za-z_$][^\s\{\}]*),)?\s*\*\s+as\s+([A-Za-z_$][[^\s\{\}]*)/;
+const namedImportsRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\{([^\}]+)\}$/;
+const namespaceImportRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\*\s+as\s+([A-Za-z_$][^\s\{\}]*)$/;
 const defaultBindingRe = /^\s*([A-Za-z_$][^\s\{\}]*)\s*$/;
 const importSpecifierRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s+as\s+)?([A-Za-z_$][^\s\{\}]*)$/;
 
@@ -17,9 +17,10 @@ export const getImportBinding = (
   const importBinding: { [key: string]: string } = {};
   let namespaceImport: string | null = null;
 
-  const namedImportsMatch = importClause.match(namedImportsRe);
-  const namespaceImportMatch = importClause.match(namespaceImportRe);
-  const defaultBindingMatch = importClause.match(defaultBindingRe);
+  const trimmed = importClause.trim();
+  const namedImportsMatch = trimmed.match(namedImportsRe);
+  const namespaceImportMatch = trimmed.match(namespaceImportRe);
+  const defaultBindingMatch = trimmed.match(defaultBindingRe);
 
   if (namedImportsMatch) {
     const defaultImport = namedImportsMatch[1];
