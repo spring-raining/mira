@@ -8,6 +8,61 @@ declare module '@mdx-js/mdx' {
   export default compile;
 }
 
+declare module '@mdx-js/mdx/mdx-hast-to-jsx' {
+  export function compile(options?: object): void;
+  export function toJSX(
+    node: any,
+    parentNode?: object,
+    options?: object
+  ): string;
+  export default compile;
+}
+
+declare module '@mdx-js/util' {
+  //export const EMPTY_NEWLINE = EMPTY_NEWLINE
+  //export const isImport = isImport
+  //export const isExport = isExport
+  //export const isExportDefault = isExportDefault
+  //export const isImportOrExport = isImportOrExport
+  //export const startsWithCapitalLetter = startsWithCapitalLetter
+  //export const isComment = isComment
+  //export const getCommentContents = getCommentContents
+  //export const paramCase = paramCase
+  export const toTemplateLiteral: (text: string) => string;
+}
+
+declare module 'hastscript' {
+  import { Node } from 'unist';
+  function h(
+    selector?: string,
+    properties?: object | null,
+    ...children: any[]
+  ): Node;
+  export default h;
+}
+
+declare module 'hastscript/svg' {
+  import { Node } from 'unist';
+  function s(
+    selector?: string,
+    properties?: object | null,
+    ...children: any[]
+  ): Node;
+  export default s;
+}
+
+declare module 'hast-to-hyperscript' {
+  import { Node } from 'unist';
+  function toH(h: (...args: any[]) => any, node: Node, options?: object): any;
+  export default toH;
+}
+
+declare module 'hast-util-raw' {
+  import { Node } from 'unist';
+  function raw(tree: Node, file?: any): any;
+  export default raw;
+}
+
 declare module 'remark-react' {
   declare var remarkReact: any;
   export default remarkReact;

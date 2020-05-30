@@ -1,6 +1,6 @@
+import { ReactNode } from 'react';
 import { MDXProviderComponents } from '@mdx-js/react';
 import { css } from '@emotion/core';
-import { LiveProvider, LiveEditor } from 'react-live';
 import Highlight, { defaultProps, Language } from 'prism-react-renderer';
 import lightTheme from 'prism-react-renderer/themes/nightOwlLight';
 import * as UI from './components/ui';
@@ -8,16 +8,25 @@ import * as UI from './components/ui';
 const CodeBlock = ({
   children,
   className,
-  ...props
 }: {
-  children: string;
+  children: ReactNode | ReactNode[];
   className?: string;
 }) => {
   const language = (className || '').replace(/language-/, '') as Language;
+  const code =
+    typeof children === 'string'
+      ? children
+      : Array.isArray(children) && typeof children[0] === 'string'
+      ? children[0]
+      : null;
+  if (code === null) {
+    return null;
+  }
+
   return (
     <Highlight
       {...defaultProps}
-      code={children.trim()}
+      code={code.trim()}
       language={language}
       theme={lightTheme}
     >
@@ -86,14 +95,14 @@ export const mdxComponents: MDXProviderComponents = {
   ),
   pre: (props) => <UI.Box as="pre" my={4} {...props} />,
   code: (props) => (
-    <UI.Code w="full" px={4} py={6} rounded="lg" fontSize="xs">
+    <UI.Code w="full" px={4} py={6} rounded="lg" fontSize="xs" lineHeight={1.4}>
       <CodeBlock {...props} />
     </UI.Code>
   ),
   // em?: ComponentType<any>;
   // strong?: ComponentType<any>;
   // delete?: ComponentType<any>;
-  inlineCode: (props) => <UI.Code fontSize="sm" {...props} />,
+  inlineCode: (props) => <UI.Code fontSize="sm" mx={1} {...props} />,
   hr: (props) => (
     <UI.Box
       as="hr"

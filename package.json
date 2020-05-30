@@ -20,14 +20,13 @@
     "cli-spinners": "^2.3.0",
     "emotion-theming": "^10.0.27",
     "formik": "^2.1.4",
+    "hast-to-hyperscript": "^8.1.1",
     "nanoid": "^3.1.6",
     "next": "^9.3.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-linkify": "^1.0.0-alpha",
-    "react-live": "^2.2.2",
-    "remark-parse": "^8.0.2",
-    "remark-react": "^7.0.1"
+    "react-live": "^2.2.2"
   },
   "devDependencies": {
     "@types/buble": "^0.19.2",
