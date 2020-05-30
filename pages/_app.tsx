@@ -11,6 +11,7 @@ import {
 } from '../src/contexts/workspace';
 import { createFileSystemService } from '../src/services/fs';
 import theme from '../src/theme';
+import { mdxComponents } from '../src/mdxComoponents';
 
 const withGlobalProvider = (App: React.ComponentType<AppProps>) => (
   appProps: AppProps
@@ -20,7 +21,7 @@ const withGlobalProvider = (App: React.ComponentType<AppProps>) => (
     workspaceContextInitialState
   );
   return (
-    <MDXProvider components={{}}>
+    <MDXProvider components={mdxComponents}>
       <ThemeProvider theme={theme}>
         <ColorModeProvider value="light">
           <WorkspaceContext.Provider value={{ state, dispatch }}>
