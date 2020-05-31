@@ -1,0 +1,29 @@
+# Introduction
+
+Asteroid は、JavaScript ユーザーのためのライブエディタです。入力した JavaScript は即座にプレビューされ、あなたのライブコーディングを加速させます。
+
+## Blocks
+
+Asteroid には **ブロック** という概念があります。これはちょうど [Jupyter Notebook](https://jupyter.org/) のセルのようなもので、一つの **コードブロック** にはそれぞれ JavaScript エディターとプレビュー機能が用意されています。また、各コードブロックの実行結果は保存されており、スニペット内で `return` することで後ろのコードブロックで再利用することができます。
+
+コードブロックは、基本的な JavaScript 文法のほかに [**JSX**](https://facebook.github.io/jsx/) にも対応しており、それぞれのコンポーネントは [React](https://reactjs.org/) の `React.createElement` として解釈されます。それ以外にも Asteroid 独自の関数として `$run` が用意されており、これがプレビューに React コンポーネントを追加するための唯一の方法です。React や JSX 自体の説明は省きますが、とにかくプレビューに HTML を表示させてみたい場合は、以下のように書くことで実現できます。
+
+```jsx
+$run(() => (
+  <h1>Hello Asteroid</h1>
+))
+```
+
+コードブロックの他に **ノートブロック** も利用することができます。ノートブロックは JavaScript の代わりに [**Markdown**](https://en.wikipedia.org/wiki/Markdown) 形式の文章を書くことができ、ソースコードの解説やメモ書きに便利です。
+
+## Module Import
+
+魔法のような機能を一から用意するのは大変ですが、Asteroid には ES Module (ESM) 形式で書かれた外部のライブラリを読み込む機能があります。ESM 形式に対応するものであれば jQuery、Lodash、Three.js… 何でもライブラリが置かれた URL を指定して読み込めます！ただし、一旦解釈されたソースコードは文字通りあなたのブラウザ上で何でも実行できるので、<span style={{textDecoration: 'underline'}}>読み込んだ内容によってはセキュリティ上重大な問題が起こります。</span>ライブラリの内容を確認し、信頼できないライブラリや URL は入力しないようにしてください。
+
+ESM 形式に対応したライブラリは、[**Pika CDN**](https://www.pika.dev/cdn) などでも探すことができるので参考にしてください。
+
+## MDX Export
+
+Asteroid は、作成したプロジェクトの出力に [**MDX**](https://mdxjs.com/)という形式をサポートしています。これは、Markdown に JSX を組み合わせたようなフォーマットです。
+
+MDX は単に Markdown と JSX を組み合わせたものですが、様々な使いみちが用意されています。MDX は公式で Webpack loader や、React や [Vue](https://vuejs.org/index.html) などの主要な JavaScript フレームワークのプラグインを用意しているので、MDX で出力したファイルに何も手を加えることなく、JavaScript と同じように読み込むことができます。もし [GatsbyJS](https://www.gatsbyjs.org/) か何かで書かれたブログがあるなら、Asteroid で書いたプロジェクトを埋め込むことも簡単です！

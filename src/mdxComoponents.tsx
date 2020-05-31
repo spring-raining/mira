@@ -54,12 +54,12 @@ const liStyle = css({
 export const mdxComponents: MDXProviderComponents = {
   wrapper: (props) => <UI.Box px={2} my={4} {...props} />,
   p: (props) => <UI.Text as="p" my={4} {...props} />,
-  h1: (props) => <UI.Heading as="h1" size="2xl" {...props} />,
-  h2: (props) => <UI.Heading as="h2" size="xl" {...props} />,
-  h3: (props) => <UI.Heading as="h3" size="lg" {...props} />,
-  h4: (props) => <UI.Heading as="h4" size="md" {...props} />,
-  h5: (props) => <UI.Heading as="h5" size="sm" {...props} />,
-  h6: (props) => <UI.Heading as="h6" size="xs" {...props} />,
+  h1: (props) => <UI.Heading as="h1" size="2xl" mt={8} mb={4} {...props} />,
+  h2: (props) => <UI.Heading as="h2" size="xl" mt={8} mb={4} {...props} />,
+  h3: (props) => <UI.Heading as="h3" size="lg" mt={8} mb={4} {...props} />,
+  h4: (props) => <UI.Heading as="h4" size="md" mt={8} mb={4} {...props} />,
+  h5: (props) => <UI.Heading as="h5" size="sm" mt={8} mb={4} {...props} />,
+  h6: (props) => <UI.Heading as="h6" size="xs" mt={8} mb={4} {...props} />,
   // thematicBreak?: ComponentType<any>;
   blockquote: (props) => (
     <UI.Callout

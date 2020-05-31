@@ -31,6 +31,11 @@ declare module '@mdx-js/util' {
   export const toTemplateLiteral: (text: string) => string;
 }
 
+declare module '*.mdx' {
+  const MDXComponent: (props: any) => JSX.Element;
+  export default MDXComponent;
+}
+
 declare module 'hastscript' {
   import { Node } from 'unist';
   function h(
