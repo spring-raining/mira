@@ -1,12 +1,12 @@
 # Introduction
 
-Asteroid は、JavaScript ユーザーのためのライブエディタです。入力した JavaScript は即座にプレビューされ、あなたのライブコーディングを加速させます。
+Asteroid is a live editor for JavaScript users. The JavaScript you enter will be previewed instantly, accelerating your live coding.
 
 ## Blocks
 
-Asteroid には **ブロック** という概念があります。これはちょうど [Jupyter Notebook](https://jupyter.org/) のセルのようなもので、一つの **コードブロック** にはそれぞれ JavaScript エディターとプレビュー機能が用意されています。また、各コードブロックの実行結果は保存されており、スニペット内で `return` することで後ろのコードブロックで再利用することができます。
+Asteroid has the concept of **blocks**. It's just like a cell in [Jupyter Notebook](https://jupyter.org/), which have a JavaScript editor and a preview in each **code block**. In addition, the execution result of each code block is saved and can be reused in the subsequent code block by `return` in the snippet.
 
-コードブロックは、基本的な JavaScript 文法のほかに [**JSX**](https://facebook.github.io/jsx/) にも対応しており、それぞれのコンポーネントは [React](https://reactjs.org/) の `React.createElement` として解釈されます。それ以外にも Asteroid 独自の関数として `$run` が用意されており、これがプレビューに React コンポーネントを追加するための唯一の方法です。React や JSX 自体の説明は省きますが、とにかくプレビューに HTML を表示させてみたい場合は、以下のように書くことで実現できます。
+The code block supports [**JSX**](https://facebook.github.io/jsx/) in addition to the basic JavaScript syntax, and each component is interpreted as `React.createElement` in [React](https://reactjs.org/). Otherwise, Asteroid has the original `$run` function, which provides the only way to add a React component to the preview. I won't go into React or JSX itself, but if you want to display HTML in the preview anyway, you can do so by writing the following.
 
 ```jsx
 $run(() => (
@@ -14,16 +14,16 @@ $run(() => (
 ))
 ```
 
-コードブロックの他に **ノートブロック** も利用することができます。ノートブロックは JavaScript の代わりに [**Markdown**](https://en.wikipedia.org/wiki/Markdown) 形式の文章を書くことができ、ソースコードの解説やメモ書きに便利です。
+In addition to code blocks, **note blocks** can also be used. Note blocks allow you to write [**Markdown**](https://en.wikipedia.org/wiki/Markdown) documents instead of JavaScript, which is useful for explaining source code and writing notes.
 
 ## Module Import
 
-魔法のような機能を一から用意するのは大変ですが、Asteroid には ES Module (ESM) 形式で書かれた外部のライブラリを読み込む機能があります。ESM 形式に対応するものであれば jQuery、Lodash、Three.js… 何でもライブラリが置かれた URL を指定して読み込めます！ただし、一旦解釈されたソースコードは文字通りあなたのブラウザ上で何でも実行できるので、<span style={{textDecoration: 'underline'}}>読み込んだ内容によってはセキュリティ上重大な問題が起こります。</span>ライブラリの内容を確認し、信頼できないライブラリや URL は入力しないようにしてください。
+It's hard to prepare a magical feature from scratch, but Asteroid has the feature to load external libraries written in ES Module (ESM) format, such as jQuery, Lodash, Three.js… anything that supports ESM format can be loaded by specifying the URL where the library is located! However, once interpreted, the source code can literally run anything in your browser, so <span style={{textDecoration: 'underline'}}>depending on what you read, it can cause serious security issues.</span> Check the contents of the library and do not enter unreliable libraries or URLs.
 
-ESM 形式に対応したライブラリは、[**Pika CDN**](https://www.pika.dev/cdn) などでも探すことができるので参考にしてください。
+You can also find ESM format libraries on such as [**Pika CDN**](https://www.pika.dev/cdn), for reference.
 
 ## MDX Export
 
-Asteroid は、作成したプロジェクトの出力に [**MDX**](https://mdxjs.com/)という形式をサポートしています。これは、Markdown に JSX を組み合わせたようなフォーマットです。
+Asteroid supports a format called [**MDX**](https://mdxjs.com/) for the output of projects that you create. This format is like a combination of Markdown and JSX.
 
-MDX は単に Markdown と JSX を組み合わせたものですが、様々な使いみちが用意されています。MDX は公式で Webpack loader や、React や [Vue](https://vuejs.org/index.html) などの主要な JavaScript フレームワークのプラグインを用意しているので、MDX で出力したファイルに何も手を加えることなく、JavaScript と同じように読み込むことができます。もし [GatsbyJS](https://www.gatsbyjs.org/) か何かで書かれたブログがあるなら、Asteroid で書いたプロジェクトを埋め込むことも簡単です！
+MDX is simply a combination of Markdown and JSX, but there are many ways to use it: MDX officially provides plugins for the Webpack loader and other major JavaScript frameworks such as React and [Vue](https://vuejs.org/index.html), so you can import files which outputted with MDX just like JavaScript without modifying them. If you have a blog written in [GatsbyJS](https://www.gatsbyjs.org/) or something, it's easy to embed a project you wrote in Asteroid!
