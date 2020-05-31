@@ -292,8 +292,8 @@ export const UserScriptPart = () => {
             namespaceImport: null,
           };
       const value = !!importClause
-        ? `import ${importClause} from '${moduleSpecifier}'`
-        : `import '${moduleSpecifier}'`;
+        ? `import ${importClause} from "${moduleSpecifier}"`
+        : `import "${moduleSpecifier}"`;
       const newImportPart = { id, definitions: [importDef], text: value };
       const newState = {
         providence: {

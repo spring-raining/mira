@@ -1,4 +1,6 @@
 import { createCompiler } from '@mdx-js/mdx';
+import frontmatter from 'remark-frontmatter';
+import yaml from 'js-yaml';
 import { nanoid } from 'nanoid';
 import type { Parent } from 'unist';
 import {
@@ -6,14 +8,42 @@ import {
   AsteroidBrick,
   ScriptBrick,
 } from './../contexts/universe';
-import { Note, ASTNode } from '.';
+import { Note, ASTNode, AsteroidConfig } from '.';
 
-export const importMdx = (mdxString: string): Note[] => {
+const parseConfig = (str: string): [AsteroidConfig | null, object] => {
+  try {
+    const data = yaml.safeLoad(str);
+    if (!data || typeof data !== 'object') {
+      return [null, {}];
+    }
+    const { asteroid, ...otherOption } = data;
+    return [asteroid || null, otherOption];
+  } catch (e) {
+    return [null, {}];
+  }
+};
+
+export const importMdx = (
+  mdxString: string
+): { note: Note[]; config: AsteroidConfig; frontmatter: object | null } => {
   const compiler = createCompiler({
-    remarkPlugins: [],
+    remarkPlugins: [frontmatter],
     rehypePlugins: [],
   });
   const parsed: Parent = compiler.parse(mdxString);
+  let config: AsteroidConfig = {};
+  let otherOption: object | null = null;
+  if (
+    parsed.children.length > 0 &&
+    parsed.children[0].type === 'yaml' &&
+    typeof parsed.children[0].value === 'string'
+  ) {
+    const [asteroid, _otherOption] =
+      parseConfig(parsed.children[0].value) || {};
+    config = asteroid || {};
+    otherOption = _otherOption;
+  }
+
   const scriptTypes = ['jsx', 'import', 'export'];
   const asteroidDivRe = /^<div><Asteroid_(\w+)\s*\/><\/div>$/;
   const asteroidMetaRe = /^asteroid=(\w+)$/;
@@ -32,6 +62,10 @@ export const importMdx = (mdxString: string): Note[] => {
 
     // Strip the inserted asteroid components
     if (node.type === 'jsx' && asteroidDivRe.test(node.value)) {
+      return acc;
+    }
+    // Skip config block
+    if (node.type === 'yaml') {
       return acc;
     }
 
@@ -81,7 +115,7 @@ export const importMdx = (mdxString: string): Note[] => {
       ] as Note[];
     }
   }, [] as Note[]);
-  return chunk.map((el) => {
+  const note = chunk.map((el) => {
     const { children, noteType } = el;
     const text =
       noteType === 'asteroid'
@@ -97,22 +131,31 @@ export const importMdx = (mdxString: string): Note[] => {
       text,
     } as Note;
   });
+  return { note, config, frontmatter: otherOption };
 };
 
 const asteroidDiv = (id: string) => `<div><Asteroid_${id} /></div>`;
 export const exportMdx = ({
   bricks,
   userScript,
-}: Pick<UniverseContextState, 'bricks' | 'userScript'>): string => {
+  frontmatter,
+}: Pick<UniverseContextState, 'bricks' | 'userScript'> & {
+  frontmatter: object | null;
+}): string => {
   let mdx = '';
-
-  const firstScriptBrick: ScriptBrick = {
-    ...userScript,
-    text: (userScript.children || [])
-      .map(({ value }) => (value || '') as string)
-      .join('\n\n'),
+  const module = (userScript.children || [])
+    .map(({ value }) => value)
+    .filter((value): value is string => !!value);
+  const config: AsteroidConfig = {
+    ...(module.length > 0 && { module }),
   };
-  [firstScriptBrick, ...bricks].forEach((brick, i) => {
+  const yamlStr = yaml.safeDump(
+    { ...frontmatter, asteroid: config },
+    { noCompatMode: true }
+  );
+  mdx += `---\n${yamlStr}---\n\n`;
+
+  bricks.forEach((brick, i) => {
     if (brick.noteType === 'markdown') {
       mdx += brick.text + '\n\n';
       return;

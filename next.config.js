@@ -1,4 +1,10 @@
-const withMDX = require('@next/mdx')();
+const frontmatter = require('remark-frontmatter');
+
+const withMDX = require('@next/mdx')({
+  options: {
+    remarkPlugins: [frontmatter],
+  },
+});
 
 module.exports = withMDX({
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],

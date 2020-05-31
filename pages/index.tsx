@@ -9,8 +9,11 @@ import { WorkspaceContext } from '../src/contexts/workspace';
 import pkg from '../package.json';
 
 const defaultProjectName = 'asteroid';
-const defaultMdx = `
-import paper from 'https://unpkg.com/@asteroid-pkg/paper@0.12.4?module'
+const defaultMdx = `---
+asteroid:
+  module:
+    - import paper from "https://unpkg.com/@asteroid-pkg/paper@0.12.4?module"
+---
 
 # Asteroid
 

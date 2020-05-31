@@ -21,16 +21,19 @@
     "emotion-theming": "^10.0.27",
     "formik": "^2.1.4",
     "hast-to-hyperscript": "^8.1.1",
+    "js-yaml": "^3.14.0",
     "nanoid": "^3.1.6",
     "next": "^9.3.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-linkify": "^1.0.0-alpha",
-    "react-live": "^2.2.2"
+    "react-live": "^2.2.2",
+    "remark-frontmatter": "^2.0.0"
   },
   "devDependencies": {
     "@types/buble": "^0.19.2",
     "@types/core-js": "^2.5.3",
+    "@types/js-yaml": "^3.12.4",
     "@types/mdx-js__react": "^1.5.2",
     "@types/node": "^13.13.4",
     "@types/react": "^16.9.34",

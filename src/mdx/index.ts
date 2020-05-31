@@ -23,3 +23,7 @@ export interface AsteroidNote {
 }
 
 export type Note = MarkdownNote | ScriptNote | AsteroidNote;
+
+export interface AsteroidConfig {
+  module?: string[];
+}

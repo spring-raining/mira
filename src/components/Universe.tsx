@@ -32,21 +32,34 @@ import * as UI from './ui';
 const buildInitialUniverse = async (
   mdx?: string
 ): Promise<Partial<UniverseContextState>> => {
-  let codeBlock = importMdx(mdx || '');
+  let { note, config, frontmatter } = importMdx(mdx || '');
+
+  const userScript: UniverseContextState['userScript'] = {
+    noteType: 'script',
+    brickId: nanoid(),
+    children: (config.module || []).map((mod) => ({
+      id: nanoid(),
+      type: 'import',
+      value: mod,
+    })),
+  };
+  const [firstBlock, ...latterBlocks] = note;
+  if (firstBlock?.noteType === 'script') {
+    note = latterBlocks;
+    userScript.children = [
+      ...(userScript.children || []),
+      ...firstBlock.children,
+    ];
+  }
 
   const importDefs = collectImports(
-    codeBlock.filter(({ noteType }) => noteType === 'script') as ScriptNote[]
+    [userScript, ...note].filter(
+      ({ noteType }) => noteType === 'script'
+    ) as ScriptNote[]
   );
   const imports = await Promise.all(importDefs.map(loadModule));
 
-  let userScript: UniverseContextState['userScript'] | null = null;
-  const [firstBlock, ...latterBlocks] = codeBlock;
-  if (firstBlock?.noteType === 'script') {
-    codeBlock = latterBlocks;
-    userScript = { ...firstBlock, brickId: nanoid() };
-  }
-
-  const asteroids = codeBlock.filter(
+  const asteroids = note.filter(
     ({ noteType }) => noteType === 'asteroid'
   ) as AsteroidNote[];
   const providence: Providence = {
@@ -64,8 +77,9 @@ const buildInitialUniverse = async (
     imports,
   };
   return {
-    bricks: codeBlock.map((block) => ({ ...block, brickId: nanoid() })),
+    bricks: note.map((block) => ({ ...block, brickId: nanoid() })),
     providence,
+    frontmatter,
     ...(userScript && { userScript }),
   };
 };
@@ -79,7 +93,7 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
   const { state, dispatch } = useContext(UniverseContext);
   const workspace = useContext(WorkspaceContext);
 
-  const { bricks, providence, userScript } = state;
+  const { bricks, providence, userScript, frontmatter } = state;
   const { arbitrate } = useRuler(state);
   const [initialized, setInitialized] = useState(false);
   const [initializedBrickIds, setInitializedBrickIds] = useState<string[]>([]);
@@ -192,13 +206,13 @@ const UniverseView: React.FC<UniverseProps> = ({ projectName, mdx }) => {
     }
     // Auto save after editing
     const timeoutId = setTimeout(() => {
-      const mdx = exportMdx({ bricks, userScript });
+      const mdx = exportMdx({ bricks, userScript, frontmatter });
       workspace.dispatch(updateProject({ name: projectName, mdx }));
     }, 2000);
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [ready, bricks, userScript, workspace.dispatch, projectName]);
+  }, [ready, bricks, userScript, frontmatter, workspace.dispatch, projectName]);
 
   return (
     <UI.Box w="100%">
