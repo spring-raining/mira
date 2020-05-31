@@ -5,7 +5,7 @@ import { Footer } from '../src/components/Footer';
 import { Universe } from '../src/components/Universe';
 import { WorkspaceContext } from '../src/contexts/workspace';
 
-const defaultProjectName = 'asteroid';
+const defaultProjectName = 'index';
 
 export default () => {
   const {

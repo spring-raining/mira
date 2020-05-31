@@ -11,7 +11,7 @@ import * as UI from '../src/components/ui';
 import { WorkspaceContext } from '../src/contexts/workspace';
 import HomeDoc from '../docs/index.mdx';
 
-const defaultProjectName = 'asteroid';
+const defaultProjectName = 'index';
 
 interface PageProps {
   examples: { [name: string]: string };

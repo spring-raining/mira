@@ -25,23 +25,15 @@ export const Navigation: React.FC = () => {
       bg="gray.100"
       rounded="lg"
     >
-      <Link href="/">
-        <a>
-          <NavigationItem active={route === '/'}>Home</NavigationItem>
-        </a>
-      </Link>
-      <Link href="/examples">
-        <a>
-          <NavigationItem active={route === '/examples'}>
-            Examples
-          </NavigationItem>
-        </a>
-      </Link>
-      <Link href="/workspace">
-        <a>
-          <NavigationItem>Workspace</NavigationItem>
-        </a>
-      </Link>
+      <UI.Link href="/">
+        <NavigationItem active={route === '/'}>Home</NavigationItem>
+      </UI.Link>
+      <UI.Link href="/examples">
+        <NavigationItem active={route === '/examples'}>Examples</NavigationItem>
+      </UI.Link>
+      <UI.Link href="/workspace">
+        <NavigationItem>Workspace</NavigationItem>
+      </UI.Link>
     </UI.Flex>
   );
 };
