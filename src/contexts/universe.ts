@@ -45,6 +45,7 @@ export interface UniverseContextState {
   bricks: Brick[];
   providence: Providence;
   userScript: Omit<ScriptBrick, 'text'>;
+  frontmatter: object | null;
   activeBrick: string | null;
 }
 
@@ -67,6 +68,7 @@ export const universeContextInitialState: UniverseContextState = {
     brickId: nanoid(),
     children: [],
   },
+  frontmatter: null,
   activeBrick: null,
 };
 

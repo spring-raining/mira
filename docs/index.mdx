@@ -1,0 +1,29 @@
+# Introduction
+
+Asteroid is a live editor for JavaScript users. The JavaScript you enter will be previewed instantly, accelerating your live coding.
+
+## Blocks
+
+Asteroid has the concept of **blocks**. It's just like a cell in [Jupyter Notebook](https://jupyter.org/), which have a JavaScript editor and a preview in each **code block**. In addition, the execution result of each code block is saved and can be reused in the subsequent code block by `return` in the snippet.
+
+The code block supports [**JSX**](https://facebook.github.io/jsx/) in addition to the basic JavaScript syntax, and each component is interpreted as `React.createElement` in [React](https://reactjs.org/). Otherwise, Asteroid has the original `$run` function, which provides the only way to add a React component to the preview. I won't go into React or JSX itself, but if you want to display HTML in the preview anyway, you can do so by writing the following.
+
+```jsx
+$run(() => (
+  <h1>Hello Asteroid</h1>
+))
+```
+
+In addition to code blocks, **note blocks** can also be used. Note blocks allow you to write [**Markdown**](https://en.wikipedia.org/wiki/Markdown) documents instead of JavaScript, which is useful for explaining source code and writing notes.
+
+## Module Import
+
+It's hard to prepare a magical feature from scratch, but Asteroid has the feature to load external libraries written in **ES Module (ESM)** format, such as jQuery, Lodash, Three.js… anything that supports ESM format can be loaded by specifying the URL where the library is located! However, once interpreted, the source code can literally run anything in your browser, so <span style={{textDecoration: 'underline'}}>depending on what you read, it can cause serious security issues.</span> Check the contents of the library and do not enter unreliable libraries or URLs.
+
+You can also find ESM format libraries on such as [**Pika CDN**](https://www.pika.dev/cdn), for reference.
+
+## MDX Export
+
+Asteroid supports a format called [**MDX**](https://mdxjs.com/) for the output of projects that you create. This format is like a combination of Markdown and JSX.
+
+MDX is simply a combination of Markdown and JSX, but there are many ways to use it: MDX officially provides plugins for the Webpack loader and other major JavaScript frameworks such as React and [Vue](https://vuejs.org/index.html), so you can import files which outputted with MDX just like JavaScript without modifying them. If you have a blog written in [GatsbyJS](https://www.gatsbyjs.org/) or something, it's easy to embed a project you wrote in Asteroid!

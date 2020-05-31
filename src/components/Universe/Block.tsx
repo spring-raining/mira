@@ -49,7 +49,6 @@ export const BlockPreviewPane: React.FC<
   return (
     <UI.Box
       w={['100%', '100%', '50%', '50%']}
-      bg={colorMode === 'light' ? 'gray.100' : null}
       px={4}
       py={[4, 4, 0, 0]}
       overflow="auto"
