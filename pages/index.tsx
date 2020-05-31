@@ -1,7 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
+import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import styled from '@emotion/styled';
 import { useColorMode } from '@chakra-ui/core';
+import * as fs from 'fs';
 import { setProjects } from '../src/actions/workspace';
 import { Universe } from '../src/components/Universe';
 import * as UI from '../src/components/ui';
@@ -9,75 +11,6 @@ import { WorkspaceContext } from '../src/contexts/workspace';
 import pkg from '../package.json';
 
 const defaultProjectName = 'asteroid';
-const defaultMdx = `---
-asteroid:
-  module:
-    - import paper from "https://unpkg.com/@asteroid-pkg/paper@0.12.4?module"
----
-
-# Asteroid
-
-Jupyter-like JavaScript REPL editor
-
-![](https://media.giphy.com/media/W5g5W5hMkzrJQDpN3P/giphy.gif)
-
-\`\`\`jsx asteroid=1998SF37
-await $run(() => (
-  <p style={{padding: 8, fontSize: 30, background: 'orange'}}>
-    Asteroid renders React components!
-  </p>
-))
-
-return { x: 'word' }
-\`\`\`
-
-<div><Asteroid_1998SF37 /></div>
-
-\`\`\`jsx asteroid=1998SF39
-await $run(() => x)
-\`\`\`
-
-<div><Asteroid_1998SF39 /></div>
-
-\`\`\`jsx asteroid=1998SF36
-await $run(() => <canvas id="canvas" />);
-
-const canvas = document.getElementById('canvas');
-paper.setup(canvas);
-const path = new paper.Path();
-path.strokeColor = "black";
-var start = new paper.Point(100, 100);
-path.moveTo(start);
-path.lineTo(start.add([200, -50]));
-\`\`\`
-
-<div><Asteroid_1998SF36 /></div>
-
-
-\`\`\`jsx asteroid=1958PG15
-const {Path} = paper;
-await $run(() => <canvas id="canvas2" />);
-
-const canvas = document.getElementById('canvas2');
-paper.setup(canvas);
-
-var path = new Path.Rectangle({
-	point: [30, 30],
-	size: [75, 75],
-	strokeColor: 'black',
-	fillColor: 'red',
-});
-
-paper.view.onFrame = (event) => {
-	path.rotate(3);
-	path.fillColor.hue += 1;
-}
-\`\`\`
-
-<div><Asteroid_1958PG15 /></div>
-
-
-`;
 
 const StyledIntro = styled(UI.Box)<{
   colorMode: 'light' | 'dark';
@@ -121,7 +54,11 @@ const StyledIntro = styled(UI.Box)<{
   };
 });
 
-export default () => {
+interface PageProps {
+  examples: { [name: string]: string };
+}
+
+export default ({ examples }: PageProps) => {
   const {
     state: { fs },
     dispatch,
@@ -145,7 +82,7 @@ export default () => {
         const asteroidPrj = projects.find(
           ({ name }) => name === defaultProjectName
         );
-        setInitialMdx(asteroidPrj?.mdx || defaultMdx);
+        setInitialMdx(asteroidPrj?.mdx || examples[defaultProjectName]);
         dispatch(setProjects(projects));
       });
   }, [fs, dispatch]);
@@ -189,4 +126,17 @@ export default () => {
       </UI.Flex>
     </div>
   );
+};
+
+export const getStaticProps: GetStaticProps<PageProps> = async () => {
+  const mdx = await fs.promises.readFile('public/examples/asteroid.mdx', {
+    encoding: 'utf8',
+  });
+  return {
+    props: {
+      examples: {
+        [defaultProjectName]: mdx,
+      },
+    },
+  };
 };
