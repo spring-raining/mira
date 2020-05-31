@@ -6,11 +6,9 @@ export const NavigationItem: React.FC<{ active?: boolean }> = ({
   active,
   children,
 }) => (
-  <UI.Link>
-    <UI.Box py={2} fontWeight={active ? 700 : null}>
-      {children}
-    </UI.Box>
-  </UI.Link>
+  <UI.Box py={2} fontWeight={active ? 700 : null}>
+    {children}
+  </UI.Box>
 );
 
 export const Navigation: React.FC = () => {
@@ -18,9 +16,9 @@ export const Navigation: React.FC = () => {
   return (
     <UI.Flex
       direction="column"
-      position="sticky"
-      top="2rem"
-      w="16rem"
+      position={['relative', 'relative', 'sticky', 'sticky']}
+      top={[0, 0, '2rem', '2rem']}
+      w={['100%', '100%', '16rem', '16rem']}
       mt={8}
       px={6}
       py={2}
@@ -28,10 +26,21 @@ export const Navigation: React.FC = () => {
       rounded="lg"
     >
       <Link href="/">
-        <NavigationItem active={route === '/'}>Home</NavigationItem>
+        <a>
+          <NavigationItem active={route === '/'}>Home</NavigationItem>
+        </a>
       </Link>
-      <Link href="/">
-        <NavigationItem active={route === '/examples'}>Examples</NavigationItem>
+      <Link href="/examples">
+        <a>
+          <NavigationItem active={route === '/examples'}>
+            Examples
+          </NavigationItem>
+        </a>
+      </Link>
+      <Link href="/workspace">
+        <a>
+          <NavigationItem>Workspace</NavigationItem>
+        </a>
       </Link>
     </UI.Flex>
   );

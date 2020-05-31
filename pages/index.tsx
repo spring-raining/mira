@@ -1,60 +1,17 @@
 import { useContext, useEffect, useState } from 'react';
 import { GetStaticProps } from 'next';
 import Head from 'next/head';
-import styled from '@emotion/styled';
-import { useColorMode } from '@chakra-ui/core';
 import * as fs from 'fs';
 import { setProjects } from '../src/actions/workspace';
 import { Footer } from '../src/components/Footer';
 import { Navigation } from '../src/components/Navigation';
+import { NightSky } from '../src/components/NightSky';
 import { Universe } from '../src/components/Universe';
 import * as UI from '../src/components/ui';
 import { WorkspaceContext } from '../src/contexts/workspace';
 import HomeDoc from '../docs/index.mdx';
 
 const defaultProjectName = 'asteroid';
-
-const StyledIntro = styled(UI.Box)<{
-  colorMode: 'light' | 'dark';
-}>(({ colorMode }) => {
-  const hsl = colorMode === 'light' ? '0,0%,100%' : '220,26%,14%';
-  const orbit = 'rgba(255,255,255,0.2)';
-  return {
-    position: 'relative',
-    background: `
-    radial-gradient(circle at 100% -20%, transparent 20rem, ${orbit} 20rem, ${orbit} calc(20rem + 1px), transparent calc(20rem + 1px)),
-    radial-gradient(ellipse at top left, #00031f, rgba(0, 17, 64, 0.9) 50%, transparent),
-    radial-gradient(ellipse at top right, #25006f, #7330ff 83%)`,
-    color: 'white',
-    '::after': {
-      content: '""',
-      position: 'absolute',
-      height: '30%',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(
-        to bottom,
-        hsla(${hsl}, 0) 0%,
-        hsla(${hsl}, 0.013) 6.5%,
-        hsla(${hsl}, 0.049) 12.8%,
-        hsla(${hsl}, 0.104) 19%,
-        hsla(${hsl}, 0.175) 25.2%,
-        hsla(${hsl}, 0.259) 31.3%,
-        hsla(${hsl}, 0.352) 37.4%,
-        hsla(${hsl}, 0.45) 43.5%,
-        hsla(${hsl}, 0.55) 49.8%,
-        hsla(${hsl}, 0.648) 56.2%,
-        hsla(${hsl}, 0.741) 62.7%,
-        hsla(${hsl}, 0.825) 69.6%,
-        hsla(${hsl}, 0.896) 76.6%,
-        hsla(${hsl}, 0.951) 84%,
-        hsla(${hsl}, 0.987) 91.8%,
-        hsl(${hsl}) 100%
-      )`,
-    },
-  };
-});
 
 interface PageProps {
   examples: { [name: string]: string };
@@ -65,7 +22,6 @@ export default ({ examples }: PageProps) => {
     state: { fs },
     dispatch,
   } = useContext(WorkspaceContext);
-  const { colorMode } = useColorMode();
   const [initialMdx, setInitialMdx] = useState<string | null>(null);
   useEffect(() => {
     if (!fs || !dispatch) {
@@ -95,27 +51,48 @@ export default ({ examples }: PageProps) => {
         <title>Asteroid</title>
       </Head>
 
-      <StyledIntro
-        colorMode={colorMode}
-        w="100%"
-        py={12}
-        minH={['70vh', '70vmin', '70vmin', '70vmin']}
-      >
+      <NightSky minH={['70vh', '80vmin', '60vmin', '60vmin']}>
         <UI.Box mx={6}>
           <UI.Heading>Asteroid</UI.Heading>
           <UI.Text fontSize="lg">
             JavaScript & Markdown live editor on your browser
           </UI.Text>
         </UI.Box>
-      </StyledIntro>
+        <UI.Flex
+          justify={['center', 'center', 'flex-end', 'flex-end']}
+          position="absolute"
+          w="100%"
+          bottom="1rem"
+        >
+          <UI.Image
+            src="/assets/screenshot.png"
+            height={[200, 240, 300, 300]}
+            alt="Asteroid"
+            mx="4rem"
+            boxShadow="lg"
+          />
+        </UI.Flex>
+      </NightSky>
 
-      <UI.Flex mx="auto" my={12} px={4}>
+      <UI.Flex
+        direction={['column', 'column', 'row', 'row']}
+        mx="auto"
+        my={12}
+        px={4}
+      >
         <UI.Box>
           <Navigation />
         </UI.Box>
-        <UI.Box flex={1} ml={4}>
+        <UI.Box flex={1} ml={[0, 0, 4, 4]}>
           <HomeDoc />
         </UI.Box>
+      </UI.Flex>
+
+      <UI.Flex my={12} justify="center" align="center">
+        <UI.Icon name="arrow-down" size="1.5rem" />
+        <UI.Text ml={2} fontSize="1.5rem">
+          Try it now
+        </UI.Text>
       </UI.Flex>
 
       {initialMdx != null && (
