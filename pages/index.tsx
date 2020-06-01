@@ -78,7 +78,7 @@ export default ({ examples }: PageProps) => {
         direction={['column', 'column', 'row', 'row']}
         mx="auto"
         my={12}
-        px={4}
+        px={[2, 4, 4, 4]}
       >
         <UI.Box>
           <Navigation />

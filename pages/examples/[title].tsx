@@ -15,7 +15,7 @@ export default () => {
       <Head>
         <title>Asteroid</title>
       </Head>
-      <UI.Box maxW={920} mx="auto" px={2}>
+      <UI.Box maxW={920} mx="auto" px={[2, 4, 4, 4]}>
         <Asteroid />
       </UI.Box>
     </div>

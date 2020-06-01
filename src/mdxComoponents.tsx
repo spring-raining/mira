@@ -52,7 +52,7 @@ const liStyle = css({
 });
 
 export const mdxComponents: MDXProviderComponents = {
-  wrapper: (props) => <UI.Box px={2} my={4} {...props} />,
+  wrapper: (props) => <UI.Box my={4} {...props} />,
   p: (props) => <UI.Text as="p" my={4} {...props} />,
   h1: (props) => <UI.Heading as="h1" size="2xl" mt={8} mb={4} {...props} />,
   h2: (props) => <UI.Heading as="h2" size="xl" mt={8} mb={4} {...props} />,
@@ -95,7 +95,15 @@ export const mdxComponents: MDXProviderComponents = {
   ),
   pre: (props) => <UI.Box as="pre" my={4} {...props} />,
   code: (props) => (
-    <UI.Code w="full" px={4} py={6} rounded="lg" fontSize="xs" lineHeight={1.4}>
+    <UI.Code
+      w="full"
+      px={4}
+      py={6}
+      rounded="lg"
+      fontSize="xs"
+      lineHeight={1.4}
+      overflowX="auto"
+    >
       <CodeBlock {...props} />
     </UI.Code>
   ),

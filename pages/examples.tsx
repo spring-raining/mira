@@ -29,7 +29,11 @@ export default () => {
         </UI.Box>
       </NightSky>
 
-      <UI.Flex direction={['column', 'column', 'row', 'row']} mx="auto" px={4}>
+      <UI.Flex
+        direction={['column', 'column', 'row', 'row']}
+        mx="auto"
+        px={[2, 4, 4, 4]}
+      >
         <UI.Box>
           <Navigation />
         </UI.Box>
