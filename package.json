@@ -8,7 +8,11 @@
     "start": "next start"
   },
   "license": "MIT",
+  "workspaces": [
+    "packages/mdx"
+  ],
   "dependencies": {
+    "@asteroid-pkg/mdx": "1.0.0",
     "@chakra-ui/core": "^0.7.0",
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
@@ -38,6 +42,7 @@
     "@types/node": "^13.13.4",
     "@types/react": "^16.9.34",
     "@types/react-linkify": "^1.0.0",
+    "lerna": "^3.22.0",
     "monaco-editor": "^0.20.0",
     "typescript": "^3.8.3"
   }

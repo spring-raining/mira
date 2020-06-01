@@ -1,0 +1,6 @@
+{
+  "packages": [
+    "packages/mdx"
+  ],
+  "version": "independent"
+}

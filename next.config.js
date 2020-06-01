@@ -1,9 +1,7 @@
-const frontmatter = require('remark-frontmatter');
+const { mdxOptions } = require('@asteroid-pkg/mdx');
 
 const withMDX = require('@next/mdx')({
-  options: {
-    remarkPlugins: [frontmatter],
-  },
+  options: mdxOptions,
 });
 
 module.exports = withMDX({
