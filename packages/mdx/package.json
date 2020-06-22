@@ -6,14 +6,17 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
+    "test": "tsc && jest",
     "prepublish": "npm run build"
   },
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@babel/preset-typescript": "^7.10.1",
+    "@types/jest": "^26.0.0",
+    "jest": "^26.0.1",
     "typescript": "^3.8.3"
   }
 }

@@ -9,6 +9,7 @@
   },
   "license": "MIT",
   "workspaces": [
+    ".",
     "packages/mdx"
   ],
   "dependencies": {

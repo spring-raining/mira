@@ -1,6 +1,5 @@
 {
-  "packages": [
-    "packages/mdx"
-  ],
+  "npmClient": "yarn",
+  "useWorkspaces": true,
   "version": "independent"
 }
