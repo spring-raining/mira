@@ -1,7 +1,17 @@
 import frontmatter from 'remark-frontmatter';
 import { Node } from 'unist';
-import { asteroidDiv, asteroidCodeBlock } from './remark/asteroid';
+import {
+  asteroidDiv,
+  asteroidCodeBlock,
+  insertAsteroidComponent,
+} from './remark/asteroid';
 import { loadAsteroidConfig } from './remark/loadAsteroidConfig';
+
+export {
+  parseImportClause,
+  parseImportDeclaration,
+  importModules,
+} from './ecmaImport';
 
 function withAsteroidMdxCompiler(this: any, ret: any) {
   const { Compiler } = this;
@@ -17,6 +27,7 @@ export const mdxOptions = {
     loadAsteroidConfig,
     asteroidDiv,
     asteroidCodeBlock,
+    insertAsteroidComponent,
   ],
   rehypePlugins: [],
   compilers: [withAsteroidMdxCompiler],

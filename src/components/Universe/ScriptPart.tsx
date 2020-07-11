@@ -3,8 +3,9 @@ import Linkify from 'react-linkify';
 import { Formik, Field, FormikConfig } from 'formik';
 import { keyframes } from '@emotion/core';
 import { nanoid } from 'nanoid';
+import { parseImportClause } from '@asteroid-pkg/mdx';
 import { UniverseContext, ScriptBrick } from '../../contexts/universe';
-import { getImportBinding, loadModule } from '../../mdx/module';
+import { loadModule } from '../../mdx/module';
 import { randomInt } from '../../utils';
 import * as UI from '../ui';
 import { useRuler } from './useRuler';
@@ -162,7 +163,7 @@ const ImportModuleForm: React.FC<{
 
   const importClauseValidate = (value: string) => {
     if (value.trim().length > 0) {
-      const ret = getImportBinding(value.trim());
+      const ret = parseImportClause(value.trim());
       if (!ret) {
         return 'invalid import format';
       }
@@ -284,7 +285,7 @@ export const UserScriptPart = () => {
       const importDef = !!importClause
         ? {
             moduleSpecifier,
-            ...getImportBinding(importClause)!,
+            ...parseImportClause(importClause)!,
           }
         : {
             moduleSpecifier,

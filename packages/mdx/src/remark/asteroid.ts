@@ -4,6 +4,22 @@ import visit from 'unist-util-visit';
 const asteroidDivRe = /^<div><Asteroid_(\w+)\s*\/><\/div>$/;
 const asteroidMetaRe = /^asteroid=(\w+)$/;
 
+const buildFrameworkDefinition = ({ framework }: { framework: string }) =>
+  `import * as $asteroid from '@asteroid-mdx/${framework}'`;
+
+const buildComponentCode = ({
+  value,
+  asteroidId,
+}: {
+  value: string;
+  asteroidId: string;
+}) => `export const Asteroid_${asteroidId} = () => $asteroid.component(
+  '1998SF36',
+  ({$run}) => {
+${value}
+  }
+)`;
+
 export const asteroidDiv = () =>
   function (this: any, tree: Node) {
     // Visit JSX matching asteroidDivRe
@@ -35,4 +51,49 @@ export const asteroidCodeBlock = () =>
       }
     });
     return tree;
+  };
+
+export const insertAsteroidComponent = () =>
+  function (
+    this: any,
+    tree: Node & {
+      children: Node[];
+      asteroidConfig?: any;
+    }
+  ) {
+    const codeBlocks: { asteroidId: string; value: string }[] = [];
+    visit(
+      tree,
+      'code',
+      (
+        node: Node & {
+          value: string;
+          asteroidId?: string;
+        }
+      ) => {
+        const { value, asteroidId } = node;
+        if (asteroidId) {
+          codeBlocks.push({ value, asteroidId });
+        }
+      }
+    );
+    // Insert component codes
+    const children = [
+      ...codeBlocks.map<Node>((codeBlock) => ({
+        type: 'export',
+        value: buildComponentCode(codeBlock),
+      })),
+      ...tree.children,
+    ];
+    // Insert code that loads framework-specific asteroid sdk
+    if (tree.asteroidConfig?.framework) {
+      children.unshift({
+        type: 'import',
+        value: buildFrameworkDefinition(tree.asteroidConfig),
+      });
+    }
+    return {
+      ...tree,
+      children,
+    };
   };

@@ -6,17 +6,15 @@ it('parse', async () => {
     `
 ---
 asteroid:
-  frontmattertest: true
+  framework: react
 ---
-
-export const Asteroid_1998SF36 = () => <></>;
 
 # Hi
 
 \`abc\`
 
 \`\`\`jsx asteroid=1998SF36
-$run(() => ())
+$run(() => <></>)
 return 1
 \`\`\`
 
