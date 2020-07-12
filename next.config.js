@@ -1,4 +1,4 @@
-const { mdxOptions } = require('@asteroid-pkg/mdx');
+const { mdxOptions } = require('@asteroid-mdx/core');
 
 const withMDX = require('@next/mdx')({
   options: mdxOptions,

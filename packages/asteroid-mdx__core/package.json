@@ -1,5 +1,5 @@
 {
-  "name": "@asteroid-pkg/mdx",
+  "name": "@asteroid-mdx/core",
   "version": "1.0.0",
   "main": "dist/index.js",
   "module": "module/index.js",

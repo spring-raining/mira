@@ -3,7 +3,7 @@ import Linkify from 'react-linkify';
 import { Formik, Field, FormikConfig } from 'formik';
 import { keyframes } from '@emotion/core';
 import { nanoid } from 'nanoid';
-import { parseImportClause } from '@asteroid-pkg/mdx';
+import { parseImportClause } from '@asteroid-mdx/core';
 import { UniverseContext, ScriptBrick } from '../../contexts/universe';
 import { loadModule } from '../../mdx/module';
 import { randomInt } from '../../utils';

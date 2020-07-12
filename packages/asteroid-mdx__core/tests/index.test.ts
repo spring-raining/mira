@@ -1,5 +1,5 @@
 import mdx from '@mdx-js/mdx';
-import { mdxOptions } from '@asteroid-pkg/mdx';
+import { mdxOptions } from '@asteroid-mdx/core';
 
 it('parse', async () => {
   const str = await mdx(

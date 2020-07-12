@@ -1,4 +1,4 @@
-import { parseImportDeclaration, importModules } from '@asteroid-pkg/mdx';
+import { parseImportDeclaration, importModules } from '@asteroid-mdx/core';
 import { ImportPart, ImportDefinition } from '../contexts/universe';
 import { ScriptNote, ASTNode } from '.';
 

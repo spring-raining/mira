@@ -10,10 +10,10 @@
   "license": "MIT",
   "workspaces": [
     ".",
-    "packages/mdx"
+    "packages/asteroid-mdx__*"
   ],
   "dependencies": {
-    "@asteroid-pkg/mdx": "1.0.0",
+    "@asteroid-mdx/core": "1.0.0",
     "@chakra-ui/core": "^0.7.0",
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
