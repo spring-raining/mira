@@ -31,16 +31,20 @@ export const importMdx = (
     rehypePlugins: [],
   });
   const parsed: Parent = compiler.parse(mdxString);
-  let config: AsteroidConfig = {};
+  let config: AsteroidConfig = {
+    framework: 'react',
+  };
   let otherOption: object | null = null;
   if (
     parsed.children.length > 0 &&
     parsed.children[0].type === 'yaml' &&
     typeof parsed.children[0].value === 'string'
   ) {
-    const [asteroid, _otherOption] =
+    const [asteroidConfig, _otherOption] =
       parseConfig(parsed.children[0].value) || {};
-    config = asteroid || {};
+    if (asteroidConfig) {
+      config = asteroidConfig;
+    }
     otherOption = _otherOption;
   }
 
@@ -147,6 +151,7 @@ export const exportMdx = ({
     .map(({ value }) => value)
     .filter((value): value is string => !!value);
   const config: AsteroidConfig = {
+    framework: 'react',
     ...(module.length > 0 && { module }),
   };
   const yamlStr = yaml.safeDump(
