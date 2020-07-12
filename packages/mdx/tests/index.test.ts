@@ -7,6 +7,8 @@ it('parse', async () => {
 ---
 asteroid:
   framework: react
+  module:
+    - 'import paper from "https://unpkg.com/@asteroid-pkg/paper@0.12.4?module"'
 ---
 
 # Hi

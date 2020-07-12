@@ -10,11 +10,13 @@ const buildFrameworkDefinition = ({ framework }: { framework: string }) =>
 const buildComponentCode = ({
   value,
   asteroidId,
+  config,
 }: {
   value: string;
   asteroidId: string;
+  config: object;
 }) => `export const Asteroid_${asteroidId} = () => $asteroid.component(
-  '1998SF36',
+  ${JSON.stringify(config)},
   ({$run}) => {
 ${value}
   }
@@ -81,7 +83,10 @@ export const insertAsteroidComponent = () =>
     const children = [
       ...codeBlocks.map<Node>((codeBlock) => ({
         type: 'export',
-        value: buildComponentCode(codeBlock),
+        value: buildComponentCode({
+          ...codeBlock,
+          config: tree.asteroidConfig || {},
+        }),
       })),
       ...tree.children,
     ];
