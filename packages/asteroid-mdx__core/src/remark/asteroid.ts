@@ -15,9 +15,9 @@ const buildComponentCode = ({
   value: string;
   asteroidId: string;
   config: object;
-}) => `export const Asteroid_${asteroidId} = () => $asteroid.component(
+}) => `export const Asteroid_${asteroidId} = $asteroid.component(
   ${JSON.stringify(config)},
-  ({$run}) => {
+  async ({$run}) => {
 ${value}
   }
 )`;
