@@ -19,7 +19,7 @@
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
     "@isomorphic-git/lightning-fs": "^4.2.2",
-    "@mdx-js/loader": "^1.6.1",
+    "@mdx-js/loader": "^2.0.0-next.8",
     "@monaco-editor/react": "^3.3.0",
     "@next/mdx": "^9.3.6",
     "buble": "^0.20.0",

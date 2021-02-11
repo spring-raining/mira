@@ -12,6 +12,7 @@ export {
   parseImportDeclaration,
   importModules,
 } from './ecmaImport';
+export type { AsteroidConfig, RuntimeScope } from './types';
 
 function withAsteroidMdxCompiler(this: any, ret: any) {
   const { Compiler } = this;

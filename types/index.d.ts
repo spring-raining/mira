@@ -1,10 +1,11 @@
 /// <reference types="node" />
 
 declare module '@mdx-js/mdx' {
-  export function compile(mdx: string, options?: object): Promise<any>;
-  export function sync(mdx: string, options?: object): any;
-  export function createMdxAstCompiler(options?: object): any;
-  export function createCompiler(options?: object): any;
+  import { Processor } from "unified";
+  export function compile(mdx: string, options?: object): Promise<string>;
+  export function sync(mdx: string, options?: object): string;
+  export function createMdxAstCompiler(options?: object): Processor;
+  export function createCompiler(options?: object): Processor;
   export default compile;
 }
 

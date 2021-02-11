@@ -3,12 +3,13 @@ import frontmatter from 'remark-frontmatter';
 import yaml from 'js-yaml';
 import { nanoid } from 'nanoid';
 import type { Parent } from 'unist';
+import type { AsteroidConfig } from '@asteroid-mdx/core';
 import {
   UniverseContextState,
   AsteroidBrick,
   ScriptBrick,
 } from './../contexts/universe';
-import { Note, ASTNode, AsteroidConfig } from '.';
+import { Note, ASTNode } from '.';
 
 const parseConfig = (str: string): [AsteroidConfig | null, object] => {
   try {

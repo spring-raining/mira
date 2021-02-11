@@ -23,8 +23,3 @@ export interface AsteroidNote {
 }
 
 export type Note = MarkdownNote | ScriptNote | AsteroidNote;
-
-export interface AsteroidConfig {
-  framework?: 'react';
-  module?: string[];
-}
