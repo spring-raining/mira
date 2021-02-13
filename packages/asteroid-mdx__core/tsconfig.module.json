@@ -5,4 +5,7 @@
     "module": "ESNext",
     "outDir": "./module",
   },
+  "include": [
+    "src/**/*.ts"
+  ]
 }

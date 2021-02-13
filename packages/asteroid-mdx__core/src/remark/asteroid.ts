@@ -1,3 +1,4 @@
+import type { Plugin } from "unified";
 import { Node } from 'unist';
 import visit from 'unist-util-visit';
 
@@ -22,7 +23,7 @@ ${value}
   }
 )`;
 
-export const asteroidDiv = () =>
+export const asteroidDiv: Plugin = () =>
   function (this: any, tree: Node) {
     // Visit JSX matching asteroidDivRe
     visit(tree, 'jsx', (node) => {
@@ -37,7 +38,7 @@ export const asteroidDiv = () =>
     return tree;
   };
 
-export const asteroidCodeBlock = () =>
+export const asteroidCodeBlock: Plugin = () =>
   function (this: any, tree: Node) {
     // Visit fenced code block which has asteroid meta
     visit(tree, 'code', (node) => {
@@ -55,13 +56,14 @@ export const asteroidCodeBlock = () =>
     return tree;
   };
 
-export const insertAsteroidComponent = () =>
+export const insertAsteroidComponent: Plugin = () =>
   function (
     this: any,
-    tree: Node & {
-      children: Node[];
-      asteroidConfig?: any;
-    }
+    tree: any
+    // tree: Node & {
+    //   children: Node[];
+    //   asteroidConfig?: any;
+    // }
   ) {
     const codeBlocks: { asteroidId: string; value: string }[] = [];
     visit(

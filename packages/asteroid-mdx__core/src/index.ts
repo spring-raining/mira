@@ -1,5 +1,6 @@
+import mdx from "@mdx-js/mdx";
 import frontmatter from 'remark-frontmatter';
-import { Node } from 'unist';
+import type { Plugin } from "unified";
 import {
   asteroidDiv,
   asteroidCodeBlock,
@@ -14,22 +15,24 @@ export {
 } from './ecmaImport';
 export type { AsteroidConfig, RuntimeScope } from './types';
 
-function withAsteroidMdxCompiler(this: any, ret: any) {
-  const { Compiler } = this;
-  this.Compiler = function (tree: Node) {
-    const jsx = Compiler(tree);
-    return jsx;
-  };
-}
-
-export const mdxOptions = {
+export const mdxOptions: mdx.Options = {
   remarkPlugins: [
     frontmatter,
     loadAsteroidConfig,
     asteroidDiv,
     asteroidCodeBlock,
     insertAsteroidComponent,
-  ],
+  ] as Plugin[],
   rehypePlugins: [],
-  compilers: [withAsteroidMdxCompiler],
+  compilers: [],
 };
+
+export async function compile(input: string, options: mdx.Options = mdxOptions): Promise<string> {
+  return await mdx(input, options);
+}
+
+export function compileSync(input: string, options: mdx.Options = mdxOptions): string {
+  return mdx.sync(input, options);
+}
+
+export default compile;

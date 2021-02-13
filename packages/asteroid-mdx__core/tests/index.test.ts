@@ -1,29 +1,10 @@
-import mdx from '@mdx-js/mdx';
-import { mdxOptions } from '@asteroid-mdx/core';
+import fs from 'fs';
+import path from 'path';
+import { compile } from '../src/index';
 
 it('parse', async () => {
-  const str = await mdx(
-    `
----
-asteroid:
-  framework: react
-  module:
-    - 'import paper from "https://unpkg.com/@asteroid-pkg/paper@0.12.4?module"'
----
-
-# Hi
-
-\`abc\`
-
-\`\`\`jsx asteroid=1998SF36
-$run(() => <></>)
-return 1
-\`\`\`
-
-<div><Asteroid_1998SF36 /></div>
-
-    `,
-    mdxOptions
+  const str = await compile(
+    fs.readFileSync(path.join(__dirname, 'test.mdx'), { encoding: 'utf8' })
   );
   expect(str).toBe('');
 });

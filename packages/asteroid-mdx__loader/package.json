@@ -1,0 +1,25 @@
+{
+  "name": "@asteroid-mdx/loader",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@asteroid-mdx/core": "1.0.0",
+    "loader-utils": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-syntax-jsx": "^7.12.13",
+    "@babel/plugin-transform-react-jsx": "^7.12.16",
+    "@babel/plugin-transform-runtime": "^7.12.15",
+    "@types/jest": "^26.0.0",
+    "babel-loader": "^8.2.2",
+    "jest": "^26.0.1",
+    "memfs": "^3.2.0",
+    "webpack": "^5.21.2"
+  }
+}

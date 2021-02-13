@@ -1,8 +1,9 @@
 import yaml from 'js-yaml';
+import type { Plugin } from "unified";
 import { Node } from 'unist';
 import visit from 'unist-util-visit';
 
-export const loadAsteroidConfig = () =>
+export const loadAsteroidConfig: Plugin = () =>
   function (this: any, tree: Node) {
     let config = {};
     visit(tree, 'yaml', ({ value }, index, parent) => {
