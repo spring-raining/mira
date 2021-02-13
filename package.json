@@ -9,42 +9,6 @@
   },
   "license": "MIT",
   "workspaces": [
-    ".",
     "packages/asteroid-mdx__*"
-  ],
-  "dependencies": {
-    "@asteroid-mdx/core": "1.0.0",
-    "@asteroid-mdx/react": "1.0.0",
-    "@chakra-ui/core": "^0.7.0",
-    "@emotion/core": "^10.0.28",
-    "@emotion/styled": "^10.0.27",
-    "@isomorphic-git/lightning-fs": "^4.2.2",
-    "@mdx-js/loader": "^2.0.0-next.8",
-    "@monaco-editor/react": "^3.3.0",
-    "@next/mdx": "^9.3.6",
-    "buble": "^0.20.0",
-    "cli-spinners": "^2.3.0",
-    "emotion-theming": "^10.0.27",
-    "formik": "^2.1.4",
-    "hast-to-hyperscript": "^8.1.1",
-    "js-yaml": "^3.14.0",
-    "nanoid": "^3.1.6",
-    "next": "^9.3.6",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-linkify": "^1.0.0-alpha",
-    "react-live": "^2.2.2"
-  },
-  "devDependencies": {
-    "@types/buble": "^0.19.2",
-    "@types/core-js": "^2.5.3",
-    "@types/js-yaml": "^3.12.4",
-    "@types/mdx-js__react": "^1.5.2",
-    "@types/node": "^13.13.4",
-    "@types/react": "^16.9.34",
-    "@types/react-linkify": "^1.0.0",
-    "lerna": "^3.22.0",
-    "monaco-editor": "^0.20.0",
-    "typescript": "^3.8.3"
-  }
+  ]
 }

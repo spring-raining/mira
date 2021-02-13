@@ -8,6 +8,7 @@ import toH from 'hast-to-hyperscript';
 import raw from 'hast-util-raw';
 import { Node } from 'unist';
 import visit from 'unist-util-visit';
+import { mdxComponents } from "../mdxComoponents";
 
 const toSlimJSX = (
   node: Node,
@@ -71,7 +72,7 @@ markdownCompiler.use(compileMarkdown, options);
 
 export const useMarkdownRenderer = (md: string) => {
   const [element, setElement] = useState<React.ReactElement>();
-  const components = useMDXComponents() || {};
+  const components = useMDXComponents(mdxComponents) || {};
 
   const createElement = useCallback(
     (name: string, attrs?: object, children?: any[]): React.ReactElement => {

@@ -1,7 +1,7 @@
-const { mdxOptions } = require('@asteroid-mdx/core');
+// const { mdxOptions } = require('@asteroid-mdx/core');
 
 const withMDX = require('@next/mdx')({
-  options: mdxOptions,
+  // options: mdxOptions,
 });
 
 module.exports = withMDX({

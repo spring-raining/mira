@@ -17,7 +17,7 @@ const parseConfig = (str: string): [AsteroidConfig | null, object] => {
     if (!data || typeof data !== 'object') {
       return [null, {}];
     }
-    const { asteroid, ...otherOption } = data;
+    const { asteroid, ...otherOption } = data as any;
     return [asteroid || null, otherOption];
   } catch (e) {
     return [null, {}];
@@ -31,7 +31,7 @@ export const importMdx = (
     remarkPlugins: [frontmatter],
     rehypePlugins: [],
   });
-  const parsed: Parent = compiler.parse(mdxString);
+  const parsed = compiler.parse(mdxString) as Parent;
   let config: AsteroidConfig = {
     framework: 'react',
   };

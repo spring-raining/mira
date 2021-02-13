@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { MDXProviderComponents } from '@mdx-js/react';
+import { ComponentDictionary } from '@mdx-js/react';
 import { css } from '@emotion/core';
 import Highlight, { defaultProps, Language } from 'prism-react-renderer';
 import lightTheme from 'prism-react-renderer/themes/nightOwlLight';
@@ -51,7 +51,7 @@ const liStyle = css({
   },
 });
 
-export const mdxComponents: MDXProviderComponents = {
+export const mdxComponents: ComponentDictionary = {
   wrapper: (props) => <UI.Box my={4} {...props} />,
   p: (props) => <UI.Text as="p" my={4} {...props} />,
   h1: (props) => <UI.Heading as="h1" size="2xl" mt={8} mb={4} {...props} />,
