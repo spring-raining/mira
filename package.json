@@ -1,14 +1,9 @@
 {
   "name": "asteroid",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
   "license": "MIT",
   "workspaces": [
-    "packages/asteroid-mdx__*"
+    "packages/*"
   ]
 }
