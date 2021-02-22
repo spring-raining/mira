@@ -2,15 +2,14 @@ import React, {
   useState,
   useEffect,
   useMemo,
-  ComponentType,
   ReactChild,
 } from 'react';
 import {
   parseImportDeclaration,
   importModules,
   AsteroidConfig,
-  RuntimeScope,
 } from '@asteroid-mdx/core';
+import { getRuntimeScope } from "./runtimeScope";
 
 const importCache: Record<string, any> = {};
 
@@ -30,29 +29,6 @@ const loadModule = async (modules: string[]) => {
   );
   importCache[key] = ret;
   return ret;
-};
-
-const getRuntimeScope = ({
-  resultCallback,
-  errorCallback,
-  errorBoundary,
-}: {
-  resultCallback: (result: ComponentType) => void;
-  errorCallback: (error: Error) => void;
-  errorBoundary: (element: any) => ComponentType;
-}): RuntimeScope => {
-  const $run = (element: any) => {
-    if (typeof element === 'undefined') {
-      errorCallback(new SyntaxError('`$run` must return valid JSX.'));
-    } else {
-      try {
-        resultCallback(errorBoundary(element));
-      } catch (error) {
-        errorCallback(error);
-      }
-    }
-  };
-  return { $run };
 };
 
 const buildErrorBoundary = (errorCallback: (error: Error) => void) => (

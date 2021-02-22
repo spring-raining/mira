@@ -83,16 +83,16 @@ export const insertAsteroidComponent: Plugin = () =>
         type: 'export',
         value: buildComponentCode({
           ...codeBlock,
-          config: tree.asteroidConfig || {},
+          config: (tree as any).asteroidConfig || {},
         }),
       })),
       ...tree.children as any,
     ];
     // Insert code that loads framework-specific asteroid sdk
-    if (tree.asteroidConfig?.framework) {
+    if ((tree as any).asteroidConfig?.framework) {
       children.unshift({
         type: 'import',
-        value: buildFrameworkDefinition({framework: tree.asteroidConfig.framework}),
+        value: buildFrameworkDefinition({framework: (tree as any).asteroidConfig.framework}),
       });
     }
     return {

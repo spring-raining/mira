@@ -1,4 +1,4 @@
-import { Options, compile as compileMdx, sync as compileSyncMdx } from "@mdx-js/mdx";
+import compileMdx, { Options, sync as compileSyncMdx } from "@mdx-js/mdx";
 import frontmatter from 'remark-frontmatter';
 import type { Plugin } from "unified";
 import {

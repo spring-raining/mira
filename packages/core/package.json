@@ -2,6 +2,7 @@
   "name": "@asteroid-mdx/core",
   "version": "1.0.0",
   "types": "./lib/index.d.ts",
+  "main": "./lib/index.js",
   "exports": {
     "import": "./module/index.js",
     "node": "./lib/index.js"
