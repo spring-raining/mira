@@ -23,6 +23,9 @@ const LivedEditor: React.FC<Omit<EditorProps, 'code' | 'language'>> = ({
       {...other}
       code={live.code}
       language="javascript"
+      readOnly={!live.canEdit}
+      errorMarkers={live.errorMarkers}
+      warnMarkers={live.warnMarkers}
       onChange={handleChange}
     />
   );

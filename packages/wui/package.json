@@ -2,6 +2,10 @@
   "name": "wui",
   "version": "0.1.0",
   "private": true,
+  "dependencies": {
+    "@asteroid-mdx/react": "1.0.0",
+    "@asteroid-mdx/transpiler": "1.0.0"
+  },
   "devDependencies": {
     "@babel/core": "7.12.3",
     "@monaco-editor/react": "^4.0.10",

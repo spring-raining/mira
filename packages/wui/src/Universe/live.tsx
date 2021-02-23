@@ -1,5 +1,11 @@
-import React, { createContext, useContext } from 'react';
 import { getRuntimeScope } from '@asteroid-mdx/react';
+import {
+  init as initTranspiler,
+  Service as TranspilerService,
+} from '@asteroid-mdx/transpiler';
+import type { Message } from 'esbuild-wasm';
+import React, { createContext, useContext } from 'react';
+import { MarkerMessage } from '../Editor';
 
 // eslint-disable-next-line no-new-func
 const AsyncFunctionShim = new Function(
@@ -43,8 +49,42 @@ const errorBoundary = (errorCallback: (error: Error) => void) => (
   };
 };
 
+const transpile = async ({
+  code,
+  transpiler,
+}: {
+  code: string;
+  transpiler: TranspilerService;
+}): Promise<{
+  code?: string;
+  map?: string;
+  warnings: Message[];
+  errors: Message[];
+  errorObject?: Error;
+}> => {
+  try {
+    const transpiled = await transpiler.transform(code, {
+      loader: 'jsx',
+      sourcefile: '[Asteroid]',
+    });
+    return { ...transpiled, errors: [] };
+  } catch (error) {
+    return {
+      errorObject: error,
+      errors: error.errors ?? [],
+      warnings: error.warnings ?? [],
+    };
+  }
+};
+
 const renderElementAsync = async (
-  { code = '', scope = {} },
+  {
+    code,
+    scope = {},
+  }: {
+    code: string;
+    scope: Record<string, unknown>;
+  },
   resultCallback: (result: React.ReactNode) => void,
   errorCallback: (error: Error) => void
 ) => {
@@ -55,10 +95,7 @@ const renderElementAsync = async (
   });
 
   try {
-    // TODO
-    // const transformed = transform(code);
-    const transformed = code;
-    return await evalCode(transformed, {
+    return await evalCode(code, {
       ...scope,
       ...runtimeScope,
     });
@@ -69,6 +106,9 @@ const renderElementAsync = async (
 
 interface LiveContextValue {
   code: string;
+  canEdit: boolean;
+  errorMarkers?: MarkerMessage[];
+  warnMarkers?: MarkerMessage[];
   onError: (error: Error) => void;
   onChange: (code: string) => void;
   element?: React.ReactNode | null;
@@ -86,12 +126,34 @@ interface CodeBlockProviderProps {
   transformCode?: (code: string) => string;
 }
 
-export class LiveProvider extends React.Component<CodeBlockProviderProps> {
+interface CodeBlockProviderState {
+  canEdit: boolean;
+  errorMarkers?: MarkerMessage[];
+  warnMarkers?: MarkerMessage[];
+  transpilerService?: TranspilerService;
+  element?: React.ReactNode | null;
+  error?: string | null;
+}
+
+export class LiveProvider extends React.Component<
+  CodeBlockProviderProps,
+  CodeBlockProviderState
+> {
   static defaultProps = {
     code: '',
     scope: {},
     onRender: () => {},
   };
+
+  constructor(props: CodeBlockProviderProps) {
+    super(props);
+    this.state = { canEdit: false };
+  }
+
+  async componentDidMount() {
+    const transpilerService = await initTranspiler();
+    this.setState({ transpilerService, canEdit: true });
+  }
 
   componentDidUpdate(prevProps: CodeBlockProviderProps) {
     const {
@@ -119,7 +181,7 @@ export class LiveProvider extends React.Component<CodeBlockProviderProps> {
     this.setState({ error: error.toString() });
   };
 
-  transpile = ({
+  transpile = async ({
     code,
     scope,
     transformCode,
@@ -129,17 +191,40 @@ export class LiveProvider extends React.Component<CodeBlockProviderProps> {
     transformCode?: (code: string) => string;
   }) => {
     const { onRender } = this.props;
-    // Transpilation arguments
-    const input = {
-      code: transformCode ? transformCode(code) : code,
-      scope,
-    };
 
     const errorCallback = (err: Error) =>
       this.setState({ element: undefined, error: err.toString() });
     const renderElement = (element: React.ReactNode) =>
       this.setState({ error: undefined, element });
     this.setState({ error: undefined, element: null }); // Reset output for async (no inline) evaluation
+
+    if (!this.state.transpilerService) {
+      return errorCallback(new Error('Asteroid transpiler is not initialized'));
+    }
+    const {
+      code: transpiled,
+      errorObject: transpileError,
+      errors,
+      warnings,
+    } = await transpile({
+      code: transformCode ? transformCode(code) : code,
+      transpiler: this.state.transpilerService,
+    });
+    this.setState({
+      errorMarkers: errors.flatMap<MarkerMessage>(({ text, location }) =>
+        location ? { location, text } : []
+      ),
+      warnMarkers: warnings.flatMap<MarkerMessage>(({ text, location }) =>
+        location ? { location, text } : []
+      ),
+    });
+    if (transpileError || typeof transpiled !== 'string') {
+      return errorCallback(transpileError!);
+    }
+    const input = {
+      code: transpiled,
+      scope,
+    };
     onRender(
       new Promise((resolve, reject) => {
         renderElementAsync(input, renderElement, errorCallback)

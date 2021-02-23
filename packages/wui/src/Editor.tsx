@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MonacoEditor, {
+  useMonaco,
   OnMount as OnEditorMount,
   BeforeMount as BeforeEditorMount,
 } from '@monaco-editor/react';
@@ -26,9 +27,21 @@ const useAsyncEvent = (callback: (...args: any[]) => void) => {
   return handler;
 };
 
+export interface MarkerMessage {
+  location: {
+    line: number;
+    column: number;
+    length: number;
+  };
+  text: string;
+}
+
 export interface EditorProps {
   code?: string;
   language?: 'javascript' | 'markdown';
+  readOnly?: boolean;
+  errorMarkers?: MarkerMessage[];
+  warnMarkers?: MarkerMessage[];
   onEditorUpdate?: (editor: any) => void;
   onChange?: (code: string) => void;
   onCreateNewBlockCommand?: () => void;
@@ -40,6 +53,9 @@ export interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({
   code,
   language,
+  readOnly = false,
+  errorMarkers,
+  warnMarkers,
   onEditorUpdate = () => {},
   onChange = () => {},
   onCreateNewBlockCommand = () => {},
@@ -48,7 +64,7 @@ export const Editor: React.FC<EditorProps> = ({
   onFocus = () => {},
 }) => {
   const [initialCode] = useState(() => code);
-  // const monaco = useMonaco();
+  const monaco = useMonaco();
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
     null
   );
@@ -132,6 +148,39 @@ export const Editor: React.FC<EditorProps> = ({
       updateEditorHeight();
     });
   }, [editor]);
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+    editor.updateOptions({ readOnly });
+  }, [editor, readOnly]);
+
+  useEffect(() => {
+    const model = editor?.getModel();
+    if (!monaco || !model) {
+      return;
+    }
+    const markers =[
+      ...(errorMarkers ?? []).map(({location, text}) => ({
+        startLineNumber: location.line,
+        startColumn: location.column,
+        endLineNumber: location.line,
+        endColumn: location.column + location.length,
+        message: text,
+        severity: monaco.MarkerSeverity.Error,
+      })),
+      ...(warnMarkers ?? []).map(({location, text}) => ({
+        startLineNumber: location.line,
+        startColumn: location.column,
+        endLineNumber: location.line,
+        endColumn: location.column + location.length,
+        message: text,
+        severity: monaco.MarkerSeverity.Warning,
+      }))
+    ];
+    monaco.editor.setModelMarkers(model, 'customMarkers', markers);
+  }, [monaco, editor, errorMarkers, warnMarkers]);
 
   return (
     <div
