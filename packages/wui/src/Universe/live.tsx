@@ -5,6 +5,7 @@ import {
 } from '@asteroid-mdx/transpiler';
 import type { Message } from 'esbuild-wasm';
 import React, { createContext, useContext } from 'react';
+import { Either } from "../atoms";
 import { MarkerMessage } from '../Editor';
 
 // eslint-disable-next-line no-new-func
@@ -16,8 +17,8 @@ const evalCode = (code: string, scope: Record<string, any>) => {
   const scopeKeys = Object.keys(scope);
   const scopeValues = scopeKeys.map((key) => scope[key]);
   try {
-    const res = new AsyncFunctionShim(...scopeKeys, code);
-    return res(...scopeValues);
+    const res = new AsyncFunctionShim('React', ...scopeKeys, code);
+    return res(React, ...scopeValues);
   } catch (error) {
     return Promise.reject(error);
   }
@@ -85,20 +86,24 @@ const renderElementAsync = async (
     code: string;
     scope: Record<string, unknown>;
   },
-  resultCallback: (result: React.ReactNode) => void,
+  resultCallback: (result: React.ComponentType) => void,
   errorCallback: (error: Error) => void
 ) => {
+  const ErrorBoundary = errorBoundary(errorCallback);
   const runtimeScope = getRuntimeScope({
     resultCallback,
     errorCallback,
-    errorBoundary: errorBoundary(errorCallback),
+    errorBoundary: ErrorBoundary,
   });
 
   try {
-    return await evalCode(code, {
+    const element = await evalCode(code, {
       ...scope,
       ...runtimeScope,
     });
+    if (typeof element !== 'undefined') {
+      resultCallback(ErrorBoundary(element));
+    }
   } catch (error) {
     throw error;
   }
@@ -111,41 +116,41 @@ interface LiveContextValue {
   warnMarkers?: MarkerMessage[];
   onError: (error: Error) => void;
   onChange: (code: string) => void;
-  element?: React.ReactNode | null;
+  element?: React.ComponentType | null;
   error?: string | null;
 }
 
 const LiveContext = createContext<LiveContextValue | null>(null);
 
-interface CodeBlockProviderProps {
+interface LiveProviderProps {
   code: string;
   scope: Record<string, any>;
   // status: 'init' | 'live' | 'outdated' | 'running' | null;
-  onRender: (result: Promise<object | null>) => void;
+  onEvaluate: (result: Promise<Either<Error, unknown>>) => void;
   asteroidId?: string;
   transformCode?: (code: string) => string;
 }
 
-interface CodeBlockProviderState {
+interface LiveProviderState {
   canEdit: boolean;
   errorMarkers?: MarkerMessage[];
   warnMarkers?: MarkerMessage[];
   transpilerService?: TranspilerService;
-  element?: React.ReactNode | null;
+  element?: React.ComponentType | null;
   error?: string | null;
 }
 
 export class LiveProvider extends React.Component<
-  CodeBlockProviderProps,
-  CodeBlockProviderState
+  LiveProviderProps,
+  LiveProviderState
 > {
   static defaultProps = {
     code: '',
     scope: {},
-    onRender: () => {},
+    onEvaluate: () => {},
   };
 
-  constructor(props: CodeBlockProviderProps) {
+  constructor(props: LiveProviderProps) {
     super(props);
     this.state = { canEdit: false };
   }
@@ -155,7 +160,7 @@ export class LiveProvider extends React.Component<
     this.setState({ transpilerService, canEdit: true });
   }
 
-  componentDidUpdate(prevProps: CodeBlockProviderProps) {
+  componentDidUpdate(prevProps: LiveProviderProps) {
     const {
       code: prevCode,
       scope: prevScope,
@@ -190,11 +195,11 @@ export class LiveProvider extends React.Component<
     scope: Record<string, any>;
     transformCode?: (code: string) => string;
   }) => {
-    const { onRender } = this.props;
+    const { onEvaluate } = this.props;
 
     const errorCallback = (err: Error) =>
       this.setState({ element: undefined, error: err.toString() });
-    const renderElement = (element: React.ReactNode) =>
+    const renderElement = (element: React.ComponentType) =>
       this.setState({ error: undefined, element });
     this.setState({ error: undefined, element: null }); // Reset output for async (no inline) evaluation
 
@@ -225,14 +230,15 @@ export class LiveProvider extends React.Component<
       code: transpiled,
       scope,
     };
-    onRender(
-      new Promise((resolve, reject) => {
+    onEvaluate(
+      new Promise((resolve) => {
         renderElementAsync(input, renderElement, errorCallback)
           .then((ret) => {
-            resolve(typeof ret === 'object' ? ret : null);
+            resolve([null, ret]);
           })
           .catch((error) => {
             errorCallback(error);
+            resolve([error, null]);
           });
       })
     );
