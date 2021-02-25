@@ -1,12 +1,12 @@
-import { getRuntimeScope } from '@asteroid-mdx/react';
 import {
   init as initTranspiler,
   Service as TranspilerService,
 } from '@asteroid-mdx/transpiler';
 import type { Message } from 'esbuild-wasm';
 import React, { createContext, useContext } from 'react';
-import { Either } from "../atoms";
+import { Either } from '../atoms';
 import { MarkerMessage } from '../Editor';
+import { getRuntimeScope } from './runtimeScope';
 
 // eslint-disable-next-line no-new-func
 const AsyncFunctionShim = new Function(
@@ -53,22 +53,60 @@ const errorBoundary = (errorCallback: (error: Error) => void) => (
 const transpile = async ({
   code,
   transpiler,
+  exportValues = [],
 }: {
   code: string;
   transpiler: TranspilerService;
+  exportValues?: string[];
 }): Promise<{
-  code?: string;
+  text?: string;
   map?: string;
   warnings: Message[];
   errors: Message[];
   errorObject?: Error;
 }> => {
   try {
-    const transpiled = await transpiler.transform(code, {
-      loader: 'jsx',
-      sourcefile: '[Asteroid]',
+    const transpiled = await transpiler.build({
+      stdin: {
+        contents: code,
+        loader: 'jsx',
+        sourcefile: '[Asteroid]',
+      },
+      plugins: [
+        {
+          name: 'asteroidResolver',
+          setup: (build) => {
+            build.onResolve({ filter: /.*/ }, (args) => ({
+              path: args.path,
+              namespace: 'mdx',
+            }));
+            build.onLoad({ filter: /.*/, namespace: 'mdx' }, () => {
+              return {
+                contents: exportValues
+                  .map(
+                    (val) =>
+                      `export const ${val} = /* @__PURE__ */ $use('${val}');`
+                  )
+                  .join('\n'),
+                loader: 'js',
+              };
+            });
+          },
+        },
+      ],
+      bundle: true,
+      write: false,
+      sourcemap: 'inline',
+      platform: 'browser',
+      target: 'es2020',
+      globalName: '$_exports',
+      footer: '$_exports=$_exports||{};$val($_exports);$run($_exports.default)',
     });
-    return { ...transpiled, errors: [] };
+    return {
+      text: transpiled.outputFiles[0].text,
+      warnings: transpiled.warnings,
+      errors: [],
+    };
   } catch (error) {
     return {
       errorObject: error,
@@ -90,20 +128,17 @@ const renderElementAsync = async (
   errorCallback: (error: Error) => void
 ) => {
   const ErrorBoundary = errorBoundary(errorCallback);
-  const runtimeScope = getRuntimeScope({
-    resultCallback,
-    errorCallback,
-    errorBoundary: ErrorBoundary,
-  });
+  const [runtimeScope, evaluatee] = getRuntimeScope(scope);
 
   try {
-    const element = await evalCode(code, {
+    await evalCode(code, {
       ...scope,
       ...runtimeScope,
     });
-    if (typeof element !== 'undefined') {
-      resultCallback(ErrorBoundary(element));
+    if (typeof evaluatee.render !== 'undefined') {
+      resultCallback(ErrorBoundary(evaluatee.render));
     }
+    return evaluatee;
   } catch (error) {
     throw error;
   }
@@ -192,7 +227,7 @@ export class LiveProvider extends React.Component<
     transformCode,
   }: {
     code: string;
-    scope: Record<string, any>;
+    scope: Record<string, unknown>;
     transformCode?: (code: string) => string;
   }) => {
     const { onEvaluate } = this.props;
@@ -207,13 +242,14 @@ export class LiveProvider extends React.Component<
       return errorCallback(new Error('Asteroid transpiler is not initialized'));
     }
     const {
-      code: transpiled,
+      text: transpiled,
       errorObject: transpileError,
       errors,
       warnings,
     } = await transpile({
       code: transformCode ? transformCode(code) : code,
       transpiler: this.state.transpilerService,
+      exportValues: Object.keys(scope),
     });
     this.setState({
       errorMarkers: errors.flatMap<MarkerMessage>(({ text, location }) =>

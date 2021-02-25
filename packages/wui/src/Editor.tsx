@@ -164,17 +164,17 @@ export const Editor: React.FC<EditorProps> = ({
     const markers =[
       ...(errorMarkers ?? []).map(({location, text}) => ({
         startLineNumber: location.line,
-        startColumn: location.column,
+        startColumn: location.column + 1,
         endLineNumber: location.line,
-        endColumn: location.column + location.length,
+        endColumn: location.column + location.length + 1,
         message: text,
         severity: monaco.MarkerSeverity.Error,
       })),
       ...(warnMarkers ?? []).map(({location, text}) => ({
         startLineNumber: location.line,
-        startColumn: location.column,
+        startColumn: location.column + 1,
         endLineNumber: location.line,
-        endColumn: location.column + location.length,
+        endColumn: location.column + location.length + 1,
         message: text,
         severity: monaco.MarkerSeverity.Warning,
       }))
