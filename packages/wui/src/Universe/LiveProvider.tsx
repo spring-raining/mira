@@ -2,7 +2,6 @@ import {
   init as initTranspiler,
   Service as TranspilerService,
 } from '@asteroid-mdx/transpiler';
-import type { Message } from 'esbuild-wasm';
 import React, {
   createContext,
   useCallback,
@@ -12,7 +11,7 @@ import React, {
 } from 'react';
 import { Either } from '../atoms';
 import { MarkerMessage } from '../Editor';
-import { getRuntimeScope } from './runtimeScope';
+import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
 // eslint-disable-next-line no-new-func
 const AsyncFunctionShim = new Function(
@@ -56,101 +55,129 @@ const errorBoundary = (errorCallback: (error: Error) => void) => (
   };
 };
 
-const build = async ({
-  code,
-  transpiler,
-  exportValues = [],
-}: {
-  code: string;
-  transpiler: TranspilerService;
-  exportValues?: string[];
-}): Promise<{
-  text?: string;
-  map?: string;
-  warnings: Message[];
-  errors: Message[];
-  errorObject?: Error;
-}> => {
-  try {
-    const transpiled = await transpiler.build({
-      stdin: {
-        contents: code,
-        loader: 'jsx',
-        sourcefile: '[Asteroid]',
-      },
-      plugins: [
-        {
-          name: 'asteroidResolver',
-          setup: (build) => {
-            build.onResolve({ filter: /.*/ }, (args) => ({
-              path: args.path,
-              namespace: 'mdx',
-            }));
-            build.onLoad({ filter: /.*/, namespace: 'mdx' }, () => {
-              return {
-                contents: exportValues
-                  .map(
-                    (val) =>
-                      `export const ${val} = /* @__PURE__ */ $use('${val}');`
-                  )
-                  .join('\n'),
-                loader: 'js',
-              };
-            });
+const useTranspilerService = () => {
+  const [
+    transpilerService,
+    setTranspilerService,
+  ] = useState<TranspilerService | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      setTranspilerService(await initTranspiler());
+    })();
+  }, []);
+
+  const build = useCallback(
+    async ({
+      code,
+      exportValues = [],
+    }: {
+      code: string;
+      exportValues?: string[];
+    }): Promise<{
+      text?: string;
+      map?: string;
+      warnings: MarkerMessage[];
+      errors: MarkerMessage[];
+      errorObject?: Error;
+    }> => {
+      if (!transpilerService) {
+        return {
+          errorObject: new Error('Asteroid transpiler is not initialized'),
+          errors: [],
+          warnings: [],
+        };
+      }
+      const mapMessage = (
+        messages: { text: string; location: MarkerMessage['location'] | null }[]
+      ) =>
+        messages.flatMap<MarkerMessage>(({ text, location }) =>
+          location ? { location, text } : []
+        );
+      try {
+        const transpiled = await transpilerService.build({
+          stdin: {
+            contents: code,
+            loader: 'jsx',
+            sourcefile: '[Asteroid]',
           },
-        },
-      ],
-      bundle: true,
-      write: false,
-      sourcemap: 'inline',
-      platform: 'browser',
-      target: 'es2020',
-      globalName: '$_exports',
-      footer: '$_exports=$_exports||{};$val($_exports);$run($_exports.default)',
-    });
-    console.log(transpiled.outputFiles[0].text);
-    return {
-      text: transpiled.outputFiles[0].text,
-      warnings: transpiled.warnings,
-      errors: [],
-    };
-  } catch (error) {
-    return {
-      errorObject: error,
-      errors: error.errors ?? [],
-      warnings: error.warnings ?? [],
-    };
-  }
+          plugins: [
+            {
+              name: 'asteroidResolver',
+              setup: (build) => {
+                build.onResolve({ filter: /.*/ }, (args) => ({
+                  path: args.path,
+                  namespace: 'mdx',
+                }));
+                build.onLoad({ filter: /.*/, namespace: 'mdx' }, () => {
+                  return {
+                    contents: exportValues
+                      .map(
+                        (val) =>
+                          `export const ${val} = /* @__PURE__ */ $use('${val}');`
+                      )
+                      .join('\n'),
+                    loader: 'js',
+                  };
+                });
+              },
+            },
+          ],
+          bundle: true,
+          write: false,
+          sourcemap: 'inline',
+          platform: 'browser',
+          target: 'es2020',
+          globalName: '$_exports',
+          footer:
+            '$_exports=$_exports||{};$val($_exports);$run($_exports.default)',
+        });
+        return {
+          text: transpiled.outputFiles[0].text,
+          warnings: mapMessage(transpiled.warnings),
+          errors: [],
+        };
+      } catch (error) {
+        return {
+          errorObject: error,
+          errors: mapMessage(error.errors ?? []),
+          warnings: mapMessage(error.warnings ?? []),
+        };
+      }
+    },
+    [transpilerService]
+  );
+
+  return { transpilerService, build };
 };
 
 const renderElementAsync = async (
   {
     code,
     scope = {},
+    environment,
   }: {
     code: string;
     scope: Record<string, unknown>;
+    environment: RuntimeEnvironment;
   },
-  resultCallback: (result: React.ComponentType) => void
-  // errorCallback: (error: Error) => void
+  resultCallback: (result: React.ComponentType) => void,
+  errorCallback: (error: Error) => void
 ) => {
-  const errorCallback = (error: Error) => {
-    throw error;
-  };
   const ErrorBoundary = errorBoundary(errorCallback);
-  const [runtimeScope, evaluatee] = getRuntimeScope({ scope, errorCallback });
+  const runtimeScope = environment.getRuntimeScope({ scope, errorCallback });
 
   try {
     await evalCode(code, {
       ...scope,
       ...runtimeScope,
     });
-    if (typeof evaluatee.render !== 'undefined') {
-      resultCallback(ErrorBoundary(evaluatee.render));
+    if (typeof environment.render !== 'undefined') {
+      resultCallback(ErrorBoundary(environment.render));
     }
-    return evaluatee;
+    return environment;
   } catch (error) {
-    throw error;
+    errorCallback(error);
   }
 };
 
@@ -185,25 +212,19 @@ export const LiveProvider: React.FC<LiveProviderProps> = ({
   const [output, setOutput] = useState<LiveContextValue['output']>({});
   const [errorMarkers, setErrorMarkers] = useState<MarkerMessage[]>([]);
   const [warnMarkers, setWarnMarkers] = useState<MarkerMessage[]>([]);
-  const [
-    transpilerService,
-    setTranspilerService,
-  ] = useState<TranspilerService | null>(null);
+  const { transpilerService, build } = useTranspilerService();
   const [canEdit, setCanEdit] = useState(false);
 
   const transpile = useCallback(
     async ({
       code,
       scope,
+      environment,
     }: {
       code: string;
       scope: Record<string, unknown>;
+      environment: RuntimeEnvironment;
     }) => {
-      if (!transpilerService) {
-        return setOutput({
-          error: new Error('Asteroid transpiler is not initialized'),
-        });
-      }
       const {
         text: transpiled,
         errorObject: buildError,
@@ -211,19 +232,10 @@ export const LiveProvider: React.FC<LiveProviderProps> = ({
         warnings,
       } = await build({
         code,
-        transpiler: transpilerService,
         exportValues: ['x'], //Object.keys(scope),
       });
-      setErrorMarkers(
-        errors.flatMap<MarkerMessage>(({ text, location }) =>
-          location ? { location, text } : []
-        )
-      );
-      setWarnMarkers(
-        warnings.flatMap<MarkerMessage>(({ text, location }) =>
-          location ? { location, text } : []
-        )
-      );
+      setErrorMarkers(errors);
+      setWarnMarkers(warnings);
       if (buildError || typeof transpiled !== 'string') {
         return setOutput({ error: buildError! });
       }
@@ -233,30 +245,34 @@ export const LiveProvider: React.FC<LiveProviderProps> = ({
             {
               code: transpiled,
               scope,
+              environment,
             },
-            (element) => setOutput({ element })
-          )
-            .then((ret) => resolve([null, ret]))
-            .catch((error) => {
+            (element) => setOutput({ element }),
+            (error) => {
               setOutput({ error });
               resolve([error, null]);
-            });
+            }
+          ).then((ret) => {
+            resolve([null, ret]);
+          });
         })
       );
     },
-    [transpilerService, onEvaluate]
+    [build, onEvaluate]
   );
 
   useEffect(() => {
-    (async () => {
-      setTranspilerService(await initTranspiler());
-      setCanEdit(true);
-    })();
-  }, []);
+    setCanEdit(!!transpilerService);
+  }, [transpilerService]);
 
   useEffect(() => {
-    transpile({ code, scope: {} });
-  }, [code, transpile]);
+    if (!transpilerService) {
+      return;
+    }
+    const environment = setupRuntimeEnvironment();
+    transpile({ code, scope: {}, environment });
+    return environment.teardown;
+  }, [code, transpile, transpilerService]);
 
   const onChange = useCallback((code: string) => {
     setCode(code);
