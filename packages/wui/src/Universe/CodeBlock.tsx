@@ -35,14 +35,14 @@ const LivedEditor: React.FC<Omit<EditorProps, 'code' | 'language'>> = ({
 
 const LivedPreview: React.FC = () => {
   const live = useLivedComponent();
-  return live?.element ? <live.element /> : null;
+  return live?.output.element ? <live.output.element /> : null;
 };
 
 const LivedError: React.FC = () => {
   const live = useLivedComponent();
-  return live?.error ? (
+  return live?.output.error ? (
     <div>
-      <pre>{live.error}</pre>
+      <pre>{live.output.error.toString()}</pre>
     </div>
   ) : null;
 };

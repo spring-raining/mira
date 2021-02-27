@@ -3,7 +3,13 @@ import {
   Service as TranspilerService,
 } from '@asteroid-mdx/transpiler';
 import type { Message } from 'esbuild-wasm';
-import React, { createContext, useContext } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { Either } from '../atoms';
 import { MarkerMessage } from '../Editor';
 import { getRuntimeScope } from './runtimeScope';
@@ -50,7 +56,7 @@ const errorBoundary = (errorCallback: (error: Error) => void) => (
   };
 };
 
-const transpile = async ({
+const build = async ({
   code,
   transpiler,
   exportValues = [],
@@ -125,9 +131,12 @@ const renderElementAsync = async (
     code: string;
     scope: Record<string, unknown>;
   },
-  resultCallback: (result: React.ComponentType) => void,
-  errorCallback: (error: Error) => void
+  resultCallback: (result: React.ComponentType) => void
+  // errorCallback: (error: Error) => void
 ) => {
+  const errorCallback = (error: Error) => {
+    throw error;
+  };
   const ErrorBoundary = errorBoundary(errorCallback);
   const [runtimeScope, evaluatee] = getRuntimeScope({ scope, errorCallback });
 
@@ -145,159 +154,133 @@ const renderElementAsync = async (
   }
 };
 
-interface LiveContextValue {
+export interface LiveContextValue {
   code: string;
   canEdit: boolean;
   errorMarkers?: MarkerMessage[];
   warnMarkers?: MarkerMessage[];
   onError: (error: Error) => void;
   onChange: (code: string) => void;
-  element?: React.ComponentType | null;
-  error?: string | null;
+  output: {
+    element?: React.ComponentType | null;
+    error?: Error | null;
+  };
 }
 
 const LiveContext = createContext<LiveContextValue | null>(null);
 
-interface LiveProviderProps {
+export interface LiveProviderProps {
   code: string;
-  scope: Record<string, any>;
-  // status: 'init' | 'live' | 'outdated' | 'running' | null;
+  // scope: Record<string, any>;
   onEvaluate: (result: Promise<Either<Error, unknown>>) => void;
   asteroidId?: string;
-  transformCode?: (code: string) => string;
 }
 
-interface LiveProviderState {
-  canEdit: boolean;
-  errorMarkers?: MarkerMessage[];
-  warnMarkers?: MarkerMessage[];
-  transpilerService?: TranspilerService;
-  element?: React.ComponentType | null;
-  error?: string | null;
-}
+export const LiveProvider: React.FC<LiveProviderProps> = ({
+  code: propsCode,
+  onEvaluate,
+  children,
+}) => {
+  const [code, setCode] = useState(() => propsCode);
+  const [output, setOutput] = useState<LiveContextValue['output']>({});
+  const [errorMarkers, setErrorMarkers] = useState<MarkerMessage[]>([]);
+  const [warnMarkers, setWarnMarkers] = useState<MarkerMessage[]>([]);
+  const [
+    transpilerService,
+    setTranspilerService,
+  ] = useState<TranspilerService | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
 
-export class LiveProvider extends React.Component<
-  LiveProviderProps,
-  LiveProviderState
-> {
-  static defaultProps = {
-    code: '',
-    scope: {},
-    onEvaluate: () => {},
-  };
-
-  constructor(props: LiveProviderProps) {
-    super(props);
-    this.state = { canEdit: false };
-  }
-
-  async componentDidMount() {
-    const transpilerService = await initTranspiler();
-    this.setState({ transpilerService, canEdit: true });
-  }
-
-  componentDidUpdate(prevProps: LiveProviderProps) {
-    const {
-      code: prevCode,
-      scope: prevScope,
-      // status: prevStatus,
-    } = prevProps;
-    const { code, scope, transformCode } = this.props;
-    if (
-      code !== prevCode ||
-      // shallow compare
-      Object.keys(scope).length !== Object.keys(prevScope).length ||
-      Object.keys(scope).some((k) => scope[k] !== prevScope[k])
-    ) {
-      this.transpile({ code, scope, transformCode });
-    }
-  }
-
-  onChange = (code: string) => {
-    const { scope, transformCode } = this.props;
-    this.transpile({ code, scope, transformCode });
-  };
-
-  onError = (error: Error) => {
-    this.setState({ error: error.toString() });
-  };
-
-  transpile = async ({
-    code,
-    scope,
-    transformCode,
-  }: {
-    code: string;
-    scope: Record<string, unknown>;
-    transformCode?: (code: string) => string;
-  }) => {
-    const { onEvaluate } = this.props;
-
-    const errorCallback = (err: Error) =>
-      this.setState({ element: undefined, error: err.toString() });
-    const renderElement = (element: React.ComponentType) =>
-      this.setState({ error: undefined, element });
-    this.setState({ error: undefined, element: null }); // Reset output for async (no inline) evaluation
-
-    if (!this.state.transpilerService) {
-      return errorCallback(new Error('Asteroid transpiler is not initialized'));
-    }
-    const {
-      text: transpiled,
-      errorObject: transpileError,
-      errors,
-      warnings,
-    } = await transpile({
-      code: transformCode ? transformCode(code) : code,
-      transpiler: this.state.transpilerService,
-      exportValues: ['x'], //Object.keys(scope),
-    });
-    this.setState({
-      errorMarkers: errors.flatMap<MarkerMessage>(({ text, location }) =>
-        location ? { location, text } : []
-      ),
-      warnMarkers: warnings.flatMap<MarkerMessage>(({ text, location }) =>
-        location ? { location, text } : []
-      ),
-    });
-    if (transpileError || typeof transpiled !== 'string') {
-      return errorCallback(transpileError!);
-    }
-    const input = {
-      code: transpiled,
+  const transpile = useCallback(
+    async ({
+      code,
       scope,
-    };
-    onEvaluate(
-      new Promise((resolve) => {
-        renderElementAsync(input, renderElement, errorCallback)
-          .then((ret) => {
-            resolve([null, ret]);
-          })
-          .catch((error) => {
-            errorCallback(error);
-            resolve([error, null]);
-          });
-      })
-    );
-  };
+    }: {
+      code: string;
+      scope: Record<string, unknown>;
+    }) => {
+      if (!transpilerService) {
+        return setOutput({
+          error: new Error('Asteroid transpiler is not initialized'),
+        });
+      }
+      const {
+        text: transpiled,
+        errorObject: buildError,
+        errors,
+        warnings,
+      } = await build({
+        code,
+        transpiler: transpilerService,
+        exportValues: ['x'], //Object.keys(scope),
+      });
+      setErrorMarkers(
+        errors.flatMap<MarkerMessage>(({ text, location }) =>
+          location ? { location, text } : []
+        )
+      );
+      setWarnMarkers(
+        warnings.flatMap<MarkerMessage>(({ text, location }) =>
+          location ? { location, text } : []
+        )
+      );
+      if (buildError || typeof transpiled !== 'string') {
+        return setOutput({ error: buildError! });
+      }
+      onEvaluate(
+        new Promise((resolve) => {
+          renderElementAsync(
+            {
+              code: transpiled,
+              scope,
+            },
+            (element) => setOutput({ element })
+          )
+            .then((ret) => resolve([null, ret]))
+            .catch((error) => {
+              setOutput({ error });
+              resolve([error, null]);
+            });
+        })
+      );
+    },
+    [transpilerService, onEvaluate]
+  );
 
-  render() {
-    const { children, code } = this.props;
+  useEffect(() => {
+    (async () => {
+      setTranspilerService(await initTranspiler());
+      setCanEdit(true);
+    })();
+  }, []);
 
-    return (
-      <LiveContext.Provider
-        value={{
-          ...this.state,
-          code,
-          onError: this.onError,
-          onChange: this.onChange,
-        }}
-      >
-        {children}
-      </LiveContext.Provider>
-    );
-  }
-}
+  useEffect(() => {
+    transpile({ code, scope: {} });
+  }, [code, transpile]);
+
+  const onChange = useCallback((code: string) => {
+    setCode(code);
+  }, []);
+  const onError = useCallback((error: Error) => {
+    setOutput({ error });
+  }, []);
+
+  return (
+    <LiveContext.Provider
+      value={{
+        code,
+        canEdit,
+        errorMarkers,
+        warnMarkers,
+        onChange,
+        onError,
+        output,
+      }}
+    >
+      {children}
+    </LiveContext.Provider>
+  );
+};
 
 export const useLivedComponent = (): LiveContextValue | null => {
   const live = useContext(LiveContext);
