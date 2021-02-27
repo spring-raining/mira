@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { useBrick, createNewBrick } from '../hooks/brick';
 import { useProvidence } from '../hooks/providence';
 import { Editor, EditorProps } from '../Editor';
-import { LiveProvider, useLivedComponent } from './live';
+import { LiveProvider, useLivedComponent } from './LiveProvider';
 
 const LivedEditor: React.FC<Omit<EditorProps, 'code' | 'language'>> = ({
   onChange,
