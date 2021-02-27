@@ -1,10 +1,13 @@
 import { atom } from 'recoil';
 
-export type Either<Left, Right> = [null, Right] | [Left, null];
-
 export interface ASTNode {
   id: string;
   [field: string]: any;
+}
+
+type AsteroidId = string;
+export interface Asteroid {
+  id: AsteroidId;
 }
 
 interface BrickState {
@@ -12,14 +15,15 @@ interface BrickState {
   text: string;
   children?: ASTNode[] | null;
 }
-type MarkdownBrick = BrickState & {
+export type MarkdownBrick = BrickState & {
   noteType: 'markdown';
 };
-type ScriptBrick = BrickState & {
+export type ScriptBrick = BrickState & {
   noteType: 'script';
 };
-type AsteroidBrick = BrickState & {
+export type AsteroidBrick = BrickState & {
   noteType: 'asteroid';
+  asteroid: Asteroid;
 };
 export type Brick = MarkdownBrick | ScriptBrick | AsteroidBrick;
 
@@ -33,3 +37,17 @@ export const brickOrderState = atom<string[]>({
   default: [],
 });
 
+export const asteroidDeclaredValueDictState = atom<Record<string, unknown>>({
+  key: 'asteroidDeclaredValueDictState',
+  default: {},
+});
+
+export const asteroidValuesExportedState = atom<Record<AsteroidId, string[]>>({
+  key: 'asteroidValuesExportedState',
+  default: {},
+});
+
+export const asteroidValuesUsedState = atom<Record<string, AsteroidId[]>>({
+  key: 'asteroidValuesUsedState',
+  default: {},
+});

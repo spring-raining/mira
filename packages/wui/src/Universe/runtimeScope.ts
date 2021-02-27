@@ -27,8 +27,6 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
           return target[String(prop)];
         },
         set: (target, prop, value) => {
-          // TODO: hoist code here
-          console.debug('set', prop, value);
           target[String(prop)] = value;
           return true;
         },

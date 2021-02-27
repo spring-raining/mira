@@ -18,7 +18,7 @@ const UniverseView: React.FC = () => {
     >
       {bricks.map((brick) => {
         if (brick.noteType === 'asteroid') {
-          return <CodeBlock key={brick.brickId} brickId={brick.brickId} />;
+          return <CodeBlock key={brick.brickId} {...brick} />;
         }
         return null;
       })}

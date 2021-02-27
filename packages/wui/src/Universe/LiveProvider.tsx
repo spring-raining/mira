@@ -8,8 +8,10 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from 'react';
-import { Either } from '../atoms';
+import { Asteroid } from "../atoms";
+import { useProvidence } from "../hooks/providence";
 import { MarkerMessage } from '../Editor';
 import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
@@ -67,13 +69,16 @@ const useTranspilerService = () => {
     })();
   }, []);
 
-  const build = useCallback(
-    async ({
+  const build = useMemo(() => {
+    if (!transpilerService) {
+      return null;
+    }
+    return async ({
       code,
-      exportValues = [],
+      declaredValues = [],
     }: {
       code: string;
-      exportValues?: string[];
+      declaredValues?: string[];
     }): Promise<{
       text?: string;
       map?: string;
@@ -111,7 +116,7 @@ const useTranspilerService = () => {
                 }));
                 build.onLoad({ filter: /.*/, namespace: 'mdx' }, () => {
                   return {
-                    contents: exportValues
+                    contents: declaredValues
                       .map(
                         (val) =>
                           `export const ${val} = /* @__PURE__ */ $use('${val}');`
@@ -144,11 +149,10 @@ const useTranspilerService = () => {
           warnings: mapMessage(error.warnings ?? []),
         };
       }
-    },
-    [transpilerService]
-  );
+    };
+  }, [transpilerService]);
 
-  return { transpilerService, build };
+  return { build };
 };
 
 const renderElementAsync = async (
@@ -163,7 +167,7 @@ const renderElementAsync = async (
   },
   resultCallback: (result: React.ComponentType) => void,
   errorCallback: (error: Error) => void
-) => {
+): Promise<RuntimeEnvironment | null> => {
   const ErrorBoundary = errorBoundary(errorCallback);
   const runtimeScope = environment.getRuntimeScope({ scope, errorCallback });
 
@@ -178,6 +182,7 @@ const renderElementAsync = async (
     return environment;
   } catch (error) {
     errorCallback(error);
+    return null;
   }
 };
 
@@ -198,33 +203,30 @@ const LiveContext = createContext<LiveContextValue | null>(null);
 
 export interface LiveProviderProps {
   code: string;
-  // scope: Record<string, any>;
-  onEvaluate: (result: Promise<Either<Error, unknown>>) => void;
-  asteroidId?: string;
+  asteroid: Asteroid;
 }
 
 export const LiveProvider: React.FC<LiveProviderProps> = ({
   code: propsCode,
-  onEvaluate,
+  asteroid,
   children,
 }) => {
+  const { evaluate, scope, declaredValues } = useProvidence(asteroid);
+
   const [code, setCode] = useState(() => propsCode);
+  const [transpiledCode, setTranspiledCode] = useState<string | null>(null);
   const [output, setOutput] = useState<LiveContextValue['output']>({});
   const [errorMarkers, setErrorMarkers] = useState<MarkerMessage[]>([]);
   const [warnMarkers, setWarnMarkers] = useState<MarkerMessage[]>([]);
-  const { transpilerService, build } = useTranspilerService();
+  const { build } = useTranspilerService();
   const [canEdit, setCanEdit] = useState(false);
 
-  const transpile = useCallback(
-    async ({
-      code,
-      scope,
-      environment,
-    }: {
-      code: string;
-      scope: Record<string, unknown>;
-      environment: RuntimeEnvironment;
-    }) => {
+  // transpile code
+  useEffect(() => {
+    if (!build) {
+      return;
+    }
+    (async () => {
       const {
         text: transpiled,
         errorObject: buildError,
@@ -232,47 +234,49 @@ export const LiveProvider: React.FC<LiveProviderProps> = ({
         warnings,
       } = await build({
         code,
-        exportValues: ['x'], //Object.keys(scope),
+        declaredValues,
       });
       setErrorMarkers(errors);
       setWarnMarkers(warnings);
       if (buildError || typeof transpiled !== 'string') {
-        return setOutput({ error: buildError! });
+        setTranspiledCode(null);
+        setOutput({ error: buildError! });
+      } else {
+        setTranspiledCode(transpiled);
       }
-      onEvaluate(
-        new Promise((resolve) => {
-          renderElementAsync(
-            {
-              code: transpiled,
-              scope,
-              environment,
-            },
-            (element) => setOutput({ element }),
-            (error) => {
-              setOutput({ error });
-              resolve([error, null]);
-            }
-          ).then((ret) => {
-            resolve([null, ret]);
-          });
-        })
-      );
-    },
-    [build, onEvaluate]
-  );
+    })();
+  }, [build, code, declaredValues]);
 
+  // run code
   useEffect(() => {
-    setCanEdit(!!transpilerService);
-  }, [transpilerService]);
-
-  useEffect(() => {
-    if (!transpilerService) {
+    if (!transpiledCode) {
       return;
     }
     const environment = setupRuntimeEnvironment();
-    transpile({ code, scope: {}, environment });
+    evaluate(() => new Promise((resolve) => {
+      renderElementAsync(
+        {
+          code: transpiledCode,
+          scope,
+          environment,
+        },
+        (element) => setOutput({ element }),
+        (error) => {
+          setOutput({ error });
+          resolve([error, null]);
+        }
+      ).then((ret) => {
+        if (ret) {
+          resolve([null, ret]);
+        }
+      });
+    }));
     return environment.teardown;
-  }, [code, transpile, transpilerService]);
+  }, [evaluate, transpiledCode, scope]);
+
+  useEffect(() => {
+    setCanEdit(!!build);
+  }, [build]);
 
   const onChange = useCallback((code: string) => {
     setCode(code);

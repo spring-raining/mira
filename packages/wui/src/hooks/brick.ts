@@ -14,7 +14,10 @@ const brickStateFamily = selectorFamily<Brick, string>({
   get: (brickId) => ({ get }) => get(brickDictState)[brickId],
   set: (brickId) => ({ set }, newValue) => {
     if (!(newValue instanceof DefaultValue)) {
-      set(brickDictState, (prevState) => ({ ...prevState, [brickId]: newValue }));
+      set(brickDictState, (prevState) => ({
+        ...prevState,
+        [brickId]: newValue,
+      }));
     }
   },
 });
@@ -62,9 +65,16 @@ export const useBrick = (brickId: string) => {
   return { brick, updateBrick, insertBrick };
 };
 
-export const createNewBrick = (noteType: Brick['noteType']): Brick => ({
-  noteType,
-  brickId: nanoid(),
-  text: '',
-  children: null,
-});
+export const createNewBrick = (noteType: Brick['noteType']): Brick => {
+  const brick = {
+    noteType,
+    brickId: nanoid(),
+    text: '',
+    children: null,
+  };
+  if (brick.noteType === 'asteroid') {
+    return { ...brick, asteroid: { id: nanoid() } };
+  } else {
+    return brick as Brick;
+  }
+};

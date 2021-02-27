@@ -1,7 +1,7 @@
 import { css } from 'lightwindcss';
 import React, { useCallback } from 'react';
+import { AsteroidBrick } from '../atoms';
 import { useBrick, createNewBrick } from '../hooks/brick';
-import { useProvidence } from '../hooks/providence';
 import { Editor, EditorProps } from '../Editor';
 import { LiveProvider, useLivedComponent } from './LiveProvider';
 
@@ -47,9 +47,10 @@ const LivedError: React.FC = () => {
   ) : null;
 };
 
-export const CodeBlock: React.VFC<{ brickId: string }> = ({ brickId }) => {
+export const CodeBlock: React.VFC<
+  Pick<AsteroidBrick, 'asteroid' | 'brickId'>
+> = ({ asteroid, brickId }) => {
   const { brick, updateBrick, insertBrick } = useBrick(brickId);
-  const { evaluate } = useProvidence();
   const onEditorChange = useCallback(
     (text: string) => {
       updateBrick((brick) => ({ ...brick, text }));
@@ -67,7 +68,7 @@ export const CodeBlock: React.VFC<{ brickId: string }> = ({ brickId }) => {
     return null;
   }
   return (
-    <LiveProvider code={brick.text} onEvaluate={evaluate}>
+    <LiveProvider code={brick.text} {...{ asteroid }}>
       <div>
         <button onClick={prependBrick}>Add</button>
         <div
