@@ -6,10 +6,9 @@ export const useProvidence = () => {
   const evaluate = useCallback((renderer: Promise<Either<Error, unknown>>) => {
     // const runId = nanoid();
     requestAnimationFrame(() => {
-      renderer
-        .then(([error, evaluated]) => {
-          // TODO
-        });
+      renderer.then(([error, evaluated]) => {
+        // TODO
+      });
     });
   }, []);
 

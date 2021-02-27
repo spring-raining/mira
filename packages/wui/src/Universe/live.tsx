@@ -102,6 +102,7 @@ const transpile = async ({
       globalName: '$_exports',
       footer: '$_exports=$_exports||{};$val($_exports);$run($_exports.default)',
     });
+    console.log(transpiled.outputFiles[0].text);
     return {
       text: transpiled.outputFiles[0].text,
       warnings: transpiled.warnings,
@@ -128,7 +129,7 @@ const renderElementAsync = async (
   errorCallback: (error: Error) => void
 ) => {
   const ErrorBoundary = errorBoundary(errorCallback);
-  const [runtimeScope, evaluatee] = getRuntimeScope(scope);
+  const [runtimeScope, evaluatee] = getRuntimeScope({ scope, errorCallback });
 
   try {
     await evalCode(code, {
@@ -249,7 +250,7 @@ export class LiveProvider extends React.Component<
     } = await transpile({
       code: transformCode ? transformCode(code) : code,
       transpiler: this.state.transpilerService,
-      exportValues: Object.keys(scope),
+      exportValues: ['x'], //Object.keys(scope),
     });
     this.setState({
       errorMarkers: errors.flatMap<MarkerMessage>(({ text, location }) =>

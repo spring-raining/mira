@@ -10,14 +10,54 @@ export interface RuntimeEvaluatee {
   referenceVal: Record<string, any>;
 }
 
-export const getRuntimeScope = (
-  scope: Record<string, unknown>
-): [RuntimeScope, RuntimeEvaluatee] => {
+export const getRuntimeScope = ({
+  scope,
+  errorCallback,
+}: {
+  scope: Record<string, unknown>;
+  errorCallback: (error: Error) => void;
+}): [RuntimeScope, RuntimeEvaluatee] => {
   const evaluatee: RuntimeEvaluatee = {
     render: null,
-    exportVal: {},
+    exportVal: new Proxy<Record<string, any>>(
+      {},
+      {
+        get: (target, prop) => {
+          return target[String(prop)];
+        },
+        set: (target, prop, value) => {
+          // TODO: hoist code here
+          console.debug('set', prop, value);
+          target[String(prop)] = value;
+          return true;
+        },
+      }
+    ),
     referenceVal: {},
   };
+  const registerVal = (vals: Record<string, any>) => {
+    for (let [k, v] of Object.entries(vals)) {
+      const set = (val: any) => {
+        evaluatee.exportVal[k] = val;
+      };
+      if (typeof v === 'function') {
+        const run = () => {
+          const callbackId = window.requestIdleCallback(() => {
+            try {
+              set(v(run));
+            } catch (error) {
+              window.cancelIdleCallback(callbackId);
+              errorCallback(error);
+            }
+          });
+        };
+        run();
+      } else {
+        set(v);
+      }
+    }
+  };
+
   return [
     {
       $run: (element: any) => {
@@ -46,7 +86,7 @@ export const getRuntimeScope = (
         if (Object.keys(val).some((v) => v.startsWith('$'))) {
           throw new Error('Cannot define a val starts with $');
         }
-        evaluatee.exportVal = { ...evaluatee.exportVal, ...val };
+        registerVal(val);
       },
       $use: (val: any) => {
         if (typeof val !== 'string' && typeof val !== 'number') {

@@ -4,7 +4,8 @@
   "private": true,
   "dependencies": {
     "@asteroid-mdx/react": "1.0.0",
-    "@asteroid-mdx/transpiler": "1.0.0"
+    "@asteroid-mdx/transpiler": "1.0.0",
+    "requestidlecallback-polyfill": "^1.0.2"
   },
   "devDependencies": {
     "@babel/core": "7.12.3",
