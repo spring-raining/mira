@@ -18,7 +18,7 @@ const compareByArrayContent = <T extends string | number>(a: T[], b: T[]) => {
   return a.every((v) => b.includes(v)) && b.every((v) => a.includes(v));
 };
 
-const exportedValuesFamily = selectorFamily<string[], string>({
+export const exportedValuesFamily = selectorFamily<string[], string>({
   key: 'exportedValuesFamily',
   get: (asteroidId) => ({ get }) =>
     get(asteroidValuesExportedState)[asteroidId] ?? [],

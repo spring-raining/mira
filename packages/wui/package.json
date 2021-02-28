@@ -4,8 +4,7 @@
   "private": true,
   "dependencies": {
     "@asteroid-mdx/react": "1.0.0",
-    "@asteroid-mdx/transpiler": "1.0.0",
-    "requestidlecallback-polyfill": "^1.0.2"
+    "@asteroid-mdx/transpiler": "1.0.0"
   },
   "devDependencies": {
     "@babel/core": "7.12.3",
@@ -52,6 +51,7 @@
     "jest-watch-typeahead": "0.6.1",
     "lightwindcss": "^0.1.0",
     "mini-css-extract-plugin": "0.11.3",
+    "monaco-editor": "^0.22.3",
     "nanoid": "^3.1.20",
     "optimize-css-assets-webpack-plugin": "5.0.4",
     "pnp-webpack-plugin": "1.6.4",
@@ -67,6 +67,7 @@
     "react-dom": "^17.0.1",
     "react-refresh": "^0.8.3",
     "recoil": "^0.1.2",
+    "requestidlecallback-polyfill": "^1.0.2",
     "resolve": "1.18.1",
     "resolve-url-loader": "^3.1.2",
     "sass-loader": "^10.0.5",

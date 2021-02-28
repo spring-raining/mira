@@ -1,3 +1,5 @@
+import type { editor } from 'monaco-editor';
+import { MutableRefObject } from "react";
 import { atom } from 'recoil';
 
 export interface ASTNode {
@@ -37,6 +39,11 @@ export const brickOrderState = atom<string[]>({
   default: [],
 });
 
+export const activeBrickIdState = atom<string | null>({
+  key: 'activeBrickIdState',
+  default: null,
+});
+
 export const asteroidDeclaredValueDictState = atom<Record<string, unknown>>({
   key: 'asteroidDeclaredValueDictState',
   default: {},
@@ -47,7 +54,7 @@ export const asteroidValuesExportedState = atom<Record<AsteroidId, string[]>>({
   default: {},
 });
 
-export const asteroidValuesUsedState = atom<Record<string, AsteroidId[]>>({
-  key: 'asteroidValuesUsedState',
-  default: {},
-});
+// export const asteroidValuesUsedState = atom<Record<string, AsteroidId[]>>({
+//   key: 'asteroidValuesUsedState',
+//   default: {},
+// });

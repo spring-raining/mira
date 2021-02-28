@@ -7,7 +7,15 @@ import {
   selectorFamily,
   DefaultValue,
 } from 'recoil';
-import { brickDictState, brickOrderState, Brick } from '../atoms';
+import {
+  activeBrickIdState,
+  asteroidDeclaredValueDictState,
+  asteroidValuesExportedState,
+  brickDictState,
+  brickOrderState,
+  Brick,
+} from '../atoms';
+import { editorRefs } from "./editor";
 
 const brickStateFamily = selectorFamily<Brick, string>({
   key: 'brickStateFamily',
@@ -45,6 +53,8 @@ export const useBricks = () => {
 
 export const useBrick = (brickId: string) => {
   const [brick, updateBrick] = useRecoilState(brickStateFamily(brickId));
+  const [activeBrickId] = useRecoilState(activeBrickIdState);
+
   const insertBrick = useRecoilCallback(
     ({ snapshot, set }) => async (newBrick: Brick, offset: number = 0) => {
       const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
@@ -62,7 +72,58 @@ export const useBrick = (brickId: string) => {
       set(brickOrderState, brickOrder);
     }
   );
-  return { brick, updateBrick, insertBrick };
+  return {
+    brick,
+    updateBrick,
+    insertBrick,
+    isActive: brickId === activeBrickId,
+  };
+};
+
+export const useBrickManipulator = () => {
+  const cleanup = useRecoilCallback(
+    ({ snapshot, set }) => async (brickId: string) => {
+      const activeBrickId = await snapshot.getPromise(activeBrickIdState);
+      const brickOrder = await snapshot.getPromise(brickOrderState);
+      const brickDict = await snapshot.getPromise(brickDictState);
+      const filterDict = <T>(dict: Record<string, T>, excludeKey: string[]) =>
+        Object.entries(dict).reduce<Record<string, T>>(
+          (prev, [k, v]) =>
+            excludeKey.includes(k) ? prev : { ...prev, [k]: v },
+          {}
+        );
+      if (brickOrder.includes(brickId)) {
+        set(
+          brickOrderState,
+          brickOrder.filter((id) => id !== brickId)
+        );
+      }
+      set(activeBrickIdState, activeBrickId === brickId ? null : activeBrickId);
+      if (brickId in brickDict) {
+        set(brickDictState, filterDict(brickDict, [brickId]));
+      }
+      delete editorRefs[brickId];
+      const brick = brickDict[brickId];
+      if (brick?.noteType === 'asteroid') {
+        const asteroidId = brick.asteroid.id;
+        const decalredValueDict = await snapshot.getPromise(
+          asteroidDeclaredValueDictState
+        );
+        const exportedValues =
+          (await snapshot.getPromise(asteroidValuesExportedState)) ?? [];
+        set(
+          asteroidDeclaredValueDictState,
+          filterDict(decalredValueDict, exportedValues[asteroidId] ?? [])
+        );
+        set(
+          asteroidValuesExportedState,
+          filterDict(exportedValues, [asteroidId])
+        );
+      }
+    }
+  );
+
+  return { cleanup };
 };
 
 export const createNewBrick = (noteType: Brick['noteType']): Brick => {

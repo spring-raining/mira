@@ -1,7 +1,8 @@
 import { css } from 'lightwindcss';
 import React, { useCallback } from 'react';
 import { AsteroidBrick } from '../atoms';
-import { useBrick, createNewBrick } from '../hooks/brick';
+import { useBrick, useBrickManipulator, createNewBrick } from '../hooks/brick';
+import { useEditorCallbacks } from '../hooks/editor';
 import { Editor, EditorProps } from '../Editor';
 import { LiveProvider, useLivedComponent } from './LiveProvider';
 
@@ -50,7 +51,9 @@ const LivedError: React.FC = () => {
 export const CodeBlock: React.VFC<
   Pick<AsteroidBrick, 'asteroid' | 'brickId'>
 > = ({ asteroid, brickId }) => {
-  const { brick, updateBrick, insertBrick } = useBrick(brickId);
+  const { brick, updateBrick, insertBrick, isActive } = useBrick(brickId);
+  const { cleanup } = useBrickManipulator();
+  const editorCallbacks = useEditorCallbacks({ brickId });
   const onEditorChange = useCallback(
     (text: string) => {
       updateBrick((brick) => ({ ...brick, text }));
@@ -63,6 +66,9 @@ export const CodeBlock: React.VFC<
   const appendBrick = useCallback(() => {
     insertBrick(createNewBrick('asteroid'), 1);
   }, [insertBrick]);
+  const deleteBrick = useCallback(() => {
+    cleanup(brickId);
+  }, [cleanup, brickId]);
 
   if (brick.noteType !== 'asteroid') {
     return null;
@@ -71,25 +77,35 @@ export const CodeBlock: React.VFC<
     <LiveProvider code={brick.text} {...{ asteroid }}>
       <div>
         <button onClick={prependBrick}>Add</button>
+        <button onClick={deleteBrick}>Delete </button>
         <div
           className={css`
             display: flex;
+            align-items: flex-start;
             width: 100%;
-            margin: 1rem 0;
-            padding: 1rem 0;
-            background-color: beige;
           `}
         >
           <div
             className={css`
               width: 50%;
+              margin: 1rem;
+              padding-right: 1rem;
+              border-radius: 4px;
             `}
+            style={{
+              backgroundColor: isActive ? '#f4f4f5' : '#fafafa',
+            }}
           >
-            <LivedEditor onChange={onEditorChange} />
+            <LivedEditor onChange={onEditorChange} {...editorCallbacks} />
           </div>
           <div
             className={css`
               width: 50%;
+              margin: 1rem;
+              padding: 1rem;
+              border: 2px solid #f4f4f5;
+              border-radius: 4px;
+              box-sizing: border-box;
             `}
           >
             <LivedPreview />

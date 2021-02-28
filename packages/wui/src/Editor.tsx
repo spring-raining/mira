@@ -200,6 +200,12 @@ export const Editor: React.FC<EditorProps> = ({
           scrollBeyondLastLine: false,
           scrollbar: {
             alwaysConsumeMouseWheel: false,
+            vertical: 'hidden',
+            verticalScrollbarSize: 0,
+          },
+          padding: {
+            top: 24,
+            bottom: 24,
           },
         }}
         theme="asteroidLightTheme"
