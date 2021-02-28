@@ -11,6 +11,7 @@ import {
   asteroidValuesExportedState,
   Asteroid,
 } from '../atoms';
+import { RuntimeEnvironment } from '../Universe/runtimeScope';
 
 const compareByArrayContent = <T extends string | number>(a: T[], b: T[]) => {
   // Check element intersection
@@ -75,18 +76,10 @@ const useScope = (asteroidId: string) => {
   return { scope, declaredValues };
 };
 
-export const useProvidence = <
-  T extends {
-    exportVal: Record<string, any>;
-    referenceVal: Record<string, any>;
-  }
->({
-  id: asteroidId,
-}: Asteroid) => {
+const useValueEvaluator =  <T extends RuntimeEnvironment>(asteroidId: string) => {
   const [exportVal, setExportVal] = useRecoilState(
     exportedValuesFamily(asteroidId)
   );
-  const { scope, declaredValues } = useScope(asteroidId);
   const updateDeclaredVals = useRecoilCallback(
     ({ snapshot, set }) => async (
       addVals: Record<string, unknown>,
@@ -103,35 +96,123 @@ export const useProvidence = <
     }
   );
 
-  const evaluatorCallback = useRef<((env: T) => void) | null>(null);
+  const valueEvaluatorRef = useRef<
+    | ((arg: { evaluated: T; errorCallback: (error: Error) => void }) => void)
+    | null
+  >(null);
+  // Setting callback that updates export values
   useEffect(() => {
-    evaluatorCallback.current = (evaluated) => {
-      const deleteValNames = exportVal.filter((v) => !(v in evaluated.exportVal));
+    let stalled = false;
+    const teardownFunctions: (() => void)[] = [];
+    valueEvaluatorRef.current = ({
+      evaluated,
+      errorCallback,
+    }: {
+      evaluated: T;
+      errorCallback: (error: Error) => void;
+    }) => {
+      const constantVal = Object.entries(evaluated.exportVal).filter(
+        ([, v]) => typeof v !== 'function'
+      );
+      const deleteValNames = exportVal.filter(
+        (v) => !(v in evaluated.exportVal)
+      );
       setExportVal(Object.keys(evaluated.exportVal));
-      updateDeclaredVals(evaluated.exportVal, deleteValNames);
+      updateDeclaredVals(
+        constantVal.reduce<Record<string, unknown>>(
+          (prev, [k, v]) => ({ ...prev, [k]: v }),
+          {}
+        ),
+        deleteValNames
+      );
+      const functionalVal = Object.entries(evaluated.exportVal).filter(
+        ([, v]) => typeof v === 'function'
+      );
+      // Sets undefined value until functional computation is finished
+      if (functionalVal.length > 0) {
+        updateDeclaredVals(
+          functionalVal.reduce<Record<string, undefined>>(
+            (prev, [k]) => ({ ...prev, [k]: undefined }),
+            {}
+          ),
+          []
+        );
+      }
+      for (let [k, func] of functionalVal) {
+        const update = (val: unknown) => updateDeclaredVals({ [k]: val }, []);
+        const callbackIdList: number[] = [];
+        const clearCallbacks = () => {
+          let id: number | undefined;
+          while ((id = callbackIdList.shift())) {
+            window.cancelIdleCallback(id);
+          }
+        };
+        // eslint-disable-next-line no-loop-func
+        const run = () => {
+          if (stalled) {
+            return;
+          }
+          const callbackId = window.requestIdleCallback(() => {
+            try {
+              clearCallbacks();
+              callbackIdList.push(callbackId);
+              update(func(run));
+            } catch (error) {
+              window.cancelIdleCallback(callbackId);
+              errorCallback(error);
+            }
+          });
+        };
+        teardownFunctions.push(clearCallbacks);
+        run();
+      }
+      return () => {
+        stalled = true;
+        teardownFunctions.forEach((fn) => fn());
+      };
     };
   }, [exportVal, setExportVal, updateDeclaredVals]);
 
-  const evaluatorId = useRef<number>();
-  const evaluate = useCallback((renderer: () => Promise<Either<Error, T>>) => {
-    let runId: number | undefined;
-    const run = () => {
-      const cb = evaluatorCallback.current;
-      renderer().then((ret) => {
-        if (evaluatorId.current !== runId || ret[0]) {
-          return;
-        }
-        if (evaluatorCallback.current !== cb) {
-          runId = window.requestAnimationFrame(run);
-          evaluatorId.current = runId;
-          return;
-        }
-        cb?.(ret[1]);
-      });
-    };
-    runId = window.requestAnimationFrame(run);
-    evaluatorId.current = runId;
-  }, []);
+  return valueEvaluatorRef;
+};
+
+export const useProvidence = <T extends RuntimeEnvironment>({
+  id: asteroidId,
+}: Asteroid) => {
+  const { scope, declaredValues } = useScope(asteroidId);
+  const valueEvaluatorRef = useValueEvaluator(asteroidId);
+
+  const runtimeEnvironment = useRef<T>();
+  const evaluate = useCallback(
+    ({
+      environment,
+      errorCallback,
+    }: {
+      environment: T;
+      errorCallback: (error: Error) => void;
+    }) => (renderer: () => Promise<Either<Error, T>>) => {
+      runtimeEnvironment.current = environment;
+      const runId = environment.envId;
+      const run = () => {
+        const cb = valueEvaluatorRef.current;
+        renderer().then((ret) => {
+          if (runtimeEnvironment.current?.envId !== runId || ret[0]) {
+            return;
+          }
+          if (valueEvaluatorRef.current !== cb) {
+            window.requestAnimationFrame(run);
+            return;
+          }
+          cb?.({
+            evaluated: ret[1],
+            errorCallback,
+          });
+        });
+      };
+      window.requestAnimationFrame(run);
+    },
+    [valueEvaluatorRef]
+  );
 
   return { evaluate, scope, declaredValues };
 };

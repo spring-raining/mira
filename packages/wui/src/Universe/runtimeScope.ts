@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 export interface RuntimeScope {
   $run(element: any): void;
   $val(...args: any[]): void;
@@ -5,20 +7,18 @@ export interface RuntimeScope {
 }
 
 export interface RuntimeEnvironment {
+  envId: string;
   render: any;
   exportVal: Record<string, any>;
   referenceVal: Record<string, any>;
   getRuntimeScope: (e: {
     scope: Record<string, unknown>;
-    errorCallback: (error: Error) => void;
   }) => RuntimeScope;
-  teardown: () => void;
 }
 
 export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
-  let stalled = false;
-  const teardownFunctions: (() => void)[] = [];
   const environment: RuntimeEnvironment = {
+    envId: nanoid(),
     render: null,
     exportVal: new Proxy<Record<string, any>>(
       {},
@@ -35,45 +35,16 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
     referenceVal: {},
     getRuntimeScope: ({
       scope,
-      errorCallback,
     }: {
       scope: Record<string, unknown>;
-      errorCallback: (error: Error) => void;
     }): RuntimeScope => {
       const registerVal = (vals: Record<string, any>) => {
         for (let [k, v] of Object.entries(vals)) {
-          const set = (val: any) => {
-            environment.exportVal[k] = val;
-          };
-          if (typeof v === 'function') {
-            const callbackIdList: number[] = [];
-            const clearCallbacks = () => {
-              let id: number | undefined;
-              while ((id = callbackIdList.shift())) {
-                window.cancelIdleCallback(id);
-              }
-            };
-            // eslint-disable-next-line no-loop-func
-            const run = () => {
-              if (stalled) {
-                return;
-              }
-              const callbackId = window.requestIdleCallback(() => {
-                try {
-                  clearCallbacks();
-                  callbackIdList.push(callbackId);
-                  set(v(run));
-                } catch (error) {
-                  window.cancelIdleCallback(callbackId);
-                  errorCallback(error);
-                }
-              });
-            };
-            teardownFunctions.push(clearCallbacks);
-            run();
-          } else {
-            set(v);
+          if (k === 'default') {
+            // ignore default exports
+            continue;
           }
+          environment.exportVal[k] = v;
         }
       };
 
@@ -116,10 +87,6 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
           return scope[val];
         },
       };
-    },
-    teardown: () => {
-      stalled = true;
-      teardownFunctions.forEach((fn) => fn());
     },
   };
   return environment;

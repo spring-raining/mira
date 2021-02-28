@@ -10,8 +10,8 @@ import React, {
   useState,
   useMemo,
 } from 'react';
-import { Asteroid } from "../atoms";
-import { useProvidence } from "../hooks/providence";
+import { Asteroid } from '../atoms';
+import { useProvidence } from '../hooks/providence';
 import { MarkerMessage } from '../Editor';
 import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
@@ -31,9 +31,7 @@ const evalCode = (code: string, scope: Record<string, any>) => {
   }
 };
 
-const errorBoundary = (errorCallback: (error: Error) => void) => (
-  Element: React.ReactNode
-) => {
+const errorBoundary = (errorCallback: (error: Error) => void) => {
   return class ErrorBoundary extends React.Component<
     {},
     { hasError: boolean }
@@ -52,7 +50,7 @@ const errorBoundary = (errorCallback: (error: Error) => void) => (
       if (this.state.hasError) {
         return null;
       }
-      return typeof Element === 'function' ? <Element /> : Element;
+      return this.props.children;
     }
   };
 };
@@ -136,6 +134,7 @@ const useTranspilerService = () => {
           globalName: '$_exports',
           footer:
             '$_exports=$_exports||{};$val($_exports);$run($_exports.default)',
+          logLevel: 'silent',
         });
         return {
           text: transpiled.outputFiles[0].text,
@@ -165,11 +164,11 @@ const renderElementAsync = async (
     scope: Record<string, unknown>;
     environment: RuntimeEnvironment;
   },
-  resultCallback: (result: React.ComponentType) => void,
+  resultCallback: (result: React.ReactNode) => void,
   errorCallback: (error: Error) => void
 ): Promise<RuntimeEnvironment | null> => {
   const ErrorBoundary = errorBoundary(errorCallback);
-  const runtimeScope = environment.getRuntimeScope({ scope, errorCallback });
+  const runtimeScope = environment.getRuntimeScope({ scope });
 
   try {
     await evalCode(code, {
@@ -177,7 +176,15 @@ const renderElementAsync = async (
       ...runtimeScope,
     });
     if (typeof environment.render !== 'undefined') {
-      resultCallback(ErrorBoundary(environment.render));
+      const Element =
+        typeof environment.render === 'function'
+          ? environment.render
+          : () => environment.render;
+      resultCallback(
+        <ErrorBoundary>
+          <Element />
+        </ErrorBoundary>
+      );
     }
     return environment;
   } catch (error) {
@@ -194,7 +201,7 @@ export interface LiveContextValue {
   onError: (error: Error) => void;
   onChange: (code: string) => void;
   output: {
-    element?: React.ComponentType | null;
+    element?: React.ReactNode | null;
     error?: Error | null;
   };
 }
@@ -253,25 +260,30 @@ export const LiveProvider: React.FC<LiveProviderProps> = ({
       return;
     }
     const environment = setupRuntimeEnvironment();
-    evaluate(() => new Promise((resolve) => {
-      renderElementAsync(
-        {
-          code: transpiledCode,
-          scope,
-          environment,
-        },
-        (element) => setOutput({ element }),
-        (error) => {
-          setOutput({ error });
-          resolve([error, null]);
-        }
-      ).then((ret) => {
-        if (ret) {
-          resolve([null, ret]);
-        }
-      });
-    }));
-    return environment.teardown;
+    evaluate({
+      environment,
+      errorCallback: (error) => setOutput({ error }),
+    })(
+      () =>
+        new Promise((resolve) => {
+          renderElementAsync(
+            {
+              code: transpiledCode,
+              scope,
+              environment,
+            },
+            (element) => setOutput({ element }),
+            (error) => {
+              setOutput({ error });
+              resolve([error, null]);
+            }
+          ).then((ret) => {
+            if (ret) {
+              resolve([null, ret]);
+            }
+          });
+        })
+    );
   }, [evaluate, transpiledCode, scope]);
 
   useEffect(() => {
