@@ -2,12 +2,16 @@ import { css } from 'lightwindcss';
 import React, { useCallback } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useBricks, createNewBrick } from './hooks/brick';
-import { CodeBlock } from './Universe/CodeBlock';
+import { Block } from './Universe/Block';
+import { LiveBlock } from './Universe/LiveBlock';
 
 const UniverseView: React.FC = () => {
   const { bricks, pushBrick } = useBricks();
-  const onClick = useCallback(() => {
+  const onCreateCodeBlockClick = useCallback(() => {
     pushBrick(createNewBrick('asteroid'));
+  }, [pushBrick]);
+  const onCreateTextBlockClick = useCallback(() => {
+    pushBrick(createNewBrick('script'));
   }, [pushBrick]);
 
   return (
@@ -18,11 +22,13 @@ const UniverseView: React.FC = () => {
     >
       {bricks.map((brick) => {
         if (brick.noteType === 'asteroid') {
-          return <CodeBlock key={brick.brickId} {...brick} />;
+          return <LiveBlock key={brick.brickId} {...brick} />;
+        } else {
+          return <Block key={brick.brickId} {...brick} />
         }
-        return null;
       })}
-      <button {...{ onClick }}>Create code block</button>
+      <button onClick={onCreateCodeBlockClick}>Create code block</button>
+      <button onClick={onCreateTextBlockClick}>Create text block</button>
     </div>
   );
 };

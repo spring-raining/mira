@@ -48,7 +48,7 @@ const LivedError: React.FC = () => {
   ) : null;
 };
 
-export const CodeBlock: React.VFC<
+export const LiveBlock: React.VFC<
   Pick<AsteroidBrick, 'asteroid' | 'brickId'>
 > = ({ asteroid, brickId }) => {
   const { brick, updateBrick, insertBrick, isActive } = useBrick(brickId);

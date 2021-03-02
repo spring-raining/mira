@@ -3,6 +3,7 @@ import MonacoEditor, {
   useMonaco,
   OnMount as OnEditorMount,
   BeforeMount as BeforeEditorMount,
+  Monaco,
 } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { css } from 'lightwindcss';
@@ -38,11 +39,15 @@ export interface MarkerMessage {
 
 export interface EditorProps {
   code?: string;
-  language?: 'javascript' | 'markdown';
+  language?: string;
   readOnly?: boolean;
   errorMarkers?: MarkerMessage[];
   warnMarkers?: MarkerMessage[];
-  onEditorUpdate?: (editor: any) => void;
+  padding?: {
+    top?: number;
+    bottom?: number;
+  };
+  onEditorUpdate?: (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => void;
   onChange?: (code: string) => void;
   onCreateNewBlockCommand?: () => void;
   onMoveForwardCommand?: () => void;
@@ -56,6 +61,10 @@ export const Editor: React.FC<EditorProps> = ({
   readOnly = false,
   errorMarkers,
   warnMarkers,
+  padding = {
+    top: 24,
+    bottom: 24,
+  },
   onEditorUpdate = () => {},
   onChange = () => {},
   onCreateNewBlockCommand = () => {},
@@ -103,7 +112,7 @@ export const Editor: React.FC<EditorProps> = ({
       return;
     }
     setEditor(editor);
-    onEditorUpdate(editor);
+    onEditorUpdate(editor, monaco);
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
       createNewBlockCommandHandler
@@ -161,7 +170,7 @@ export const Editor: React.FC<EditorProps> = ({
     if (!monaco || !model) {
       return;
     }
-    const markers =[
+    const markers = [
       ...(errorMarkers ?? []).map(({location, text}) => ({
         startLineNumber: location.line,
         startColumn: location.column + 1,
@@ -203,10 +212,7 @@ export const Editor: React.FC<EditorProps> = ({
             vertical: 'hidden',
             verticalScrollbarSize: 0,
           },
-          padding: {
-            top: 24,
-            bottom: 24,
-          },
+          padding,
         }}
         theme="asteroidLightTheme"
         loading={<></>}
