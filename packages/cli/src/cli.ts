@@ -1,5 +1,7 @@
-import { a } from '.';
+import { parseArgs } from './commands';
+import { startAsteroidServer } from './server';
 
 export function main() {
-  a();
+  const args = parseArgs();
+  startAsteroidServer(args);
 };

@@ -28,6 +28,13 @@ const nodeOutput = {
       sourcemap: true,
     },
   ],
+  external: [
+    '@babel/code-frame',
+    '@web/dev-server',
+    '@web/dev-server-core',
+    'chalk',
+    'ip',
+  ],
   plugins,
 };
 
