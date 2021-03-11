@@ -1,12 +1,19 @@
 import path from "path";
 import { DevServerStartError } from '@web/dev-server';
 import { DevServer, Plugin } from '@web/dev-server-core';
+import { hmrPlugin } from "@web/dev-server-hmr";
 import { CliArgs } from './commands';
 import { createLogger } from './logger/createLogger';
+import { asteroidObserverPlugin } from "./plugins/asteroidObserverPlugin";
+import { proactiveWatchPlugin } from "./plugins/proactiveWatchPlugin";
 
 export async function startAsteroidServer(args: CliArgs) {
   try {
-    const plugins: Plugin[] = [];
+    const plugins: Plugin[] = [
+      hmrPlugin(),
+      asteroidObserverPlugin(),
+      proactiveWatchPlugin(),
+    ];
     const { logger, loggerPlugin } = createLogger({
       debugLogging: false,
       clearTerminalOnReload: false,
