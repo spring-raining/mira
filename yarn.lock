@@ -7305,6 +7305,11 @@ esbuild-wasm@^0.8.50:
   resolved "https://registry.yarnpkg.com/esbuild-wasm/-/esbuild-wasm-0.8.50.tgz#814414ac2e29c6b6635f1532792be14144717637"
   integrity sha512-jutCMpyII3gt/gvFpSTn7trb4q6Yo+jp58Tx21CJ167eHhrQU2sFqk4fWdKDNKCqXIz2vq8PMsEZ7HzN1ESFbQ==
 
+esbuild@^0.11.9:
+  version "0.11.9"
+  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.11.9.tgz#408bf4fb5ae9abc2f27d56b62e19aab697687975"
+  integrity sha512-qP7w/oWjJBIh9x+H37DbpkMtmSnLm63VDyA06+vkJJEHlVR7QSDiPAaka7mtMQZHoBn87irUx5rDxbXMKaf8xw==
+
 escalade@^3.0.1, escalade@^3.0.2, escalade@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.1.1.tgz#d8cfdc7000965c5a0174b4a82eaa5c0552742e40"

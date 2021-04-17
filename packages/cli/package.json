@@ -38,6 +38,8 @@
   "dependencies": {
     "@web/dev-server": "^0.1.8",
     "@web/dev-server-hmr": "^0.1.8",
-    "globby": "^11.0.2"
+    "esbuild": "^0.11.9",
+    "globby": "^11.0.2",
+    "parse5": "^6.0.1"
   }
 }

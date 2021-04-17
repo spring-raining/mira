@@ -5,12 +5,14 @@ import { hmrPlugin } from "@web/dev-server-hmr";
 import { CliArgs } from './commands';
 import { createLogger } from './logger/createLogger';
 import { asteroidObserverPlugin } from "./plugins/asteroidObserverPlugin";
+import { esbuildPlugin } from './plugins/esbuildPlugin';
 import { proactiveWatchPlugin } from "./plugins/proactiveWatchPlugin";
 
 export async function startAsteroidServer(args: CliArgs) {
   try {
     const plugins: Plugin[] = [
       hmrPlugin(),
+      esbuildPlugin(),
       asteroidObserverPlugin(),
       proactiveWatchPlugin(),
     ];

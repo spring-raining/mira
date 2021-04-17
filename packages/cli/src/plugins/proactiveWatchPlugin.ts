@@ -30,7 +30,6 @@ export function proactiveWatchPlugin(): Plugin {
 
   const workDir = process.cwd();
   const rehashTargetFiles = async () => {
-    console.log('rehash');
     workDirWatcher?.close();
     gitignoreFileWatcher?.close();
 
@@ -49,7 +48,6 @@ export function proactiveWatchPlugin(): Plugin {
       if (isIgnored(pathname)) {
         return;
       }
-      console.log('add', pathname);
       if (
         path.basename(pathname) === '.gitignore' &&
         !gitignorePaths.includes(pathname)
