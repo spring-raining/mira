@@ -1,12 +1,11 @@
-import { Logger } from '@web/dev-server-core';
-import { DevServerConfig } from "@web/dev-server";
+import { Logger, DevServerCoreConfig } from '@web/dev-server-core';
 import ip from 'ip';
 import chalk from 'chalk';
 
-const createAddress = (config: DevServerConfig, host: string, path: string) =>
+const createAddress = (config: DevServerCoreConfig, host: string, path: string) =>
   `http${config.http2 ? 's' : ''}://${host}:${config.port}${path}`;
 
-function logNetworkAddress(config: DevServerConfig, logger: Logger, openPath: string) {
+function logNetworkAddress(config: DevServerCoreConfig, logger: Logger, openPath: string) {
   try {
     const address = ip.address();
     if (typeof address === 'string') {
@@ -19,9 +18,9 @@ function logNetworkAddress(config: DevServerConfig, logger: Logger, openPath: st
   }
 }
 
-export function logStartMessage(config: DevServerConfig, logger: Logger) {
+export function logStartMessage(config: DevServerCoreConfig, logger: Logger) {
   const prettyHost = config.hostname ?? 'localhost';
-  let openPath = typeof config.open === 'string' ? config.open : '/';
+  let openPath = config.basePath ?? '/';
   if (!openPath.startsWith('/')) {
     openPath = `/${openPath}`;
   }

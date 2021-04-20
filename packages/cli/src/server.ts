@@ -1,18 +1,26 @@
 import path from "path";
-import { DevServerStartError } from '@web/dev-server';
 import { DevServer, Plugin } from '@web/dev-server-core';
 import { hmrPlugin } from "@web/dev-server-hmr";
 import { CliArgs } from './commands';
 import { createLogger } from './logger/createLogger';
 import { asteroidObserverPlugin } from "./plugins/asteroidObserverPlugin";
 import { esbuildPlugin } from './plugins/esbuildPlugin';
+import { nodeResolvePlugin } from './plugins/nodeResolvePlugin';
 import { proactiveWatchPlugin } from "./plugins/proactiveWatchPlugin";
 
 export async function startAsteroidServer(args: CliArgs) {
   try {
+    const coreConfig = {
+      port: args.port,
+      rootDir: path.resolve(__dirname, '../public'),
+      hostname: 'localhost',
+      basePath: '',
+      injectWebSocket: true,
+    };
     const plugins: Plugin[] = [
-      hmrPlugin(),
+      nodeResolvePlugin(coreConfig.rootDir),
       esbuildPlugin(),
+      hmrPlugin() as any, // FIXME
       asteroidObserverPlugin(),
       proactiveWatchPlugin(),
     ];
@@ -24,13 +32,9 @@ export async function startAsteroidServer(args: CliArgs) {
     plugins.unshift(loggerPlugin);
     const server = new DevServer(
       {
-        port: args.port,
-        rootDir: path.resolve(__dirname, '../public'),
-        hostname: 'localhost',
-        basePath: '',
+        ...coreConfig,
         middleware: [],
         plugins,
-        injectWebSocket: true,
       },
       logger
     );
@@ -46,11 +50,7 @@ export async function startAsteroidServer(args: CliArgs) {
     await server.start();
     // openBrowser();
   } catch (error) {
-    if (error instanceof DevServerStartError) {
-      console.error(error.message);
-    } else {
-      console.error(error);
-    }
+    console.error(error);
     process.exit(1);
   }
 }

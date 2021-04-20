@@ -30,7 +30,6 @@ const nodeOutput = {
   ],
   external: [
     '@babel/code-frame',
-    '@web/dev-server',
     '@web/dev-server-core',
     '@web/dev-server-hmr',
     'camelcase',

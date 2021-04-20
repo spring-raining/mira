@@ -9,14 +9,8 @@ import {
   PluginSyntaxError,
   ServerStartParams,
 } from '@web/dev-server-core';
-import {
-  queryAll,
-  predicates,
-  getTextContent,
-  setTextContent,
-} from '@web/dev-server-core/dist/dom5';
-import { transform, Loader } from 'esbuild';
-import { parse as parseHtml, serialize as serializeHtml } from 'parse5';
+import { Loader } from 'esbuild';
+import { esbuildTransform } from './esbuild/transform';
 
 export interface EsbuildConfig {
   loaders: Record<string, Loader>;
@@ -58,16 +52,12 @@ export function esbuildPlugin(): Plugin {
     target: string | string[]
   ) => {
     try {
-      const { code: transformedCode, warnings } = await transform(code, {
-        sourcefile: filePath,
-        sourcemap: 'inline',
+      const {code: transformedCode, warnings} = await esbuildTransform({
+        config: esbuildConfig,
+        code,
+        filePath,
         loader,
         target,
-        // don't set any format for JS-like formats, otherwise esbuild reformats the code unnecesarily
-        format: ['js', 'jsx', 'ts', 'tsx'].includes(loader) ? undefined : 'esm',
-        jsxFactory: esbuildConfig.jsxFactory,
-        jsxFragment: esbuildConfig.jsxFragment,
-        define: esbuildConfig.define,
       });
 
       if (warnings) {
@@ -99,36 +89,6 @@ export function esbuildPlugin(): Plugin {
     }
   };
 
-  const transformHtml = async (
-    body: string,
-    filePath: string,
-    loader: Loader,
-    target: string | string[]
-  ) => {
-    const documentAst = parseHtml(body);
-    const inlineScripts = queryAll(
-      documentAst,
-      predicates.AND(
-        predicates.hasTagName('script'),
-        predicates.NOT(predicates.hasAttr('src'))
-      )
-    );
-    if (inlineScripts.length === 0) {
-      return;
-    }
-    for (const node of inlineScripts) {
-      const code = getTextContent(node);
-      const transformedCode = await transformCode(
-        code,
-        filePath,
-        loader,
-        target
-      );
-      setTextContent(node, transformedCode);
-    }
-    return serializeHtml(documentAst);
-  };
-
   return {
     name: 'esbuild',
     serverStart: (params) => {
@@ -147,8 +107,7 @@ export function esbuildPlugin(): Plugin {
     transform: async (context) => {
       let loader: Loader;
       if (context.response.is('html')) {
-        // we are transforming inline scripts
-        loader = 'js';
+        return;
       } else {
         const fileExtension = path.posix.extname(context.path);
         loader = esbuildConfig.loaders[fileExtension];
@@ -166,9 +125,6 @@ export function esbuildPlugin(): Plugin {
         context.url,
         serverStartParams!.config.rootDir
       );
-      if (context.response.is('html')) {
-        return transformHtml(context.body as string, filePath, loader, target);
-      }
       return transformCode(context.body as string, filePath, loader, target);
     },
   };

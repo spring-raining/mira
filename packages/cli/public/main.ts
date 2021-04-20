@@ -1,4 +1,4 @@
-import { add } from './mod.ts';
+import { add } from './mod';
 
 console.log(add(3, 1));
 // console.log(3);
