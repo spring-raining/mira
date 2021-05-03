@@ -3,6 +3,7 @@ import { DevServer, Plugin } from '@web/dev-server-core';
 import { hmrPlugin } from "@web/dev-server-hmr";
 import { CliArgs } from './commands';
 import { createLogger } from './logger/createLogger';
+import { workspaceMiddleware } from './middlewares/workspaceMiddleware';
 import { asteroidObserverPlugin } from "./plugins/asteroidObserverPlugin";
 import { esbuildPlugin } from './plugins/esbuildPlugin';
 import { nodeResolvePlugin } from './plugins/nodeResolvePlugin';
@@ -33,7 +34,9 @@ export async function startAsteroidServer(args: CliArgs) {
     const server = new DevServer(
       {
         ...coreConfig,
-        middleware: [],
+        middleware: [
+          await workspaceMiddleware(),
+        ],
         plugins,
       },
       logger
