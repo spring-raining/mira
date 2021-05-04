@@ -3,26 +3,7 @@ import { Plugin } from '@web/dev-server-core';
 import chokidar, { FSWatcher } from 'chokidar';
 import debounce from 'debounce';
 import { gitignore } from 'globby';
-import fastGlob from 'fast-glob';
-
-const DEFAULT_IGNORE = [
-  '**/node_modules/**',
-  '**/flow-typed/**',
-  '**/coverage/**',
-  '**/.git',
-];
-
-const getGitignoreFiles = async ({
-  cwd,
-}: {
-  cwd: string;
-}): Promise<string[]> => {
-  return await fastGlob('**/.gitignore', {
-    ignore: DEFAULT_IGNORE,
-    cwd,
-    absolute: true,
-  });
-};
+import { globFiles } from '../../util';
 
 export function proactiveWatchPlugin(): Plugin {
   let gitignoreFileWatcher: FSWatcher;
@@ -34,16 +15,18 @@ export function proactiveWatchPlugin(): Plugin {
     gitignoreFileWatcher?.close();
 
     const isIgnored = await gitignore();
-    const gitignorePaths = await getGitignoreFiles({ cwd: workDir });
+    const gitignorePaths = await globFiles({
+      patterns: '**/.gitignore',
+      cwd: workDir,
+      absolute: true,
+    });
     gitignoreFileWatcher = chokidar.watch(gitignorePaths);
     workDirWatcher = chokidar.watch(workDir);
 
     const reload = debounce(() => {
       rehashTargetFiles();
     }, 200);
-    gitignoreFileWatcher
-      .on('change', reload)
-      .on('unlink', reload);
+    gitignoreFileWatcher.on('change', reload).on('unlink', reload);
     workDirWatcher.on('add', (pathname) => {
       if (isIgnored(pathname)) {
         return;

@@ -42,6 +42,7 @@
     "@web/dev-server-hmr": "^0.1.9",
     "es-module-lexer": "^0.4.1",
     "esbuild": "^0.11.9",
-    "globby": "^11.0.2"
+    "globby": "^11.0.2",
+    "reflect-metadata": "0.1.13"
   }
 }

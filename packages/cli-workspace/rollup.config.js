@@ -5,22 +5,14 @@ import typescript from '@rollup/plugin-typescript';
 const plugins = [
   nodeResolve({ preferBuiltins: true }),
   typescript({
+    tsconfig: './tsconfig.entrypoint.json',
     declaration: false,
   }),
 ];
 
 const nodeOutput = {
-  input: [
-    path.resolve(__dirname, 'src/cli.ts'),
-    path.resolve(__dirname, 'src/index.ts'),
-  ],
+  input: [path.resolve(__dirname, 'module/index.ts')],
   output: [
-    {
-      dir: path.resolve(__dirname, 'module'),
-      format: 'module',
-      exports: 'named',
-      sourcemap: true,
-    },
     {
       dir: path.resolve(__dirname, 'dist'),
       format: 'cjs',
@@ -29,17 +21,9 @@ const nodeOutput = {
     },
   ],
   external: [
-    '@babel/code-frame',
-    '@web/dev-server-core',
-    '@web/dev-server-hmr',
-    'camelcase',
-    'chalk',
-    'chokidar',
-    'command-line-args',
-    'command-line-usage',
-    'debounce',
-    'globby',
-    'ip',
+    'next',
+    'reflect-metadata',
+    'tsyringe',
   ],
   plugins,
 };

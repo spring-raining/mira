@@ -1,19 +1,19 @@
-import path from "path";
 import { DevServer, Plugin } from '@web/dev-server-core';
-import { hmrPlugin } from "@web/dev-server-hmr";
+import { hmrPlugin } from '@web/dev-server-hmr';
 import { CliArgs } from './commands';
-import { createLogger } from './logger/createLogger';
-import { workspaceMiddleware } from './middlewares/workspaceMiddleware';
-import { asteroidObserverPlugin } from "./plugins/asteroidObserverPlugin";
-import { esbuildPlugin } from './plugins/esbuildPlugin';
-import { nodeResolvePlugin } from './plugins/nodeResolvePlugin';
-import { proactiveWatchPlugin } from "./plugins/proactiveWatchPlugin";
+import { createLogger } from './server/logger/createLogger';
+import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
+import { asteroidObserverPlugin } from './server/plugins/asteroidObserverPlugin';
+import { esbuildPlugin } from './server/plugins/esbuildPlugin';
+import { nodeResolvePlugin } from './server/plugins/nodeResolvePlugin';
+import { proactiveWatchPlugin } from './server/plugins/proactiveWatchPlugin';
+import { getCliRepository } from './workspace';
 
 export async function startAsteroidServer(args: CliArgs) {
   try {
     const coreConfig = {
       port: args.port,
-      rootDir: path.resolve(__dirname, '../public'),
+      rootDir: args.rootDir, //path.resolve(__dirname, '../public'),
       hostname: 'localhost',
       basePath: '',
       injectWebSocket: true,
@@ -34,9 +34,9 @@ export async function startAsteroidServer(args: CliArgs) {
     const server = new DevServer(
       {
         ...coreConfig,
-        middleware: [
-          await workspaceMiddleware(),
-        ],
+        middleware: [await workspaceMiddleware({
+          cliRepository: getCliRepository(args),
+        })],
         plugins,
       },
       logger
