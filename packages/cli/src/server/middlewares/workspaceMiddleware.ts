@@ -1,14 +1,14 @@
-import createApp, { CliRepository } from '@asteroid-mdx/cli-workspace';
+import createApp, { WorkspaceRepository } from '@asteroid-mdx/cli-workspace';
 import { Middleware } from '@web/dev-server-core';
 
 export async function workspaceMiddleware({
-  cliRepository,
+  workspaceRepository,
 }: {
-  cliRepository: CliRepository;
+  workspaceRepository: WorkspaceRepository;
 }): Promise<Middleware> {
   const { app } = createApp(
     {
-      cliRepository,
+      workspaceRepository,
     },
     {
       dev: process.env.NODE_ENV === 'development',

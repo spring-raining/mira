@@ -3,18 +3,22 @@ import next from 'next';
 import type createServer from 'next/dist/server/next';
 import { NextServer } from 'next/dist/server/next';
 import { container } from 'tsyringe';
-import { cliServiceToken, CliRepository, CliService } from '../services/cli';
+import {
+  workspaceServiceToken,
+  WorkspaceRepository,
+  WorkspaceService,
+} from '../services/workspace';
 
-export type { CliRepository };
+export type { WorkspaceRepository };
 
 export default (
-  { cliRepository }: { cliRepository: CliRepository },
+  { workspaceRepository }: { workspaceRepository: WorkspaceRepository },
   options: Parameters<typeof createServer>[0] = {}
 ): {
   app: NextServer;
 } => {
-  container.register(cliServiceToken, {
-    useValue: new CliService(cliRepository),
+  container.register(workspaceServiceToken, {
+    useValue: new WorkspaceService(workspaceRepository),
   });
   return {
     app: next({

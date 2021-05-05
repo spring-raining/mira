@@ -7,7 +7,7 @@ import { asteroidObserverPlugin } from './server/plugins/asteroidObserverPlugin'
 import { esbuildPlugin } from './server/plugins/esbuildPlugin';
 import { nodeResolvePlugin } from './server/plugins/nodeResolvePlugin';
 import { proactiveWatchPlugin } from './server/plugins/proactiveWatchPlugin';
-import { getCliRepository } from './workspace';
+import { getWorkspaceRepository } from './workspace';
 
 export async function startAsteroidServer(args: CliArgs) {
   try {
@@ -34,9 +34,11 @@ export async function startAsteroidServer(args: CliArgs) {
     const server = new DevServer(
       {
         ...coreConfig,
-        middleware: [await workspaceMiddleware({
-          cliRepository: getCliRepository(args),
-        })],
+        middleware: [
+          await workspaceMiddleware({
+            workspaceRepository: getWorkspaceRepository(args),
+          }),
+        ],
         plugins,
       },
       logger
