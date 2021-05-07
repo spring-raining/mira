@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "types": "./lib/index.d.ts",
   "main": "./lib/index.js",
-  "exports": {
-    "import": "./module/index.js",
-    "node": "./lib/index.js"
-  },
   "license": "MIT",
   "scripts": {
     "build": "run-p build:*",

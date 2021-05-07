@@ -9,10 +9,11 @@ export const UniverseView: React.VFC = () => {
     return <Flex>No file</Flex>;
   }
   return (
-    <Flex>
-      <pre>
-        <Code>{file.body}</Code>
-      </pre>
+    <Flex flex={1} position="relative">
+      <iframe
+        style={{ flex: 1 }}
+        src="universe"
+      />
     </Flex>
   );
 };

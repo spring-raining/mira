@@ -3,10 +3,10 @@ import React from 'react';
 import { useAsteroidFiles } from '../hooks/workspace';
 
 export const FileTreeView: React.VFC = () => {
-  const { asteroidFiles, setActiveFilePath } = useAsteroidFiles();
+  const { asteroidFiles, activeFilePath, setActiveFilePath } = useAsteroidFiles();
 
   return (
-    <Stack direction="column" py={2}>
+    <Stack direction="column" py={2} spacing={0}>
       {asteroidFiles.map(({ path }) => (
         <Flex
           key={path}
@@ -14,11 +14,12 @@ export const FileTreeView: React.VFC = () => {
           onClick={() => setActiveFilePath(path)}
           px={2}
           py={1}
+          backgroundColor={path === activeFilePath ? 'gray.100': 'transparent'}
           _hover={{
             backgroundColor: 'gray.100',
           }}
         >
-          <Text fontSize="sm">{path}</Text>
+          <Text fontSize="sm" isTruncated>{path}</Text>
         </Flex>
       ))}
     </Stack>
