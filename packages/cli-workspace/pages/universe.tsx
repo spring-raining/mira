@@ -1,14 +1,44 @@
-import { AsteroidWui } from '@asteroid-mdx/wui';
+import { AsteroidWui, Brick } from '@asteroid-mdx/wui';
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import { container } from 'tsyringe';
+import { hydrateMdx } from '../mdx/io';
+import { workspaceServiceToken, WorkspaceService } from '../services/workspace';
+import { AsteroidFileItem } from '../types/workspace';
 
-export default function Home() {
+interface PageProps {
+  file: AsteroidFileItem<number> | null;
+  bricks: Brick[] | null;
+}
 
+export const getServerSideProps: GetServerSideProps<PageProps> = async (
+  context
+) => {
+  const cli = container.resolve<WorkspaceService>(workspaceServiceToken);
+  const asteroid = (await cli.service.getAsteroidFiles()).map((it) => ({
+    ...it,
+    mtime: it.mtime.getTime(),
+    birthtime: it.mtime.getTime(),
+  }));
+  const filepath = context.query['mdx'];
+  const filepathStr =
+    filepath && Array.isArray(filepath) ? filepath[0] : filepath;
+  const file =
+    filepathStr &&
+    asteroid.find((f) => f.path === decodeURIComponent(filepathStr)) || null;
+  const bricks = file && hydrateMdx(file.body);
+  return {
+    props: { file, bricks },
+  };
+};
+
+export default function Home({ file, bricks }: PageProps) {
   return (
     <>
       <Head>
-        <title>Universe</title>
+        <title>{file?.path ?? 'Universe'}</title>
       </Head>
-      <AsteroidWui />
+      <AsteroidWui bricks={bricks ?? undefined} />
     </>
   );
 }

@@ -1,12 +1,15 @@
-import compileMdx, { Options, sync as compileSyncMdx } from "@mdx-js/mdx";
+import * as mdx from '@mdx-js/mdx';
 import frontmatter from 'remark-frontmatter';
-import type { Plugin } from "unified";
+import type { Plugin, Processor } from 'unified';
 import {
   asteroidDiv,
   asteroidCodeBlock,
   insertAsteroidComponent,
 } from './remark/asteroid';
 import { loadAsteroidConfig } from './remark/loadAsteroidConfig';
+
+export type Options = mdx.Options;
+export type { Plugin, Processor };
 
 export {
   parseImportClause,
@@ -24,15 +27,25 @@ export const mdxOptions: Options = {
     insertAsteroidComponent,
   ] as Plugin[],
   rehypePlugins: [],
-  compilers: [],
 };
 
-export async function compile(input: string, options: Options = mdxOptions): Promise<string> {
-  return await compileMdx(input, options);
+export async function compile(
+  input: string,
+  options: Options = mdxOptions
+): Promise<string> {
+  return await mdx.mdx(input, options);
 }
 
 export function sync(input: string, options: Options = mdxOptions): string {
-  return compileSyncMdx(input, options);
+  return mdx.sync(input, options);
+}
+
+export function createMdxAstCompiler(options: Options = mdxOptions): Processor {
+  return mdx.createMdxAstCompiler(options);
+}
+
+export function createCompiler(options: Options = mdxOptions): Processor {
+  return mdx.createCompiler(options);
 }
 
 export default compile;

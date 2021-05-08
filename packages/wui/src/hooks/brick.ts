@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid';
+import { nanoid } from 'nanoid/non-secure';
 import {
   useRecoilState,
   useRecoilValue,
@@ -15,7 +15,7 @@ import {
   brickOrderState,
   Brick,
 } from '../atoms';
-import { editorRefs } from "./editor";
+import { editorRefs } from './editor';
 
 const brickStateFamily = selectorFamily<Brick, string>({
   key: 'brickStateFamily',
@@ -33,22 +33,36 @@ const brickStateFamily = selectorFamily<Brick, string>({
 const bricksState = selector({
   key: 'bricksState',
   get: ({ get }) =>
-    get(brickOrderState).map((brickId) => get(brickDictState)[brickId]),
+    get(brickOrderState)
+      .map((brickId) => get(brickDictState)[brickId])
+      .filter((brick) => !!brick),
 });
 
 export const useBricks = () => {
   const bricks = useRecoilValue(bricksState);
   const pushBrick = useRecoilCallback(
-    ({ snapshot, set }) => async (newBrick: Brick) => {
-      const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
-      const brickOrder = [...(await snapshot.getPromise(brickOrderState))];
-      brickDict[newBrick.brickId] = newBrick;
-      brickOrder.push(newBrick.brickId);
-      set(brickDictState, brickDict);
-      set(brickOrderState, brickOrder);
+    ({ set }) => async (newBrick: Brick) => {
+      set(brickDictState, (brickDict) => ({...brickDict, [newBrick.brickId]: newBrick}));
+      set(brickOrderState, (brickOrder) => [...brickOrder, newBrick.brickId]);
     }
   );
-  return { bricks, pushBrick };
+  const flushAll = useRecoilCallback(({ reset }) => () => {
+    reset(activeBrickIdState);
+    reset(brickOrderState);
+    reset(brickDictState);
+    reset(asteroidDeclaredValueDictState);
+    reset(asteroidValuesExportedState);
+  });
+  const importBricks = useRecoilCallback(
+    () => async (bricks: Brick[]) => {
+      flushAll();
+      for (let brick of bricks) {
+        await pushBrick(brick);
+      }
+    },
+    [flushAll, pushBrick]
+  );
+  return { bricks, pushBrick, flushAll, importBricks };
 };
 
 export const useBrick = (brickId: string) => {

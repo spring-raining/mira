@@ -12,7 +12,7 @@ export const UniverseView: React.VFC = () => {
     <Flex flex={1} position="relative">
       <iframe
         style={{ flex: 1 }}
-        src="universe"
+        src={`universe?mdx=${encodeURIComponent(file.path)}`}
       />
     </Flex>
   );

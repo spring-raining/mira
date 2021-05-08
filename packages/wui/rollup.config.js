@@ -7,7 +7,7 @@ import typescript from '@rollup/plugin-typescript';
 const plugins = [
   nodeResolve(),
   typescript({
-    tsconfig: './tsconfig.json',
+    tsconfig: './tsconfig.module.json',
     declaration: false,
   }),
   commonjs(),
@@ -25,7 +25,14 @@ const output = [
         sourcemap: true,
       },
     ],
-    external: ['react', 'recoil', 'nanoid', '@asteroid-mdx/transpiler'],
+    external: [
+      'react',
+      'recoil',
+      'nanoid',
+      '@asteroid-mdx/core',
+      '@asteroid-mdx/transpiler',
+      '@mdx-js/mdx',
+    ],
     plugins,
   },
 ];

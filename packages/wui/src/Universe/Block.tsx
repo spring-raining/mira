@@ -1,5 +1,5 @@
 import { css } from 'lightwindcss';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Brick } from '../atoms';
 import { useBrick } from '../hooks/brick';
 import { Editor } from '../Editor';
@@ -10,13 +10,18 @@ export const Block: React.VFC<Pick<Brick, 'brickId'>> = ({ brickId }) => {
   const [languageEditorActive, setLanguageEditorActive] = useState(false);
   const [language, setLanguage] = useState('');
   const languageCompletionHandlers = {
-    onMount: useCallback(() => setLanguageEditorActive(true), []),
+    onMount: useCallback(() => setLanguageEditorActive(false), []),
     onSubmit: useCallback((lang: string) => {
       setLanguage(lang);
       setLanguageEditorActive(false);
     }, []),
     onBlur: useCallback(() => setLanguageEditorActive(false), []),
   };
+
+  useEffect(() => {
+    // TODO: detect language
+    setLanguage('markdown');
+  }, []);
 
   return (
     <div>

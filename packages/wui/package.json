@@ -17,7 +17,6 @@
     "test": "node scripts/test.js"
   },
   "dependencies": {
-    "@asteroid-mdx/react": "1.0.0",
     "@asteroid-mdx/transpiler": "1.0.0",
     "nanoid": "3.1.20"
   },

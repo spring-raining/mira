@@ -14,12 +14,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "@asteroid-mdx/core": "1.0.0",
     "@asteroid-mdx/wui": "1.0.0",
     "@babel/plugin-proposal-decorators": "^7.13.15",
     "@chakra-ui/react": "1.6.0",
     "@emotion/react": "11.1.5",
     "@emotion/styled": "11.3.0",
     "framer-motion": "4.1.11",
+    "nanoid": "3.1.20",
     "next": "10.2.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
