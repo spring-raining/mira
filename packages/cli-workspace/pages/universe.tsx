@@ -1,4 +1,5 @@
 import { AsteroidWui, Brick } from '@asteroid-mdx/wui';
+import { Global, css } from '@emotion/react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { container } from 'tsyringe';
@@ -38,6 +39,14 @@ export default function Home({ file, bricks }: PageProps) {
       <Head>
         <title>{file?.path ?? 'Universe'}</title>
       </Head>
+      <Global styles={css`
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin: 0;
+        }
+      `} />
       <AsteroidWui bricks={bricks ?? undefined} />
     </>
   );

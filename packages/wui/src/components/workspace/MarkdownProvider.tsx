@@ -3,7 +3,7 @@ import React from 'react';
 import {
   useMarkdownRenderer,
   MarkdownProvider,
-} from '../hooks/useMarkdownRenderer';
+} from '../../hooks/useMarkdownRenderer';
 
 const useMarkdownStyling = () => {
   const markdownStyling = css`

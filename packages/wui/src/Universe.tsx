@@ -3,7 +3,8 @@ import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { Brick } from './types';
 import { useBricks, createNewBrick } from './state/brick';
-import { Block } from './Universe/Block';
+import { PlanetarySystem } from './components/planetarySystem';
+import { Block } from './components/workspace/Block';
 
 export interface UniverseProps {
   bricks?: Brick[];
@@ -28,22 +29,53 @@ const UniverseView: React.VFC<UniverseProps> = ({ bricks: initialBricks }) => {
   return (
     <div
       className={css`
-        width: 100%;
+        display: flex;
       `}
     >
-      {bricks.map((brick) => {
-        if (brick.noteType === 'script') {
-          return (
-            <pre key={brick.brickId}>
-              <code>{brick.text}</code>
-            </pre>
-          );
-        } else {
-          return <Block key={brick.brickId} {...brick} />;
-        }
-      })}
-      <button onClick={onCreateCodeBlockClick}>Create code block</button>
-      <button onClick={onCreateTextBlockClick}>Create text block</button>
+      <div
+        className={css`
+          width: 10rem;
+        `}
+      >
+        <div
+          className={css`
+            top: 0;
+            position: sticky;
+            padding: 5rem 0;
+          `}
+        >
+          <PlanetarySystem />
+        </div>
+      </div>
+      <div
+        className={css`
+          flex: 1;
+        `}
+      >
+        <div
+          className={css`
+            width: '100%';
+            position: sticky;
+            top: 0;
+            padding: 5rem 0;
+            margin-inline-start: 1.5rem;
+          `}
+        >
+          {bricks.map((brick) => {
+            if (brick.noteType === 'script') {
+              return (
+                <pre key={brick.brickId}>
+                  <code>{brick.text}</code>
+                </pre>
+              );
+            } else {
+              return <Block key={brick.brickId} {...brick} />;
+            }
+          })}
+          <button onClick={onCreateCodeBlockClick}>Create code block</button>
+          <button onClick={onCreateTextBlockClick}>Create text block</button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -10,9 +10,9 @@ import React, {
   useState,
   useMemo,
 } from 'react';
-import { useProvidence } from '../state/providence';
+import { useProvidence } from '../../state/providence';
 import { MarkerMessage } from '../Editor';
-import { Asteroid } from '../types';
+import { Asteroid } from '../../types';
 import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
 // eslint-disable-next-line no-new-func
