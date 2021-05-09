@@ -10,9 +10,9 @@ import React, {
   useState,
   useMemo,
 } from 'react';
-import { Asteroid } from '../atoms';
-import { useProvidence } from '../hooks/providence';
+import { useProvidence } from '../state/providence';
 import { MarkerMessage } from '../Editor';
+import { Asteroid } from '../types';
 import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
 // eslint-disable-next-line no-new-func
@@ -320,4 +320,18 @@ export const useLivedComponent = (): LiveContextValue | null => {
     return null;
   }
   return live;
+};
+
+export const LivedPreview: React.FC = () => {
+  const live = useLivedComponent();
+  return live?.output.element ? <>{live.output.element}</> : null;
+};
+
+export const LivedError: React.FC = () => {
+  const live = useLivedComponent();
+  return live?.output.error ? (
+    <div>
+      <pre>{live.output.error.toString()}</pre>
+    </div>
+  ) : null;
 };

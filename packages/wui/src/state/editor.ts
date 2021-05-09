@@ -1,7 +1,7 @@
 import type { editor } from 'monaco-editor';
 import { useCallback } from 'react';
 import { useRecoilCallback } from 'recoil';
-import { activeBrickIdState, brickOrderState } from '../atoms';
+import { activeBrickIdState, brickOrderState } from './atoms';
 
 // Setting to recoil atoms seems to occur errors
 export const editorRefs: Record<string, editor.IStandaloneCodeEditor> = {};

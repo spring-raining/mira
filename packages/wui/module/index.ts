@@ -3,8 +3,7 @@ export { Universe as AsteroidWui } from '../src/Universe';
 export type {
   ASTNode,
   Asteroid,
-  MarkdownBrick,
+  ContentBrick,
   ScriptBrick,
-  AsteroidBrick,
   Brick,
-} from '../src/atoms';
+} from '../src/types';

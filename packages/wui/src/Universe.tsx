@@ -1,10 +1,9 @@
 import { css } from 'lightwindcss';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
-import { Brick } from './atoms';
-import { useBricks, createNewBrick } from './hooks/brick';
+import { Brick } from './types';
+import { useBricks, createNewBrick } from './state/brick';
 import { Block } from './Universe/Block';
-import { LiveBlock } from './Universe/LiveBlock';
 
 export interface UniverseProps {
   bricks?: Brick[];
@@ -13,10 +12,10 @@ export interface UniverseProps {
 const UniverseView: React.VFC<UniverseProps> = ({ bricks: initialBricks }) => {
   const { bricks, pushBrick, importBricks } = useBricks();
   const onCreateCodeBlockClick = useCallback(() => {
-    pushBrick(createNewBrick('asteroid'));
+    pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
   }, [pushBrick]);
   const onCreateTextBlockClick = useCallback(() => {
-    pushBrick(createNewBrick('script'));
+    pushBrick(createNewBrick({ language: 'markdown' }));
   }, [pushBrick]);
 
   useEffect(() => {
@@ -33,12 +32,14 @@ const UniverseView: React.VFC<UniverseProps> = ({ bricks: initialBricks }) => {
       `}
     >
       {bricks.map((brick) => {
-        if (brick.noteType === 'asteroid') {
-          return <LiveBlock key={brick.brickId} {...brick} />;
-        } else if (brick.noteType === 'markdown') {
-          return <Block key={brick.brickId} {...brick} />
+        if (brick.noteType === 'script') {
+          return (
+            <pre key={brick.brickId}>
+              <code>{brick.text}</code>
+            </pre>
+          );
         } else {
-          return <pre><code>{brick.text}</code></pre>
+          return <Block key={brick.brickId} {...brick} />;
         }
       })}
       <button onClick={onCreateCodeBlockClick}>Create code block</button>

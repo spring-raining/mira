@@ -6,12 +6,12 @@ import {
   selectorFamily,
   DefaultValue,
 } from 'recoil';
+import { Asteroid } from '../types';
+import { RuntimeEnvironment } from '../Universe/runtimeScope';
 import {
   asteroidDeclaredValueDictState,
   asteroidValuesExportedState,
-  Asteroid,
-} from '../atoms';
-import { RuntimeEnvironment } from '../Universe/runtimeScope';
+} from './atoms';
 
 const compareByArrayContent = <T extends string | number>(a: T[], b: T[]) => {
   // Check element intersection

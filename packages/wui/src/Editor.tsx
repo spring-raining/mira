@@ -191,6 +191,12 @@ export const Editor: React.FC<EditorProps> = ({
     monaco.editor.setModelMarkers(model, 'customMarkers', markers);
   }, [monaco, editor, errorMarkers, warnMarkers]);
 
+  // FIXME: Support JSX/TSX language
+  if (language === 'jsx') {
+    language = 'javascript';
+  } else if (language === 'tsx') {
+    language = 'typescript';
+  }
   return (
     <div
       className={css`
