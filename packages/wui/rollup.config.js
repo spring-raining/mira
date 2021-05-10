@@ -33,6 +33,8 @@ const output = [
       '@asteroid-mdx/transpiler',
       '@mdx-js/react',
       'mdast-util-to-hast',
+      'mdast-util-to-markdown',
+      'mdast-util-to-mdx/to-markdown',
       'hast-to-hyperscript',
       'unist-util-visit',
     ],

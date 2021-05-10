@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid/non-secure';
+import { useEffect } from 'react';
 import {
   useRecoilState,
   useRecoilValue,
@@ -7,6 +8,8 @@ import {
   selectorFamily,
   DefaultValue,
 } from 'recoil';
+import { dehydrateBrick } from '../mdx/io';
+import { updateBrickByText } from '../mdx/update';
 import { Brick } from '../types';
 import {
   activeBrickIdState,
@@ -16,6 +19,8 @@ import {
   brickOrderState,
 } from './atoms';
 import { editorRefs } from './editor';
+
+const transpiledMdxCache = new WeakMap<Brick, string>();
 
 const brickStateFamily = selectorFamily<Brick, string>({
   key: 'brickStateFamily',
@@ -38,7 +43,34 @@ const bricksState = selector({
       .filter((brick) => !!brick),
 });
 
-export const useBricks = () => {
+const cancellable = (fn: () => void, ms = 100) => {
+  const timer = setTimeout(fn, ms);
+  return () => {
+    clearTimeout(timer);
+  };
+};
+const debounce = <T extends unknown[]>(
+  fn: (timer: { hasCancelled: () => boolean }) => (...args: T) => void,
+  ms = 100
+) => {
+  let cancel: () => void;
+  return (...args: T) => {
+    let cancelled = false;
+    const hasCancelled = () => cancelled;
+    cancel?.();
+    const cancelFn = cancellable(() => fn({ hasCancelled })(...args), ms);
+    cancel = () => {
+      cancelled = true;
+      cancelFn();
+    };
+  };
+};
+
+export const useBricks = ({
+  onUpdateMdx = () => {},
+}: {
+  onUpdateMdx?: (mdx: string) => void;
+} = {}) => {
   const bricks = useRecoilValue(bricksState);
   const pushBrick = useRecoilCallback(({ set }) => async (newBrick: Brick) => {
     set(brickDictState, (brickDict) => ({
@@ -63,15 +95,67 @@ export const useBricks = () => {
     },
     [flushAll, pushBrick]
   );
+
+  useEffect(
+    () =>
+      cancellable(() => {
+        const mdx = bricks
+          .map((brick) => {
+            if (transpiledMdxCache.has(brick)) {
+              return transpiledMdxCache.get(brick)!;
+            }
+            return dehydrateBrick(brick);
+          })
+          .join('\n');
+        onUpdateMdx(mdx);
+      }),
+    [bricks, onUpdateMdx]
+  );
+
   return { bricks, pushBrick, flushAll, importBricks };
 };
 
 export const useBrick = (brickId: string) => {
-  const [brick, updateBrick] = useRecoilState(brickStateFamily(brickId));
+  const [brick] = useRecoilState(brickStateFamily(brickId));
   const [activeBrickId] = useRecoilState(activeBrickIdState);
   const focus = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
   });
+  const updateBrick = useRecoilCallback(
+    ({ set, snapshot }) =>
+      debounce(({ hasCancelled }) => async (text: string) => {
+        const brick = await snapshot.getPromise(brickStateFamily(brickId));
+        const newBrick = updateBrickByText(brick, text);
+        if (hasCancelled()) {
+          return;
+        }
+        if (Array.isArray(newBrick)) {
+          set(brickDictState, (prevState) => ({
+            ...prevState,
+            ...newBrick.reduce(
+              (acc, brick) => ({
+                ...acc,
+                [brick.brickId]: brick,
+              }),
+              {}
+            ),
+          }));
+          set(brickOrderState, (prevState) => {
+            const arr = [...prevState];
+            arr.splice(
+              prevState.indexOf(brick.brickId),
+              1,
+              ...newBrick.map(({ brickId }) => brickId)
+            );
+            return arr;
+          });
+        } else {
+          set(brickStateFamily(brickId), newBrick);
+        }
+      }),
+    [brickId]
+  );
+
   return {
     brick,
     updateBrick,
@@ -116,13 +200,11 @@ export const useBrickManipulator = () => {
             excludeKey.includes(k) ? prev : { ...prev, [k]: v },
           {}
         );
-      set(
-        brickOrderState,
-        (brickOrder) => brickOrder.filter((id) => id !== brickId)
+      set(brickOrderState, (brickOrder) =>
+        brickOrder.filter((id) => id !== brickId)
       );
-      set(
-        activeBrickIdState,
-        (activeBrickId) => activeBrickId === brickId ? null : activeBrickId
+      set(activeBrickIdState, (activeBrickId) =>
+        activeBrickId === brickId ? null : activeBrickId
       );
       set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
       delete editorRefs[brickId];
@@ -131,13 +213,11 @@ export const useBrickManipulator = () => {
         const asteroidId = brick.asteroid.id;
         const exportedValues =
           (await snapshot.getPromise(asteroidValuesExportedState)) ?? [];
-        set(
-          asteroidDeclaredValueDictState,
-          (decalredValueDict) => filterDict(decalredValueDict, exportedValues[asteroidId] ?? [])
+        set(asteroidDeclaredValueDictState, (decalredValueDict) =>
+          filterDict(decalredValueDict, exportedValues[asteroidId] ?? [])
         );
-        set(
-          asteroidValuesExportedState,
-          (exportedValues) => filterDict(exportedValues ?? [], [asteroidId])
+        set(asteroidValuesExportedState, (exportedValues) =>
+          filterDict(exportedValues ?? [], [asteroidId])
         );
       }
     }
@@ -146,7 +226,13 @@ export const useBrickManipulator = () => {
   return { insertBrick, cleanup };
 };
 
-export const createNewBrick = ({language, isLived}: {language: string; isLived?: boolean}): Brick => {
+export const createNewBrick = ({
+  language,
+  isLived,
+}: {
+  language: string;
+  isLived?: boolean;
+}): Brick => {
   return {
     brickId: nanoid(),
     noteType: 'content',

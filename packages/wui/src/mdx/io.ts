@@ -1,7 +1,9 @@
 import { createCompiler } from '@asteroid-mdx/core';
-import { ASTNode, Brick, ContentBrick } from '@asteroid-mdx/wui';
+import mdxMarkdownExt from 'mdast-util-mdx/to-markdown';
+import toMarkdown from 'mdast-util-to-markdown';
 import { nanoid } from 'nanoid/non-secure';
 import type { Node, Parent } from 'unist';
+import { ASTNode, Brick, ContentBrick } from '../types';
 
 const scriptTypes = [
   'mdxFlowExpression',
@@ -92,7 +94,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       ...(node.children && { children: node.children.map(scan) }),
     };
   };
-  const brick = chunk.map(
+  const bricks = chunk.map(
     (el): Brick => {
       const { children } = el;
       const text: string =
@@ -106,7 +108,12 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       return { ...el, children: children.map(scan), text } as Brick;
     }
   );
+  return bricks;
+};
 
-  // Omit properties which cannot serializable
-  return JSON.parse(JSON.stringify(brick));
+export const dehydrateBrick = (brick: Brick): string => {
+  return toMarkdown(
+    { type: 'root', children: brick.children },
+    { listItemIndent: 'one', extensions: [mdxMarkdownExt] }
+  );
 };

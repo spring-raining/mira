@@ -1,17 +1,27 @@
 import { css } from 'lightwindcss';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
-import { Brick } from './types';
 import { useBricks, createNewBrick } from './state/brick';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
+import { hydrateMdx, dehydrateBrick } from './mdx/io';
 
 export interface UniverseProps {
-  bricks?: Brick[];
+  mdx?: string;
+  onUpdate?: (mdx: string) => void;
 }
 
-const UniverseView: React.VFC<UniverseProps> = ({ bricks: initialBricks }) => {
-  const { bricks, pushBrick, importBricks } = useBricks();
+const UniverseView: React.VFC<UniverseProps> = ({
+  mdx: initialMdx,
+  onUpdate = () => {},
+}) => {
+  const {
+    bricks,
+    pushBrick,
+    importBricks,
+  } = useBricks({
+    onUpdateMdx: onUpdate,
+  });
   const onCreateCodeBlockClick = useCallback(() => {
     pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
   }, [pushBrick]);
@@ -20,9 +30,11 @@ const UniverseView: React.VFC<UniverseProps> = ({ bricks: initialBricks }) => {
   }, [pushBrick]);
 
   useEffect(() => {
-    if (initialBricks) {
+    if (initialMdx) {
+      const initialBricks = hydrateMdx(initialMdx);
       console.log(initialBricks);
       importBricks(initialBricks);
+      console.log(initialBricks.map((brick) => dehydrateBrick(brick)));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

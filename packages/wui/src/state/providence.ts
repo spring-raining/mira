@@ -7,7 +7,7 @@ import {
   DefaultValue,
 } from 'recoil';
 import { Asteroid } from '../types';
-import { RuntimeEnvironment } from '../Universe/runtimeScope';
+import { RuntimeEnvironment } from '../components/workspace/runtimeScope';
 import {
   asteroidDeclaredValueDictState,
   asteroidValuesExportedState,

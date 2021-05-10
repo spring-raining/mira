@@ -40,7 +40,7 @@ export const BlockComponent: React.FC<{
 
   const onEditorChange = useCallback(
     (text: string) => {
-      updateBrick((brick) => ({ ...brick, text }));
+      updateBrick(text);
       if (live && isLived) {
         live.onChange(text);
       }
