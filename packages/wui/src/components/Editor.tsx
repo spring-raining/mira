@@ -55,6 +55,8 @@ export interface EditorProps {
   onFocus?: () => void;
 }
 
+export const editorFontFamily = 'SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace';
+
 export const Editor: React.FC<EditorProps> = ({
   code,
   language,
@@ -208,8 +210,7 @@ export const Editor: React.FC<EditorProps> = ({
         language={language}
         options={{
           minimap: { enabled: false },
-          fontFamily:
-            'SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace',
+          fontFamily: editorFontFamily,
           lineHeight: 18,
           lineNumbers: 'off',
           scrollBeyondLastLine: false,

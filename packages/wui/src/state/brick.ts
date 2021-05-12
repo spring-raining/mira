@@ -155,10 +155,27 @@ export const useBrick = (brickId: string) => {
       }),
     [brickId]
   );
+  const updateLanguage = useRecoilCallback(
+    ({ set, snapshot }) => debounce(({hasCancelled}) => async (language: string) => {
+      const brick = await snapshot.getPromise(brickStateFamily(brickId));
+      if (brick.noteType !== 'content') {
+        return;
+      }
+      const newBrick = updateBrickByText({...brick, language}, brick.text);
+      if (hasCancelled()) {
+        return;
+      }
+      if (!Array.isArray(newBrick)) {
+        set(brickStateFamily(brickId), newBrick);
+      }
+    }),
+    [brickId]
+  );
 
   return {
     brick,
     updateBrick,
+    updateLanguage,
     isActive: brickId === activeBrickId,
     focus,
   };

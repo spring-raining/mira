@@ -19,7 +19,6 @@
     "predev": "shx rm -rf dist",
     "dev": "run-p dev:*",
     "dev:cli": "tsc -w --incremental -p tsconfig.dev.json",
-    "dev:workspace": "yarn workspace @asteroid-mdx/cli-workspace dev",
     "dev:wui": "yarn workspace @asteroid-mdx/wui dev:module"
   },
   "publishConfig": {

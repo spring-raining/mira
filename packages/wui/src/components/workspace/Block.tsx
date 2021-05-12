@@ -1,5 +1,5 @@
 import { css } from 'lightwindcss';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import {
   useBrick,
   useBrickManipulator,
@@ -22,21 +22,19 @@ export const BlockComponent: React.FC<{
   language: string;
   isLived?: boolean;
 }> = ({ brickId, language: initialLanguage, isLived }) => {
-  const { brick, isActive, updateBrick, focus } = useBrick(brickId);
+  const { brick, isActive, updateBrick, updateLanguage, focus } = useBrick(brickId);
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId });
   const live = useLivedComponent();
 
-  const [languageEditorActive, setLanguageEditorActive] = useState(false);
   const [language, setLanguage] = useState(() => initialLanguage);
-  const languageCompletionHandlers = {
-    onMount: useCallback(() => setLanguageEditorActive(false), []),
-    onSubmit: useCallback((lang: string) => {
-      setLanguage(lang);
-      setLanguageEditorActive(false);
-    }, []),
-    onBlur: useCallback(() => setLanguageEditorActive(false), []),
-  };
+  const handleSubmitLanguage = useCallback((lang: string) => {
+    setLanguage(lang);
+    updateLanguage(lang);
+  }, [updateLanguage]);
+  const editorLanguage = useMemo(() => language.toLowerCase().split(/[^\w-]/)[0], [
+    language,
+  ]);
 
   const onEditorChange = useCallback(
     (text: string) => {
@@ -154,55 +152,51 @@ export const BlockComponent: React.FC<{
             className={css`
               width: 50%;
               margin: 0 1rem;
-              padding-right: 1rem;
-              border-radius: 4px;
             `}
-            style={{
-              backgroundColor: isActive ? '#f4f4f5' : '#fafafa',
-            }}
           >
             <div
               className={css`
                 position: relative;
+                max-width: 12rem;
+                border-radius: 4px 4px 0 0;
               `}
+            style={{
+              backgroundColor: isActive ? '#f4f4f5' : '#fafafa',
+            }}
             >
-              <div
-                style={{
-                  visibility: languageEditorActive ? 'initial' : 'hidden',
-                }}
-              >
-                <LanguageCompletionForm {...languageCompletionHandlers} />
-              </div>
-              <div
-                className={css`
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                `}
-                style={{
-                  visibility: languageEditorActive ? 'hidden' : 'initial',
-                }}
-                onClick={() => setLanguageEditorActive(true)}
-              >
-                {language}
-              </div>
+              <LanguageCompletionForm
+                language={language}
+                onUpdate={handleSubmitLanguage}
+                onFocus={focus}
+              />
             </div>
-            <Editor
-              language={language.toLowerCase()}
-              onChange={onEditorChange}
-              {...editorCallbacks}
-              {...(live && isLived
-                ? {
-                    code: live.code,
-                    readOnly: !live.canEdit,
-                    errorMarkers: live.errorMarkers,
-                    warnMarkers: live.warnMarkers,
-                  }
-                : {
-                    code: brick.text,
-                  })}
-            />
+            <div
+              className={css`
+                position: relative;
+                padding-right: 1rem;
+                border-radius: 0 0 4px 4px;
+              `}
+              style={{
+                backgroundColor: isActive ? '#f4f4f5' : '#fafafa',
+              }}
+            >
+              <Editor
+                language={editorLanguage}
+                onChange={onEditorChange}
+                padding={{ top: 12, bottom: 24 }}
+                {...editorCallbacks}
+                {...(live && isLived
+                  ? {
+                      code: live.code,
+                      readOnly: !live.canEdit,
+                      errorMarkers: live.errorMarkers,
+                      warnMarkers: live.warnMarkers,
+                    }
+                  : {
+                      code: brick.text,
+                    })}
+              />
+            </div>
           </div>
           <div
             className={css`
