@@ -2,6 +2,7 @@ import {
   init as initTranspiler,
   Service as TranspilerService,
 } from '@asteroid-mdx/transpiler';
+import { css } from 'lightwindcss';
 import React, {
   createContext,
   useCallback,
@@ -56,10 +57,8 @@ const errorBoundary = (errorCallback: (error: Error) => void) => {
 };
 
 const useTranspilerService = () => {
-  const [
-    transpilerService,
-    setTranspilerService,
-  ] = useState<TranspilerService | null>(null);
+  const [transpilerService, setTranspilerService] =
+    useState<TranspilerService | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -331,7 +330,13 @@ export const LivedError: React.FC = () => {
   const live = useLivedComponent();
   return live?.output.error ? (
     <div>
-      <pre>{live.output.error.toString()}</pre>
+      <pre
+        className={css`
+          white-space: pre-wrap;
+        `}
+      >
+        {live.output.error.toString()}
+      </pre>
     </div>
   ) : null;
 };

@@ -1,14 +1,19 @@
 import { ASTNode, Brick } from '../types';
 import { hydrateMdx } from './io';
 
-export const updateBrickByText = (brick: Brick, newText: string): Brick | Brick[] => {
+export const updateBrickByText = (
+  brick: Brick,
+  newText: string
+): Brick | Brick[] => {
   let mdx = newText;
   if (brick.noteType === 'content' && brick.language !== 'markdown') {
     const node: ASTNode | null = (brick.children ?? [])[0] ?? null;
+    const meta: string = brick.asteroid?.isLived
+      ? 'asteroid'
+      : node?.meta ?? '';
     const textEscaped = newText.replace(/```/g, '');
-    mdx = `\`\`\`${brick.language}${
-      node?.meta ? ` ${node.meta}` : ''
-    }\n${textEscaped}\n\`\`\``;
+
+    mdx = `\`\`\`${brick.language} ${meta}\n${textEscaped}\n\`\`\``;
   }
   const bricks = hydrateMdx(mdx);
   if (bricks.length === 0) {
