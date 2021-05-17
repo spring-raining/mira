@@ -9,7 +9,7 @@ import {
   DefaultValue,
 } from 'recoil';
 import { dehydrateBrick } from '../mdx/io';
-import { updateBrickByText } from '../mdx/update';
+import { updateBrickByText, updateBrickLanguage } from '../mdx/update';
 import { Brick } from '../types';
 import {
   activeBrickIdState,
@@ -170,11 +170,31 @@ export const useBrick = (brickId: string) => {
         if (brick.noteType !== 'content') {
           return;
         }
-        const newBrick = updateBrickByText({ ...brick, language }, brick.text);
+        const newBrick = updateBrickLanguage(brick, language);
         if (hasCancelled()) {
           return;
         }
-        if (!Array.isArray(newBrick)) {
+        if (Array.isArray(newBrick)) {
+          set(brickDictState, (prevState) => ({
+            ...prevState,
+            ...newBrick.reduce(
+              (acc, brick) => ({
+                ...acc,
+                [brick.brickId]: brick,
+              }),
+              {}
+            ),
+          }));
+          set(brickOrderState, (prevState) => {
+            const arr = [...prevState];
+            arr.splice(
+              prevState.indexOf(brick.brickId),
+              1,
+              ...newBrick.map(({ brickId }) => brickId)
+            );
+            return arr;
+          });
+        } else {
           set(brickStateFamily(brickId), newBrick);
         }
       }),

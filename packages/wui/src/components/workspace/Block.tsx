@@ -286,6 +286,11 @@ export const BlockComponent: React.FC<{
                 isActive &&
                   css`
                     background-color: var(--astr-colors-gray-100);
+                  `,
+                !isActive &&
+                  !isFocus &&
+                  css`
+                    visibility: hidden;
                   `
               )}
             >

@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { css } from 'lightwindcss';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { editorFontFamily } from '../Editor';
@@ -82,43 +83,53 @@ export const LanguageCompletionForm: React.VFC<
         autoCapitalize="none"
         autoComplete="off"
         spellCheck="false"
-        className={css`
-          flex: 1;
-          appearance: none;
-          background: inherit;
-          outline: none;
-          border: 2px solid transparent;
-          padding-inline-start: 1rem;
-          padding-inline-end: 1rem;
-          width: 100%;
-          height: 100%;
-          font-size: 0.8em;
-          &:focus {
-            border-color: var(--astr-colors-blue-500);
-          }
-        `}
+        className={clsx(
+          css`
+            flex: 1;
+            appearance: none;
+            background: inherit;
+            outline: none;
+            border: 2px solid transparent;
+            padding-inline-start: 1rem;
+            padding-inline-end: 1rem;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            font-size: 0.8em;
+            &:focus {
+              border-color: var(--astr-colors-blue-500);
+            }
+          `,
+          !editorActive &&
+            css`
+              opacity: 0;
+            `
+        )}
         style={{
           fontFamily: editorFontFamily,
-          opacity: editorActive ? 1 : 0,
-          position: 'absolute',
         }}
         value={text}
         onChange={handleChangeText}
         {...{ onFocus, onBlur, onKeyDown }}
       ></input>
       <code
-        className={css`
-          flex: 1;
-          padding-inline-start: calc(1rem + 2px);
-          padding-inline-end: calc(1rem + 2px);
-          font-size: 0.8rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        `}
+        className={clsx(
+          css`
+            flex: 1;
+            padding-inline-start: calc(1rem + 2px);
+            padding-inline-end: calc(1rem + 2px);
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          `,
+          editorActive &&
+            css`
+              visibility: hidden;
+            `
+        )}
         style={{
           fontFamily: editorFontFamily,
-          visibility: editorActive ? 'hidden' : 'initial',
         }}
       >
         {language}

@@ -1,16 +1,20 @@
+import { nanoid } from 'nanoid/non-secure';
 import { ASTNode, Brick } from '../types';
 import { hydrateMdx } from './io';
+
+const liveLanguage = ['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'];
+const markdownLanguage = ['md', 'mkd', 'markdn', 'markdown'];
 
 export const updateBrickByText = (
   brick: Brick,
   newText: string
 ): Brick | Brick[] => {
   let mdx = newText;
-  if (brick.noteType === 'content' && brick.language !== 'markdown') {
-    const node: ASTNode | null = (brick.children ?? [])[0] ?? null;
-    const meta: string = brick.asteroid?.isLived
-      ? 'asteroid'
-      : node?.meta ?? '';
+  if (
+    brick.noteType === 'content' &&
+    !markdownLanguage.includes(brick.language.toLowerCase())
+  ) {
+    const meta: string = brick.asteroid?.isLived ? 'asteroid' : '';
     const textEscaped = newText.replace(/```/g, '');
 
     mdx = `\`\`\`${brick.language} ${meta}\n${textEscaped}\n\`\`\``;
@@ -31,4 +35,21 @@ export const updateBrickByText = (
     bricks[0].brickId = brick.brickId;
     return bricks[0];
   }
+};
+
+export const updateBrickLanguage = (
+  brick: Brick,
+  newLanguage: string
+): Brick | Brick[] => {
+  if (brick.noteType !== 'content') {
+    return brick;
+  }
+  const newBrick = { ...brick };
+  if (liveLanguage.includes(newLanguage.toLowerCase())) {
+    newBrick.asteroid = { id: nanoid(), isLived: true };
+  } else {
+    delete newBrick.asteroid;
+  }
+  newBrick.language = newLanguage;
+  return updateBrickByText(newBrick, newBrick.text);
 };
