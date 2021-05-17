@@ -74,6 +74,7 @@ const useMarkdownStyling = () => {
     h6 {
       font-family: var(--astr-fonts-heading);
       font-weight: 700;
+      margin-top: 1rem;
       margin-bottom: 1rem;
     }
     h1 {

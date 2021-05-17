@@ -15,7 +15,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
   onUpdate = () => {},
 }) => {
-  const { bricks, pushBrick, importBricks } = useBricks({
+  const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
   const onCreateCodeBlockClick = useCallback(() => {
@@ -33,6 +33,14 @@ const UniverseView: React.VFC<UniverseProps> = ({
       console.log(initialBricks.map((brick) => dehydrateBrick(brick)));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const cb = () => {
+      resetActiveBrick();
+    };
+    window.addEventListener('click', cb);
+    return () => window.removeEventListener('click', cb);
+  }, [resetActiveBrick]);
 
   return (
     <div

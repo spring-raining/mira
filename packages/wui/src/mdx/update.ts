@@ -24,7 +24,11 @@ export const updateBrickByText = (
       children: [],
     };
   }
-  bricks[0].brickId = brick.brickId;
-  // there's possibility of divide to multiple bricks
-  return bricks.length > 1 ? bricks : bricks[0];
+  if (bricks.length > 1) {
+    // there's possibility of divide to multiple bricks
+    return bricks;
+  } else {
+    bricks[0].brickId = brick.brickId;
+    return bricks[0];
+  }
 };

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { css } from 'lightwindcss';
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import {
   useBrick,
   useBrickManipulator,
@@ -48,13 +48,8 @@ export const BlockComponent: React.FC<{
   language: string;
   isLived?: boolean;
 }> = ({ brickId, language: initialLanguage, isLived }) => {
-  const {
-    brick,
-    isActive,
-    updateBrick,
-    updateLanguage,
-    focus: focusBrick,
-  } = useBrick(brickId);
+  const { brick, isActive, updateBrick, updateLanguage, setActive } =
+    useBrick(brickId);
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId });
   const live = useLivedComponent();
@@ -71,16 +66,6 @@ export const BlockComponent: React.FC<{
   const editorLanguage = useMemo(
     () => language.toLowerCase().split(/[^\w-]/)[0],
     [language]
-  );
-
-  const onEditorChange = useCallback(
-    (text: string) => {
-      updateBrick(text);
-      if (live && isLived) {
-        live.onChange(text);
-      }
-    },
-    [updateBrick, live, isLived]
   );
   const prependBrick = useCallback(() => {
     insertBrick({
@@ -100,15 +85,31 @@ export const BlockComponent: React.FC<{
     cleanup(brickId);
   }, [cleanup, brickId]);
 
-  const handleMarkdownAreaClick = useCallback(() => {
-    focusBrick();
-  }, [focusBrick]);
-
   const [isFocus, setFocus] = useState(false);
   const containerCallbacks = {
     onMouseOver: useCallback(() => setFocus(true), []),
     onMouseOut: useCallback(() => setFocus(false), []),
+    onClick: useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+    }, []),
   };
+
+  const [editorText, setEditorText] = useState(() => brick.text);
+  const onEditorChange = useCallback(
+    (text: string) => {
+      setEditorText(text);
+      if (live && isLived) {
+        updateBrick(text);
+        live.onChange(text);
+      }
+    },
+    [updateBrick, live, isLived]
+  );
+  useEffect(() => {
+    if (!isActive && brick.text !== editorText) {
+      updateBrick(editorText);
+    }
+  }, [isActive, brick.text, editorText, updateBrick]);
 
   return (
     <div
@@ -220,7 +221,7 @@ export const BlockComponent: React.FC<{
                 position: 'absolute',
               }),
             }}
-            onClick={handleMarkdownAreaClick}
+            onClick={setActive}
           >
             <div
               className={css`
@@ -269,13 +270,16 @@ export const BlockComponent: React.FC<{
             className={css`
               width: 50%;
               margin: 0 1rem;
+              position: relative;
             `}
           >
             <div
               className={clsx(
                 css`
-                  position: relative;
-                  max-width: 12rem;
+                  position: absolute;
+                  top: -2rem;
+                  left: 0;
+                  width: 12rem;
                   border-radius: 4px 4px 0 0;
                   background-color: var(--astr-colors-gray-50);
                 `,
@@ -288,7 +292,7 @@ export const BlockComponent: React.FC<{
               <LanguageCompletionForm
                 language={language}
                 onUpdate={handleSubmitLanguage}
-                onFocus={focusBrick}
+                onFocus={setActive}
               />
             </div>
             <div

@@ -6,15 +6,12 @@ import { useBricks, useBrick } from '../../state/brick';
 const PlanetaryListItem: React.FC<
   React.HTMLAttributes<HTMLDivElement> & { brickId: string; isLived?: boolean }
 > = ({ children, brickId, isLived, ...other }) => {
-  const { focus } = useBrick(brickId);
-  const onClick = useCallback(() => {
-    focus();
-  }, [focus]);
+  const { setActive } = useBrick(brickId);
 
   return (
     <div
       {...other}
-      {...{ onClick }}
+      {...{ onClick: setActive }}
       className={css`
         display: flex;
         align-items: center;
@@ -69,9 +66,12 @@ const PlanetaryListItem: React.FC<
 
 export const PlanetarySystem: React.VFC = () => {
   const { bricks } = useBricks();
+  const onClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
 
   return (
-    <div>
+    <div {...{ onClick }}>
       {bricks.map((brick) => (
         <PlanetaryListItem
           key={brick.brickId}
