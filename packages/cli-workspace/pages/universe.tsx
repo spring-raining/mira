@@ -1,4 +1,5 @@
-import { AsteroidWui } from '@asteroid-mdx/wui';
+import { AsteroidWui, theme } from '@asteroid-mdx/wui';
+import { ThemeProvider, toCSSVar } from '@chakra-ui/react';
 import { Global, css } from '@emotion/react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
@@ -23,30 +24,37 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
   const filepathStr =
     filepath && Array.isArray(filepath) ? filepath[0] : filepath;
   const file =
-    filepathStr &&
-    asteroid.find((f) => f.path === decodeURIComponent(filepathStr)) || null;
+    (filepathStr &&
+      asteroid.find((f) => f.path === decodeURIComponent(filepathStr))) ||
+    null;
   return {
     props: { file },
   };
 };
 
 export default function Home({ file }: PageProps) {
+  console.log(toCSSVar(theme));
   return (
-    <>
+    <ThemeProvider theme={theme}>
       <Head>
         <title>{file?.path ?? 'Universe'}</title>
       </Head>
-      <Global styles={css`
-        * {
-          box-sizing: border-box;
-        }
-        body {
-          margin: 0;
-        }
-      `} />
-      <AsteroidWui mdx={file?.body ?? undefined} onUpdate={(mdx) => {
-        console.debug(mdx);
-      }} />
-    </>
+      <Global
+        styles={css`
+          * {
+            box-sizing: border-box;
+          }
+          body {
+            margin: 0;
+          }
+        `}
+      />
+      <AsteroidWui
+        mdx={file?.body ?? undefined}
+        onUpdate={(mdx) => {
+          console.debug(mdx);
+        }}
+      />
+    </ThemeProvider>
   );
 }

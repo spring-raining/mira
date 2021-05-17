@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { css } from 'lightwindcss';
 import React, { useCallback } from 'react';
 import { useBricks, useBrick } from '../../state/brick';
@@ -20,7 +21,7 @@ const PlanetaryListItem: React.FC<
         height: 1.75rem;
         cursor: pointer;
         &:hover {
-          background-color: #edf2f7;
+          background-color: var(--astr-colors-gray-100);
         }
       `}
     >
@@ -33,9 +34,9 @@ const PlanetaryListItem: React.FC<
         `}
       >
         <span
-          className={[
+          className={clsx(
             css`
-              background-color: #cbd5e0;
+              background-color: var(--astr-colors-gray-300);
               border-radius: 50%;
             `,
             isLived
@@ -46,15 +47,15 @@ const PlanetaryListItem: React.FC<
               : css`
                   width: 0.375rem;
                   height: 0.375rem;
-                `,
-          ].join(' ')}
+                `
+          )}
         ></span>
       </div>
       <span
         className={css`
           flex: 1;
-          color: #4a5568;
-          font-size: 0.875rem;
+          color: var(--astr-colors-gray-700);
+          font-size: var(--astr-fontSizes-sm);
           text-overflow: ellipsis;
           overflow: hidden;
           white-space: nowrap;

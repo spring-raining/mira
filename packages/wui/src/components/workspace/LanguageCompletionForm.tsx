@@ -94,7 +94,7 @@ export const LanguageCompletionForm: React.VFC<
           height: 100%;
           font-size: 0.8em;
           &:focus {
-            border-color: #2b6cb0;
+            border-color: var(--astr-colors-blue-500);
           }
         `}
         style={{

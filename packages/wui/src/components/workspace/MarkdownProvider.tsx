@@ -11,18 +11,33 @@ const useMarkdownStyling = () => {
     flex-direction: column;
 
     * {
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-      color: #1A202C;
+      font-family: var(--astr-fonts-body);
+      color: var(--astr-colors-gray-800);
       line-height: 1.5;
       border-width: 0;
       border-style: solid;
       box-sizing: border-box;
     }
-    blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+    blockquote,
+    dl,
+    dd,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    hr,
+    figure,
+    p,
+    pre {
       margin: 0;
     }
-    pre, code, kbd, samp {
-      font-family: SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    pre,
+    code,
+    kbd,
+    samp {
+      font-family: var(--astr-fonts-mono);
       font-size: 1em;
     }
     p {
@@ -33,14 +48,14 @@ const useMarkdownStyling = () => {
       cursor: pointer;
       text-decoration: none;
       outline: none;
-      color: #3182ce;
+      color: var(--astr-colors-blue-500);
       word-wrap: break-word;
     }
     a:hover {
       text-decoration: underline;
     }
     a:focus {
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.6);
+      box-shadow: var(--astr-shadows-outline);
     }
     hr {
       box-sizing: content-box;
@@ -51,8 +66,13 @@ const useMarkdownStyling = () => {
       margin-top: 1rem;
       margin-bottom: 1rem;
     }
-    h1, h2, h3, h4, h5, h6 {
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: var(--astr-fonts-heading);
       font-weight: 700;
       margin-bottom: 1rem;
     }
@@ -94,7 +114,8 @@ const useMarkdownStyling = () => {
       background-color: rgba(0, 0, 0, 0.06);
       border-radius: 0.5rem;
     }
-    ul, ol {
+    ul,
+    ol {
       margin: 0;
       padding: 0;
       margin-inline-start: 1em;
@@ -107,7 +128,7 @@ const useMarkdownStyling = () => {
       width: 100%;
     }
     th {
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+      font-family: var(--astr-fonts-heading);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -118,9 +139,9 @@ const useMarkdownStyling = () => {
       padding-bottom: 0.75rem;
       line-height: 1rem;
       font-size: 0.75rem;
-      color: #4A5568;
+      color: var(--astr-colors-gray-600);
       border-bottom: 1px solid;
-      border-color: #EDF2F7;
+      border-color: var(--astr-colors-gray-100);
     }
     tr:last-of-type th {
       border-bottom-width: 0;
@@ -133,7 +154,7 @@ const useMarkdownStyling = () => {
       padding-bottom: 1rem;
       line-height: 1.25rem;
       border-bottom: 1px solid;
-      border-color: #EDF2F7;
+      border-color: var(--astr-colors-gray-100);
     }
     pre {
       margin-top: 1rem;
@@ -147,7 +168,7 @@ const useMarkdownStyling = () => {
       padding-inline-end: 1.5rem;
       padding-top: 1rem;
       padding-bottom: 1rem;
-      background-color: #EDF2F7;
+      background-color: var(--astr-colors-gray-100);
       border-radius: 0.5rem;
       line-height: 1.4;
       overflow-x: auto;
@@ -157,12 +178,12 @@ const useMarkdownStyling = () => {
       padding-inline-end: 0.2em;
       margin-inline-start: 0.25rem;
       margin-inline-end: 0.25rem;
-      background-color: #EDF2F7;
+      background-color: var(--astr-colors-gray-100);
       border-radius: 0.125rem;
     }
   `;
   return { markdownStyling };
-}
+};
 
 export const MarkdownPreview: React.VFC<{ md: string }> = ({ md }) => {
   const { element } = useMarkdownRenderer(md);
@@ -170,11 +191,7 @@ export const MarkdownPreview: React.VFC<{ md: string }> = ({ md }) => {
 
   return (
     <MarkdownProvider>
-      <div
-        className={markdownStyling}
-      >
-        {element}
-      </div>
+      <div className={markdownStyling}>{element}</div>
     </MarkdownProvider>
   );
 };

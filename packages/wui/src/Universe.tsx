@@ -15,11 +15,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
   onUpdate = () => {},
 }) => {
-  const {
-    bricks,
-    pushBrick,
-    importBricks,
-  } = useBricks({
+  const { bricks, pushBrick, importBricks } = useBricks({
     onUpdateMdx: onUpdate,
   });
   const onCreateCodeBlockClick = useCallback(() => {
