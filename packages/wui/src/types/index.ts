@@ -1,3 +1,9 @@
+import { ImportDefinition } from '@asteroid-mdx/core/lib/ecmaImport';
+
+export type ParsedImportStatement = ImportDefinition & {
+  statement: string;
+};
+
 export interface ASTNode {
   id: string;
   [field: string]: any;

@@ -2,6 +2,7 @@ import { css } from 'lightwindcss';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useBricks, createNewBrick } from './state/brick';
+import { useDependency } from './state/dependency';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
 import { hydrateMdx } from './mdx/io';
@@ -29,6 +30,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
+  const { updateDependency } = useDependency({ path, depsRootPath, moduleLoader });
   const onCreateCodeBlockClick = useCallback(() => {
     pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
   }, [pushBrick]);
@@ -41,14 +43,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
       if (initialMdx) {
         const initialBricks = hydrateMdx(initialMdx);
         console.log(initialBricks);
-        const importDefs = await collectImports({
-          bricks: initialBricks,
-          path,
-          depsRootPath,
-        });
-        console.log(importDefs);
-        const modules = await loadModule(importDefs, moduleLoader);
-        console.log(modules);
+        await updateDependency(initialBricks);
         importBricks(initialBricks);
       }
     })();

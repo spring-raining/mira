@@ -76,7 +76,9 @@ const useScope = (asteroidId: string) => {
   return { scope, declaredValues };
 };
 
-const useValueEvaluator =  <T extends RuntimeEnvironment>(asteroidId: string) => {
+const useValueEvaluator = <T extends RuntimeEnvironment>(
+  asteroidId: string
+) => {
   const [exportVal, setExportVal] = useRecoilState(
     exportedValuesFamily(asteroidId)
   );
