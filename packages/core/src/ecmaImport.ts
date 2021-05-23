@@ -1,16 +1,29 @@
+import {
+  init as initEsModuleLexer,
+  parse,
+  ImportSpecifier,
+} from 'es-module-lexer';
+import stripComments from 'strip-comments';
+
+export type { ImportSpecifier };
+
 export interface ImportNode {
   type: 'import';
   value: string;
 }
 
 export interface ImportDefinition {
-  moduleSpecifier: string;
+  specifier: string;
+  all: boolean;
+  default: boolean;
+  namespace: boolean;
+  named: string[];
   importBinding: { [key: string]: string };
   namespaceImport: string | null;
 }
 
 // http://www.ecma-international.org/ecma-262/6.0/#sec-imports
-const importRe = /^import(?:(.+)from)?\s*('([^']+)'|"([^"]+)")[\s;]*$/;
+const importRe = /^import(?:(.+)from)?\s*('[^']+'|"[^"]+")[\s;]*$/;
 const namedImportsRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\{([^\}]+)\}$/;
 const namespaceImportRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\*\s+as\s+([A-Za-z_$][^\s\{\}]*)$/;
 const defaultBindingRe = /^\s*([A-Za-z_$][^\s\{\}]*)\s*$/;
@@ -18,9 +31,12 @@ const importSpecifierRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s+as\s+)?([A-Za-z_$][^\s\{
 
 export const parseImportClause = (
   importClause: string
-): Pick<ImportDefinition, 'importBinding' | 'namespaceImport'> | null => {
+): Omit<ImportDefinition, 'specifier' | 'all'> | null => {
   const importBinding: { [key: string]: string } = {};
+  const named: string[] = [];
   let namespaceImport: string | null = null;
+  let hasDefaultImport = false;
+  let hasNamespaceImport = false;
 
   const trimmed = importClause.trim();
   const namedImportsMatch = trimmed.match(namedImportsRe);
@@ -31,6 +47,7 @@ export const parseImportClause = (
     const defaultImport = namedImportsMatch[1];
     const namedImports = namedImportsMatch[2].split(',');
     if (defaultImport) {
+      hasDefaultImport = true;
       importBinding.default = defaultImport;
     }
     for (let i = 0; i < namedImports.length; i++) {
@@ -41,47 +58,80 @@ export const parseImportClause = (
       const identifierName = specifierMatch[1];
       const importedBinding = specifierMatch[2];
       importBinding[identifierName || importedBinding] = importedBinding;
+      named.push(identifierName || importedBinding);
     }
   } else if (namespaceImportMatch) {
     const defaultImport = namespaceImportMatch[1];
     if (defaultImport) {
       importBinding.default = defaultImport;
     }
+    hasNamespaceImport = true;
     namespaceImport = namespaceImportMatch[2];
   } else if (defaultBindingMatch) {
+    hasDefaultImport = true;
     importBinding.default = defaultBindingMatch[1];
   } else {
     return null;
   }
-  return { importBinding, namespaceImport };
+  return {
+    importBinding,
+    namespaceImport,
+    default: hasDefaultImport,
+    namespace: hasNamespaceImport,
+    named,
+  };
 };
 
-export const parseImportDeclaration = (
-  importDeclaration: string
+// Deeply inspired by Snowpack's parser
+// https://github.com/snowpackjs/snowpack/blob/main/snowpack/src/scan-imports.ts
+export const parseImportStatement = (
+  source: string,
+  imp: ImportSpecifier
 ): ImportDefinition | null => {
-  const matched = importDeclaration.trim().match(importRe);
+  if (
+    imp.d === -2 || // import.meta
+    imp.d > -1 // dynamic imports
+  ) {
+    return null;
+  }
+  const importStatement = stripComments(source.substring(imp.ss, imp.se));
+  if (/^import\s+type/.test(importStatement)) {
+    // type imports
+    return null;
+  }
+  const specifier = source.substring(imp.s, imp.e);
+  const matched = importStatement.trim().match(importRe);
   if (!matched) {
     return null;
   }
   const importClause = matched[1];
-  const moduleSpecifier = matched[3] || matched[4];
-
   if (importClause) {
     const bindingDef = parseImportClause(importClause);
     if (!bindingDef) {
       return null;
     }
     return {
-      moduleSpecifier,
       ...bindingDef,
-    };
+      specifier,
+      all: false,
+    }
   } else {
     return {
-      moduleSpecifier,
+      specifier,
+      all: true,
+      default: false,
+      namespace: false,
+      named: [],
       importBinding: {},
       namespaceImport: null,
     };
   }
+};
+
+export const scanImportSpecifier = async (source: string): Promise<readonly ImportSpecifier[]> => {
+  await initEsModuleLexer;
+  const [imports] = await parse(source);
+  return imports;
 };
 
 export const importModules = async (
@@ -90,19 +140,17 @@ export const importModules = async (
   const loadCache: Record<string, any> = {};
   let modules: Record<string, any> = {};
   for (let definition of definitions) {
-    const { moduleSpecifier, importBinding, namespaceImport } = definition;
-    if (!(moduleSpecifier in loadCache)) {
-      loadCache[moduleSpecifier] = await import(
-        /* webpackIgnore: true */ moduleSpecifier
-      );
+    const { specifier, importBinding, namespaceImport } = definition;
+    if (!(specifier in loadCache)) {
+      loadCache[specifier] = await import(specifier);
     }
-    const mod = loadCache[moduleSpecifier];
+    const mod = loadCache[specifier];
     modules = Object.entries(importBinding).reduce<{
       [bind: string]: any;
     }>((acc, [name, binding]) => {
       if (!(name in mod)) {
         throw new ReferenceError(
-          `Module '${moduleSpecifier}' has no exported member '${name}'`
+          `Module '${specifier}' has no exported member '${name}'`
         );
       }
       acc[binding] = mod[name];

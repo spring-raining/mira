@@ -5,4 +5,7 @@ interface FileStat<T = Date> {
   birthtime: T;
 }
 
-export type AsteroidFileItem<T = Date> = FileStat<T> & { body: string };
+export type AsteroidFileItem<T = Date> = FileStat<T> & {
+  body: string;
+  depsRootPath: string;
+};

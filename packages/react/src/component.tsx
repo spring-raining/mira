@@ -1,15 +1,11 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  ReactChild,
-} from 'react';
+import React, { useState, useEffect, useMemo, ReactChild } from 'react';
 import {
-  parseImportDeclaration,
+  parseImportStatement,
+  scanImportSpecifier,
   importModules,
   AsteroidConfig,
 } from '@asteroid-mdx/core';
-import { getRuntimeScope } from "./runtimeScope";
+import { getRuntimeScope } from './runtimeScope';
 
 const importCache: Record<string, any> = {};
 
@@ -18,15 +14,21 @@ const loadModule = async (modules: string[]) => {
   if (key in importCache) {
     return importCache[key];
   }
-  const ret = await importModules(
-    modules.map((mod) => {
-      const declaration = parseImportDeclaration(mod);
-      if (!declaration) {
-        throw new Error(`Cannot parse import declaration: ${mod}`);
-      }
-      return declaration;
-    })
-  );
+  const defs = (
+    await Promise.all(
+      modules.map(async (mod) => {
+        const imports = await scanImportSpecifier(mod);
+        return imports.map((imp) => {
+          const statement = parseImportStatement(mod, imp);
+          if (!statement) {
+            throw new Error(`Cannot parse import declaration: ${mod}`);
+          }
+          return statement;
+        });
+      })
+    )
+  ).flatMap((_) => _);
+  const ret = await importModules(defs);
   importCache[key] = ret;
   return ret;
 };

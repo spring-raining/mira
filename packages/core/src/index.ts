@@ -13,7 +13,8 @@ export type { Plugin, Processor };
 
 export {
   parseImportClause,
-  parseImportDeclaration,
+  parseImportStatement,
+  scanImportSpecifier,
   importModules,
 } from './ecmaImport';
 export type { AsteroidConfig, RuntimeScope } from './types';

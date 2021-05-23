@@ -3,6 +3,7 @@ import { ThemeProvider, toCSSVar } from '@chakra-ui/react';
 import { Global, css } from '@emotion/react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import { useCallback } from 'react';
 import { container } from 'tsyringe';
 import { workspaceServiceToken, WorkspaceService } from '../services/workspace';
 import { AsteroidFileItem } from '../types/workspace';
@@ -33,7 +34,11 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
 };
 
 export default function Home({ file }: PageProps) {
-  console.log(toCSSVar(theme));
+  const moduleLoader = useCallback(async (specifier: string) => {
+    const mod = await import(/* webpackIgnore: true */ specifier);
+    return mod;
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <Head>
@@ -51,6 +56,9 @@ export default function Home({ file }: PageProps) {
       />
       <AsteroidWui
         mdx={file?.body ?? undefined}
+        path={file?.path}
+        depsRootPath={file?.depsRootPath}
+        moduleLoader={moduleLoader}
         onUpdate={(mdx) => {
           console.debug(mdx);
         }}

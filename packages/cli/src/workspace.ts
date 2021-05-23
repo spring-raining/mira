@@ -19,7 +19,14 @@ export const getWorkspaceRepository = ({
           const absPath = path.resolve(rootDir, p);
           const { size, mtime, birthtime } = await fs.stat(absPath);
           const body = await fs.readFile(absPath, { encoding: 'utf-8' });
-          return { path: p, body, size, mtime, birthtime };
+          return {
+            path: path.join('/', p),
+            depsRootPath: '/_asteroid',
+            body,
+            size,
+            mtime,
+            birthtime,
+          };
         })
       );
     },

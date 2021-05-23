@@ -4,15 +4,26 @@ import { RecoilRoot } from 'recoil';
 import { useBricks, createNewBrick } from './state/brick';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
-import { hydrateMdx, dehydrateBrick } from './mdx/io';
+import { hydrateMdx } from './mdx/io';
+import {
+  collectImports,
+  loadModule,
+  moduleLoader as defaultModuleLoader,
+} from './mdx/dependency';
 
 export interface UniverseProps {
   mdx?: string;
+  path?: string;
+  depsRootPath?: string;
+  moduleLoader?: (specifier: string) => Promise<any>;
   onUpdate?: (mdx: string) => void;
 }
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
+  path = '/',
+  depsRootPath = '/_asteroid',
+  moduleLoader = defaultModuleLoader,
   onUpdate = () => {},
 }) => {
   const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
@@ -26,12 +37,21 @@ const UniverseView: React.VFC<UniverseProps> = ({
   }, [pushBrick]);
 
   useEffect(() => {
-    if (initialMdx) {
-      const initialBricks = hydrateMdx(initialMdx);
-      console.log(initialBricks);
-      importBricks(initialBricks);
-      console.log(initialBricks.map((brick) => dehydrateBrick(brick)));
-    }
+    (async () => {
+      if (initialMdx) {
+        const initialBricks = hydrateMdx(initialMdx);
+        console.log(initialBricks);
+        const importDefs = await collectImports({
+          bricks: initialBricks,
+          path,
+          depsRootPath,
+        });
+        console.log(importDefs);
+        const modules = await loadModule(importDefs, moduleLoader);
+        console.log(modules);
+        importBricks(initialBricks);
+      }
+    })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

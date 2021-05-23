@@ -17,7 +17,6 @@ export async function workspaceMiddleware({
   const handle = app.getRequestHandler();
   await app.prepare();
   return async (ctx, next) => {
-    (ctx.req as any).foo = 'bar';
     if (ctx.path.startsWith('/_next')) {
       await handle(ctx.req, ctx.res);
       ctx.respond = false;
