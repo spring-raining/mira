@@ -1,7 +1,43 @@
-import clsx from 'clsx';
-import { css } from 'lightwindcss';
+import { styled } from '@linaria/react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { editorFontFamily } from '../Editor';
+import { cssVar } from '../../theme';
+
+const FormContainer = styled.div`
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  height: 2rem;
+`;
+const FormInput = styled.input<{ active?: boolean }>`
+  flex: 1;
+  appearance: none;
+  background: inherit;
+  outline: none;
+  border: 2px solid transparent;
+  padding-inline-start: 1rem;
+  padding-inline-end: 1rem;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-family: ${cssVar('fonts.mono')};
+  font-size: 0.8em;
+  opacity: ${(props) => (props.active ? 1 : 0)};
+  &:focus {
+    border-color: ${cssVar('colors.blue.500')};
+  }
+`;
+const FormDisplayingCode = styled.code<{ active?: boolean }>`
+  flex: 1;
+  padding-inline-start: calc(1rem + 2px);
+  padding-inline-end: calc(1rem + 2px);
+  font-family: ${cssVar('fonts.mono')};
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  visibility: ${(props) => (props.active ? 'initial' : 'hidden')};
+`;
 
 export const LanguageCompletionForm: React.VFC<
   {
@@ -65,17 +101,8 @@ export const LanguageCompletionForm: React.VFC<
   }, [editorActive]);
 
   return (
-    <div
-      className={css`
-        display: flex;
-        align-items: center;
-        position: relative;
-        width: 100%;
-        height: 2rem;
-      `}
-      onClick={handleClick}
-    >
-      <input
+    <FormContainer onClick={handleClick}>
+      <FormInput
         {...other}
         ref={inputEl}
         type="text"
@@ -83,57 +110,12 @@ export const LanguageCompletionForm: React.VFC<
         autoCapitalize="none"
         autoComplete="off"
         spellCheck="false"
-        className={clsx(
-          css`
-            flex: 1;
-            appearance: none;
-            background: inherit;
-            outline: none;
-            border: 2px solid transparent;
-            padding-inline-start: 1rem;
-            padding-inline-end: 1rem;
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            font-size: 0.8em;
-            &:focus {
-              border-color: var(--astr-colors-blue-500);
-            }
-          `,
-          !editorActive &&
-            css`
-              opacity: 0;
-            `
-        )}
-        style={{
-          fontFamily: editorFontFamily,
-        }}
         value={text}
         onChange={handleChangeText}
+        active={editorActive}
         {...{ onFocus, onBlur, onKeyDown }}
-      ></input>
-      <code
-        className={clsx(
-          css`
-            flex: 1;
-            padding-inline-start: calc(1rem + 2px);
-            padding-inline-end: calc(1rem + 2px);
-            font-size: 0.8rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          `,
-          editorActive &&
-            css`
-              visibility: hidden;
-            `
-        )}
-        style={{
-          fontFamily: editorFontFamily,
-        }}
-      >
-        {language}
-      </code>
-    </div>
+      />
+      <FormDisplayingCode active={!editorActive}>{language}</FormDisplayingCode>
+    </FormContainer>
   );
 };

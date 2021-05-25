@@ -1,5 +1,5 @@
-import clsx from 'clsx';
-import { css } from 'lightwindcss';
+import { css, cx } from '@linaria/core';
+import { styled } from '@linaria/react';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import {
   useBrick,
@@ -7,6 +7,7 @@ import {
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
+import { cssVar } from '../../theme';
 import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor } from '../Editor';
@@ -20,29 +21,151 @@ import {
 } from './LiveProvider';
 import { MarkdownPreview } from './MarkdownProvider';
 
-const useStyle = () => {
-  const iconButtonStyle = css`
-    display: inline-block;
-    appearance: none;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    outline: none;
-    cursor: pointer;
-    background: transparent;
-    border-width: 0;
-    border-radius: var(--astr-radii-md);
-    font-weight: var(--astr-fontWeights-semibold);
-    height: var(--astr-sizes-6);
-    min-width: var(--astr-sizes-10);
-    font-size: var(--astr-fontSizes-md);
-    color: inherit;
-    &:focus {
-      box-shadow: var(--astr-shadows-outline);
-    }
-  `;
-  return { iconButtonStyle };
-};
+const visibilityHidden = css`
+  visibility: hidden;
+`;
+const FlexCenter = styled.div`
+  display: flex;
+  align-items: center;
+`;
+const RelativeFlexStart = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: start;
+  align-items: flex-start;
+  width: 100%;
+`;
+const IconButton = styled.button`
+  display: inline-block;
+  appearance: none;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+  border-width: 0;
+  border-radius: ${cssVar('radii.md')};
+  font-weight: ${cssVar('fontWeights.semibold')};
+  height: ${cssVar('sizes.6')};
+  min-width: ${cssVar('sizes.10')};
+  font-size: ${cssVar('fontSizes.md')};
+  color: inherit;
+  &:focus {
+    box-shadow: ${cssVar('shadows.outline')};
+  }
+`;
+const AddIconButton = styled(IconButton)`
+  &:hover {
+    color: ${cssVar('colors.blue.500')};
+  }
+`;
+const RemoveIconButton = styled(IconButton)`
+  &:hover {
+    color: ${cssVar('colors.red.500')};
+  }
+`;
+const BlockContainer = styled.div`
+  position: relative;
+  margin: 2rem 0;
+`;
+const TopToolPart = styled.div`
+  position: absolute;
+  top: -2rem;
+  left: -1.125rem;
+  width: 50%;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+const MiddleToolContainer = styled.div<{ active?: boolean }>`
+  position: relative;
+  width: 100%;
+  margin: 2rem 0;
+  border-left: ${(props) =>
+    props.active
+      ? `5px dotted ${cssVar('colors.gray.400')}`
+      : '5px solid transparent'};
+`;
+const EditorPart = styled.div`
+  width: 50%;
+  margin: 0 1rem;
+  position: relative;
+`;
+const LanguageCompletionContainer = styled.div<{ active?: boolean }>`
+  position: absolute;
+  top: -2rem;
+  left: 0;
+  width: 12rem;
+  border-radius: 4px 4px 0 0;
+  background-color: ${(props) =>
+    props.active ? cssVar('colors.gray.100') : cssVar('colors.gray.50')};
+`;
+const EditorContainer = styled.div<{ active?: boolean }>`
+  position: relative;
+  padding-right: 1rem;
+  border-radius: 0 4px 4px 4px;
+  background-color: ${(props) =>
+    props.active ? cssVar('colors.gray.100') : cssVar('colors.gray.50')};
+`;
+const LivePreviewPart = styled.div`
+  width: 50%;
+  margin: 0 1rem;
+`;
+const LivePreviewContainer = styled.div`
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid ${cssVar('colors.gray.50')};
+  border-radius: 4px;
+  box-sizing: border-box;
+`;
+const ScriptPreviewPart = styled.div`
+  position: absolute;
+  top: 0;
+  width: 100%;
+  padding-left: 2.5rem;
+  padding-right: 1rem;
+`;
+const ScriptPreviewCode = styled.code`
+  * {
+    font-family: ${cssVar('fonts.mono')};
+    font-size: 12px;
+    line-height: 1;
+  }
+  div {
+    height: 18px;
+  }
+`;
+const MarkdownPreviewPart = styled.div`
+  position: absolute;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: start;
+  align-items: flex-start;
+`;
+const MarkdownPreviewContainer = styled.div`
+  width: 50%;
+  margin: -1rem 2.5rem 0 2.5rem;
+  min-height: 4rem;
+  padding-right: 2rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+`;
+const MarkdownPreviewNoContentParagraph = styled.p`
+  color: ${cssVar('colors.gray.400')};
+`;
+const BottomToolPart = styled.div`
+  position: absolute;
+  bottom: -2rem;
+  left: -1.125rem;
+  width: 50%;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+`;
 
 export const BlockComponent: React.FC<{
   brickId: string;
@@ -56,7 +179,6 @@ export const BlockComponent: React.FC<{
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId });
   const live = useLivedComponent();
-  const { iconButtonStyle } = useStyle();
 
   const [language, setLanguage] = useState(() => initialLanguage);
   const handleSubmitLanguage = useCallback(
@@ -115,163 +237,47 @@ export const BlockComponent: React.FC<{
   }, [isActive, brick.text, editorText, updateBrick]);
 
   return (
-    <div
-      className={css`
-        position: relative;
-        margin: 2rem 0;
-      `}
-      {...containerCallbacks}
-    >
-      <div
-        className={clsx(
-          css`
-            position: absolute;
-            top: -2rem;
-            left: -1.125rem;
-            width: 50%;
-            height: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          `,
-          !isFocus &&
-            !isActive &&
-            css`
-              visibility: hidden;
-            `
-        )}
-      >
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-          `}
-        >
-          <button
-            className={clsx(
-              iconButtonStyle,
-              css`
-                &:hover {
-                  color: var(--astr-colors-blue-500);
-                }
-              `
-            )}
-            aria-label="Prepend"
-            onClick={prependBrick}
-          >
+    <BlockContainer {...containerCallbacks}>
+      <TopToolPart className={cx(!isFocus && !isActive && visibilityHidden)}>
+        <FlexCenter>
+          <AddIconButton aria-label="Prepend" onClick={prependBrick}>
             <PlusIcon
               className={css`
                 height: 1.5rem;
               `}
             />
-          </button>
-        </div>
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-          `}
-        >
-          <button
-            className={clsx(
-              iconButtonStyle,
-              css`
-                &:hover {
-                  color: var(--astr-colors-red-500);
-                }
-              `
-            )}
-            aria-label="Delete"
-            onClick={deleteBrick}
-          >
+          </AddIconButton>
+        </FlexCenter>
+        <FlexCenter>
+          <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
             <XIcon
               className={css`
                 height: 1.5rem;
               `}
             />
-          </button>
-        </div>
-      </div>
-      <div
-        className={clsx(
-          css`
-            position: relative;
-            width: 100%;
-            margin: 2rem 0;
-            border-left: 5px solid transparent;
-          `,
-          (isFocus || isActive) &&
-            css`
-              border-left: 5px dotted var(--astr-colors-gray-400);
-            `
-        )}
-      >
-        <div
-          className={clsx(
-            css`
-              position: relative;
-              display: flex;
-              justify-content: start;
-              align-items: flex-start;
-              width: 100%;
-            `
+          </RemoveIconButton>
+        </FlexCenter>
+      </TopToolPart>
+      <MiddleToolContainer active={isFocus || isActive}>
+        <RelativeFlexStart
+          className={cx(
+            (language === 'markdown' || noteType === 'script') &&
+              !isActive &&
+              visibilityHidden
           )}
-          style={{
-            ...((language === 'markdown' || noteType === 'script') &&
-              !isActive && {
-                pointerEvents: 'none',
-                opacity: 0,
-              }),
-          }}
         >
-          <div
-            className={css`
-              width: 50%;
-              margin: 0 1rem;
-              position: relative;
-            `}
-          >
-            <div
-              className={clsx(
-                css`
-                  position: absolute;
-                  top: -2rem;
-                  left: 0;
-                  width: 12rem;
-                  border-radius: 4px 4px 0 0;
-                  background-color: var(--astr-colors-gray-50);
-                `,
-                isActive &&
-                  css`
-                    background-color: var(--astr-colors-gray-100);
-                  `,
-                !isActive &&
-                  !isFocus &&
-                  css`
-                    visibility: hidden;
-                  `
-              )}
+          <EditorPart>
+            <LanguageCompletionContainer
+              active={isActive}
+              className={cx(!isActive && !isFocus && visibilityHidden)}
             >
               <LanguageCompletionForm
                 language={language}
                 onUpdate={handleSubmitLanguage}
                 onFocus={setActive}
               />
-            </div>
-            <div
-              className={clsx(
-                css`
-                  position: relative;
-                  padding-right: 1rem;
-                  border-radius: 0 4px 4px 4px;
-                  background-color: var(--astr-colors-gray-50);
-                `,
-                isActive &&
-                  css`
-                    background-color: var(--astr-colors-gray-100);
-                  `
-              )}
-            >
+            </LanguageCompletionContainer>
+            <EditorContainer active={isActive}>
               <Editor
                 language={editorLanguage}
                 onChange={onEditorChange}
@@ -288,159 +294,57 @@ export const BlockComponent: React.FC<{
                       code: brick.text,
                     })}
               />
-            </div>
-          </div>
-          <div
-            className={css`
-              width: 50%;
-              margin: 0 1rem;
-            `}
-          >
+            </EditorContainer>
+          </EditorPart>
+          <LivePreviewPart>
             {isLived && (
-              <div
-                className={css`
-                  width: 100%;
-                  padding: 1rem;
-                  border: 2px solid var(--astr-colors-gray-50);
-                  border-radius: 4px;
-                  box-sizing: border-box;
-                `}
-              >
+              <LivePreviewContainer>
                 <LivedPreview />
                 <LivedError />
-              </div>
+              </LivePreviewContainer>
             )}
-          </div>
-        </div>
+          </LivePreviewPart>
+        </RelativeFlexStart>
         {noteType === 'script' && (
-          <div
-            className={clsx(
-              css`
-                position: absolute;
-                top: 0;
-                width: 100%;
-                padding-left: 2.5rem;
-                padding-right: 1rem;
-              `
-            )}
-            style={{
-              ...(isActive && {
-                pointerEvents: 'none',
-                opacity: 0,
-                position: 'absolute',
-              }),
-            }}
+          <ScriptPreviewPart
+            className={cx(isActive && visibilityHidden)}
             onClick={setActive}
           >
             <pre>
-              <code
-                className={css`
-                  * {
-                    font-family: var(--astr-fonts-mono);
-                    font-size: 12px;
-                    line-height: 1;
-                  }
-                  div {
-                    height: 18px;
-                  }
-                `}
-              >
+              <ScriptPreviewCode>
                 <CodePreview code={brick.text} language="jsx" />
-              </code>
+              </ScriptPreviewCode>
             </pre>
-          </div>
+          </ScriptPreviewPart>
         )}
         {language === 'markdown' && (
-          <div
-            className={clsx(
-              css`
-                position: absolute;
-                top: 0;
-                width: 100%;
-                display: flex;
-                justify-content: start;
-                align-items: flex-start;
-              `
-            )}
-            style={{
-              ...(isActive && {
-                pointerEvents: 'none',
-                opacity: 0,
-                position: 'absolute',
-              }),
-            }}
+          <MarkdownPreviewPart
+            className={cx(isActive && visibilityHidden)}
             onClick={setActive}
           >
-            <div
-              className={css`
-                width: 50%;
-                margin: -1rem 2.5rem 0 2.5rem;
-                min-height: 4rem;
-                padding-right: 2rem;
-                display: flex;
-                flex-direction: column;
-                box-sizing: border-box;
-              `}
-            >
+            <MarkdownPreviewContainer>
               <MarkdownPreview md={brick.text} />
               {!brick.text.trim() && (
-                <p
-                  className={css`
-                    color: var(--astr-colors-gray-400);
-                  `}
-                >
+                <MarkdownPreviewNoContentParagraph>
                   No content
-                </p>
+                </MarkdownPreviewNoContentParagraph>
               )}
-            </div>
-          </div>
+            </MarkdownPreviewContainer>
+          </MarkdownPreviewPart>
         )}
-      </div>
-      <div
-        className={clsx(
-          css`
-            position: absolute;
-            bottom: -2rem;
-            left: -1.125rem;
-            width: 50%;
-            height: 2rem;
-            display: flex;
-            align-items: center;
-          `,
-          !isFocus &&
-            !isActive &&
-            css`
-              visibility: hidden;
-            `
-        )}
-      >
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-          `}
-        >
-          <button
-            className={clsx(
-              iconButtonStyle,
-              css`
-                &:hover {
-                  color: var(--astr-colors-blue-500);
-                }
-              `
-            )}
-            aria-label="Append"
-            onClick={appendBrick}
-          >
+      </MiddleToolContainer>
+      <BottomToolPart className={cx(!isFocus && !isActive && visibilityHidden)}>
+        <FlexCenter>
+          <AddIconButton aria-label="Append" onClick={appendBrick}>
             <PlusIcon
               className={css`
                 height: 1.5rem;
               `}
             />
-          </button>
-        </div>
-      </div>
-    </div>
+          </AddIconButton>
+        </FlexCenter>
+      </BottomToolPart>
+    </BlockContainer>
   );
 };
 

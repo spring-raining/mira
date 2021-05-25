@@ -1,8 +1,10 @@
 import path from 'path';
+import linaria from '@linaria/rollup';
 import { babel } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
+import postcss from 'rollup-plugin-postcss';
 
 const plugins = [
   nodeResolve(),
@@ -11,6 +13,14 @@ const plugins = [
     declaration: false,
   }),
   commonjs(),
+  linaria({
+    sourceMap: process.env.NODE_ENV !== 'production',
+  }),
+  postcss(
+    process.env.NODE_ENV === 'production' && {
+      extract: 'styles.css',
+    }
+  ),
   babel({ babelHelpers: 'bundled' }),
 ];
 

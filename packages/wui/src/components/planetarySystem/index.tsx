@@ -1,7 +1,37 @@
-import clsx from 'clsx';
-import { css } from 'lightwindcss';
+import { styled } from '@linaria/react';
 import React, { useCallback } from 'react';
 import { useBricks, useBrick } from '../../state/brick';
+import { cssVar } from '../../theme';
+
+const ItemRow = styled.div`
+  display: flex;
+  align-items: center;
+  height: 1.75rem;
+  cursor: pointer;
+  &:hover {
+    background-color: ${cssVar('colors.gray.100')};
+  }
+`;
+const ItemPinContainer = styled.div`
+  width: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+const ItemPin = styled.span<{ large?: boolean }>`
+  background-color: ${cssVar('colors.gray.300')};
+  border-radius: 50%;
+  width: ${(props) => (props.large ? '0.75rem' : '0.375rem')};
+  height: ${(props) => (props.large ? '0.75rem' : '0.375rem')};
+`;
+const ItemRowText = styled.span`
+  flex: 1;
+  color: ${cssVar('colors.gray.700')};
+  font-size: ${cssVar('fontSizes.sm')};
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+`;
 
 const PlanetaryListItem: React.FC<
   React.HTMLAttributes<HTMLDivElement> & { brickId: string; isLived?: boolean }
@@ -9,58 +39,12 @@ const PlanetaryListItem: React.FC<
   const { setActive } = useBrick(brickId);
 
   return (
-    <div
-      {...other}
-      {...{ onClick: setActive }}
-      className={css`
-        display: flex;
-        align-items: center;
-        height: 1.75rem;
-        cursor: pointer;
-        &:hover {
-          background-color: var(--astr-colors-gray-100);
-        }
-      `}
-    >
-      <div
-        className={css`
-          width: 2rem;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        `}
-      >
-        <span
-          className={clsx(
-            css`
-              background-color: var(--astr-colors-gray-300);
-              border-radius: 50%;
-            `,
-            isLived
-              ? css`
-                  width: 0.75rem;
-                  height: 0.75rem;
-                `
-              : css`
-                  width: 0.375rem;
-                  height: 0.375rem;
-                `
-          )}
-        ></span>
-      </div>
-      <span
-        className={css`
-          flex: 1;
-          color: var(--astr-colors-gray-700);
-          font-size: var(--astr-fontSizes-sm);
-          text-overflow: ellipsis;
-          overflow: hidden;
-          white-space: nowrap;
-        `}
-      >
-        {children}
-      </span>
-    </div>
+    <ItemRow {...other} {...{ onClick: setActive }}>
+      <ItemPinContainer>
+        <ItemPin large={isLived} />
+      </ItemPinContainer>
+      <ItemRowText>{children}</ItemRowText>
+    </ItemRow>
   );
 };
 

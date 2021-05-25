@@ -1,3 +1,4 @@
+import { styled } from '@linaria/react';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MonacoEditor, {
   useMonaco,
@@ -6,7 +7,6 @@ import MonacoEditor, {
   Monaco,
 } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
-import { css } from 'lightwindcss';
 
 const useAsyncEvent = (callback: (...args: any[]) => void) => {
   const eventStack = useRef<any[][]>([]);
@@ -28,6 +28,10 @@ const useAsyncEvent = (callback: (...args: any[]) => void) => {
   return handler;
 };
 
+const EditorContainer = styled.div`
+  height: 100%;
+`;
+
 export interface MarkerMessage {
   location: {
     line: number;
@@ -47,7 +51,10 @@ export interface EditorProps {
     top?: number;
     bottom?: number;
   };
-  onEditorUpdate?: (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => void;
+  onEditorUpdate?: (
+    editor: editor.IStandaloneCodeEditor,
+    monaco: Monaco
+  ) => void;
   onChange?: (code: string) => void;
   onCreateNewBlockCommand?: () => void;
   onMoveForwardCommand?: () => void;
@@ -55,7 +62,8 @@ export interface EditorProps {
   onFocus?: () => void;
 }
 
-export const editorFontFamily = 'SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace';
+export const editorFontFamily =
+  'SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace';
 
 export const Editor: React.FC<EditorProps> = ({
   code,
@@ -173,7 +181,7 @@ export const Editor: React.FC<EditorProps> = ({
       return;
     }
     const markers = [
-      ...(errorMarkers ?? []).map(({location, text}) => ({
+      ...(errorMarkers ?? []).map(({ location, text }) => ({
         startLineNumber: location.line,
         startColumn: location.column + 1,
         endLineNumber: location.line,
@@ -181,14 +189,14 @@ export const Editor: React.FC<EditorProps> = ({
         message: text,
         severity: monaco.MarkerSeverity.Error,
       })),
-      ...(warnMarkers ?? []).map(({location, text}) => ({
+      ...(warnMarkers ?? []).map(({ location, text }) => ({
         startLineNumber: location.line,
         startColumn: location.column + 1,
         endLineNumber: location.line,
         endColumn: location.column + location.length + 1,
         message: text,
         severity: monaco.MarkerSeverity.Warning,
-      }))
+      })),
     ];
     monaco.editor.setModelMarkers(model, 'customMarkers', markers);
   }, [monaco, editor, errorMarkers, warnMarkers]);
@@ -200,11 +208,7 @@ export const Editor: React.FC<EditorProps> = ({
     language = 'typescript';
   }
   return (
-    <div
-      className={css`
-        height: 100%;
-      `}
-    >
+    <EditorContainer>
       <MonacoEditor
         defaultValue={initialCode}
         language={language}
@@ -226,6 +230,6 @@ export const Editor: React.FC<EditorProps> = ({
         beforeMount={beforeEditorMount}
         onMount={onEditorMount}
       />
-    </div>
+    </EditorContainer>
   );
 };

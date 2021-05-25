@@ -1,4 +1,4 @@
-import { css } from 'lightwindcss';
+import { styled } from '@linaria/react';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useBricks, createNewBrick } from './state/brick';
@@ -19,6 +19,28 @@ export interface UniverseProps {
   moduleLoader?: (specifier: string) => Promise<any>;
   onUpdate?: (mdx: string) => void;
 }
+
+const UniverseContainer = styled.div`
+  display: flex;
+`;
+const PlanetarySystemPane = styled.div`
+  width: 10rem;
+`;
+const PlanetarySystemSticky = styled.div`
+  top: 0;
+  position: sticky;
+  padding: 5rem 0;
+`;
+const MainPane = styled.div`
+  flex: 1;
+`;
+const MainSticky = styled.div`
+  width: '100%';
+  position: sticky;
+  top: 0;
+  padding: 5rem 0;
+  margin-inline-start: 1.5rem;
+`;
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
@@ -62,48 +84,22 @@ const UniverseView: React.VFC<UniverseProps> = ({
   }, [resetActiveBrick]);
 
   return (
-    <div
-      className={css`
-        display: flex;
-      `}
-    >
-      <div
-        className={css`
-          width: 10rem;
-        `}
-      >
-        <div
-          className={css`
-            top: 0;
-            position: sticky;
-            padding: 5rem 0;
-          `}
-        >
+    <UniverseContainer>
+      <PlanetarySystemPane>
+        <PlanetarySystemSticky>
           <PlanetarySystem />
-        </div>
-      </div>
-      <div
-        className={css`
-          flex: 1;
-        `}
-      >
-        <div
-          className={css`
-            width: '100%';
-            position: sticky;
-            top: 0;
-            padding: 5rem 0;
-            margin-inline-start: 1.5rem;
-          `}
-        >
+        </PlanetarySystemSticky>
+      </PlanetarySystemPane>
+      <MainPane>
+        <MainSticky>
           {bricks.map((brick) => (
             <Block key={brick.brickId} {...brick} />
           ))}
           <button onClick={onCreateCodeBlockClick}>Create code block</button>
           <button onClick={onCreateTextBlockClick}>Create text block</button>
-        </div>
-      </div>
-    </div>
+        </MainSticky>
+      </MainPane>
+    </UniverseContainer>
   );
 };
 

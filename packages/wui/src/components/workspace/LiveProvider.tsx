@@ -2,7 +2,7 @@ import {
   init as initTranspiler,
   Service as TranspilerService,
 } from '@asteroid-mdx/transpiler';
-import { css } from 'lightwindcss';
+import { styled } from '@linaria/react';
 import React, {
   createContext,
   useCallback,
@@ -330,17 +330,15 @@ export const LivedPreview: React.FC = () => {
   return live?.output.element ? <>{live.output.element}</> : null;
 };
 
+const LivedErrorPre = styled.pre`
+  white-space: pre-wrap;
+`;
+
 export const LivedError: React.FC = () => {
   const live = useLivedComponent();
   return live?.output.error ? (
     <div>
-      <pre
-        className={css`
-          white-space: pre-wrap;
-        `}
-      >
-        {live.output.error.toString()}
-      </pre>
+      <LivedErrorPre>{live.output.error.toString()}</LivedErrorPre>
     </div>
   ) : null;
 };
