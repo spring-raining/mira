@@ -1,9 +1,12 @@
 import { nanoid } from 'nanoid';
+import { createElement, Fragment } from 'react';
 
 export interface RuntimeScope {
   $run(element: any): void;
   $val(...args: any[]): void;
   $use(val: any): void;
+  $jsxFactory: any;
+  $jsxFragment: any;
 }
 
 export interface RuntimeEnvironment {
@@ -84,6 +87,8 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
           environment.referenceVal[val] = scope[val];
           return scope[val];
         },
+        $jsxFactory: createElement,
+        $jsxFragment: Fragment,
       };
     },
   };

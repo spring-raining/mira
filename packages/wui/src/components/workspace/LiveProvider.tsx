@@ -25,8 +25,8 @@ const evalCode = (code: string, scope: Record<string, any>) => {
   const scopeKeys = Object.keys(scope);
   const scopeValues = scopeKeys.map((key) => scope[key]);
   try {
-    const res = new AsyncFunctionShim('React', ...scopeKeys, code);
-    return res(React, ...scopeValues);
+    const res = new AsyncFunctionShim(...scopeKeys, code);
+    return res(...scopeValues);
   } catch (error) {
     return Promise.reject(error);
   }
@@ -136,6 +136,8 @@ const useTranspilerService = () => {
           footer:
             '$_exports=$_exports||{};$val($_exports);$run($_exports.default)',
           logLevel: 'silent',
+          jsxFactory: '$jsxFactory',
+          jsxFragment: '$jsxFragment',
         });
         return {
           text: transpiled.outputFiles[0].text,
