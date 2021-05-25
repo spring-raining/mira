@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import {
   useRecoilCallback,
   useRecoilState,
@@ -12,6 +12,7 @@ import {
   asteroidDeclaredValueDictState,
   asteroidValuesExportedState,
 } from './atoms';
+import { useImportedValues } from './dependency';
 
 const compareByArrayContent = <T extends string | number>(a: T[], b: T[]) => {
   // Check element intersection
@@ -39,6 +40,7 @@ export const exportedValuesFamily = selectorFamily<string[], string>({
 });
 
 const useScope = (asteroidId: string) => {
+  const { importedValues } = useImportedValues();
   const selfExportValNames = useRecoilValue(exportedValuesFamily(asteroidId));
   const declaredValueDict = useRecoilValue(asteroidDeclaredValueDictState);
   const [declaredValues, setDeclaredValues] = useState(() =>
@@ -46,7 +48,7 @@ const useScope = (asteroidId: string) => {
       (v) => !selfExportValNames.includes(v)
     )
   );
-  const [scope, setScope] = useState(() => {
+  const [insideScope, setInsideScope] = useState(() => {
     const sc = { ...declaredValueDict };
     selfExportValNames.forEach((key) => {
       delete sc[key];
@@ -63,15 +65,19 @@ const useScope = (asteroidId: string) => {
     }
     if (
       changed ||
-      newDeclaredVal.some((v) => scope[v] !== declaredValueDict[v])
+      newDeclaredVal.some((v) => insideScope[v] !== declaredValueDict[v])
     ) {
       const sc = { ...declaredValueDict };
       selfExportValNames.forEach((key) => {
         delete sc[key];
       });
-      setScope(sc);
+      setInsideScope(sc);
     }
-  }, [declaredValues, scope, selfExportValNames, declaredValueDict]);
+  }, [declaredValues, insideScope, selfExportValNames, declaredValueDict]);
+  const scope = useMemo(() => ({ ...importedValues, ...insideScope }), [
+    importedValues,
+    insideScope,
+  ]);
 
   return { scope, declaredValues };
 };

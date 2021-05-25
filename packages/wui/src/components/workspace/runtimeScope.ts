@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 export interface RuntimeScope {
   $run(element: any): void;
@@ -11,9 +11,7 @@ export interface RuntimeEnvironment {
   render: any;
   exportVal: Record<string, any>;
   referenceVal: Record<string, any>;
-  getRuntimeScope: (e: {
-    scope: Record<string, unknown>;
-  }) => RuntimeScope;
+  getRuntimeScope: (e: { scope: Record<string, unknown> }) => RuntimeScope;
 }
 
 export const setupRuntimeEnvironment = (): RuntimeEnvironment => {

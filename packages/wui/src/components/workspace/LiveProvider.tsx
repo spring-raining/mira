@@ -57,8 +57,10 @@ const errorBoundary = (errorCallback: (error: Error) => void) => {
 };
 
 const useTranspilerService = () => {
-  const [transpilerService, setTranspilerService] =
-    useState<TranspilerService | null>(null);
+  const [
+    transpilerService,
+    setTranspilerService,
+  ] = useState<TranspilerService | null>(null);
 
   useEffect(() => {
     (async () => {

@@ -1,4 +1,9 @@
-import { useRecoilCallback, selector, selectorFamily } from 'recoil';
+import {
+  useRecoilCallback,
+  useRecoilValue,
+  selector,
+  selectorFamily,
+} from 'recoil';
 import { collectImports, loadModule } from '../mdx/dependency';
 import { Brick, ParsedImportStatement } from '../types';
 import {
@@ -16,7 +21,7 @@ const asteroidImportedValueFamily = selectorFamily<
     get(asteroidImportedValueByStatementDictState)[statement] ?? null,
 });
 
-export const asteroidImportedValues = selector<Record<string, any>>({
+const asteroidImportedValues = selector<Record<string, unknown>>({
   key: 'asteroidImportedValues',
   get: ({ get }) => {
     return Object.values(get(asteroidImportedValueByStatementDictState)).reduce(
@@ -104,4 +109,9 @@ export const useDependency = ({
   );
 
   return { updateDependency };
+};
+
+export const useImportedValues = () => {
+  const importedValues = useRecoilValue(asteroidImportedValues);
+  return { importedValues };
 };
