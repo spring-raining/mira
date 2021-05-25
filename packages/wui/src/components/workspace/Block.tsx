@@ -127,7 +127,7 @@ export const BlockComponent: React.FC<{
           css`
             position: absolute;
             top: -2rem;
-            left: -1.375rem;
+            left: -1.125rem;
             width: 50%;
             height: 2rem;
             display: flex;
@@ -179,11 +179,7 @@ export const BlockComponent: React.FC<{
                 &:hover {
                   color: var(--astr-colors-red-500);
                 }
-              `,
-              noteType !== 'content' &&
-                css`
-                  visibility: hidden;
-                `
+              `
             )}
             aria-label="Delete"
             onClick={deleteBrick}
@@ -199,100 +195,21 @@ export const BlockComponent: React.FC<{
       <div
         className={clsx(
           css`
+            position: relative;
             width: 100%;
             margin: 2rem 0;
-            margin-left: -5px;
-            padding-left: 5px;
+            border-left: 5px solid transparent;
           `,
           (isFocus || isActive) &&
             css`
-              padding-left: 0;
               border-left: 5px dotted var(--astr-colors-gray-400);
             `
         )}
       >
-        {noteType === 'script' && (
-          <div
-            className={clsx(
-              css`
-                width: 100%;
-                padding-left: 2.5rem;
-                padding-right: 1rem;
-              `
-            )}
-            style={{
-              ...(isActive && {
-                pointerEvents: 'none',
-                opacity: 0,
-                position: 'absolute',
-              }),
-            }}
-            onClick={setActive}
-          >
-            <pre>
-              <code
-                className={css`
-                  * {
-                    font-family: var(--astr-fonts-mono);
-                    font-size: 12px;
-                    line-height: 1;
-                  }
-                  div {
-                    height: 18px;
-                  }
-                `}
-              >
-                <CodePreview code={brick.text} language="jsx" />
-              </code>
-            </pre>
-          </div>
-        )}
-        {language === 'markdown' && (
-          <div
-            className={clsx(
-              css`
-                display: flex;
-                justify-content: start;
-                align-items: flex-start;
-                width: 100%;
-              `
-            )}
-            style={{
-              ...(isActive && {
-                pointerEvents: 'none',
-                opacity: 0,
-                position: 'absolute',
-              }),
-            }}
-            onClick={setActive}
-          >
-            <div
-              className={css`
-                width: 50%;
-                margin: 0 2.5rem;
-                min-height: 4rem;
-                padding-right: 2rem;
-                display: flex;
-                flex-direction: column;
-                box-sizing: border-box;
-              `}
-            >
-              <MarkdownPreview md={brick.text} />
-              {!brick.text.trim() && (
-                <p
-                  className={css`
-                    color: var(--astr-colors-gray-400);
-                  `}
-                >
-                  No content
-                </p>
-              )}
-            </div>
-          </div>
-        )}
         <div
           className={clsx(
             css`
+              position: relative;
               display: flex;
               justify-content: start;
               align-items: flex-start;
@@ -304,8 +221,6 @@ export const BlockComponent: React.FC<{
               !isActive && {
                 pointerEvents: 'none',
                 opacity: 0,
-                position: 'absolute',
-                width: 0,
               }),
           }}
         >
@@ -348,7 +263,7 @@ export const BlockComponent: React.FC<{
                 css`
                   position: relative;
                   padding-right: 1rem;
-                  border-radius: 0 0 4px 4px;
+                  border-radius: 0 4px 4px 4px;
                   background-color: var(--astr-colors-gray-50);
                 `,
                 isActive &&
@@ -360,7 +275,7 @@ export const BlockComponent: React.FC<{
               <Editor
                 language={editorLanguage}
                 onChange={onEditorChange}
-                padding={{ top: 12, bottom: 24 }}
+                padding={{ top: 16, bottom: 16 }}
                 {...editorCallbacks}
                 {...(live && isLived
                   ? {
@@ -397,13 +312,96 @@ export const BlockComponent: React.FC<{
             )}
           </div>
         </div>
+        {noteType === 'script' && (
+          <div
+            className={clsx(
+              css`
+                position: absolute;
+                top: 0;
+                width: 100%;
+                padding-left: 2.5rem;
+                padding-right: 1rem;
+              `
+            )}
+            style={{
+              ...(isActive && {
+                pointerEvents: 'none',
+                opacity: 0,
+                position: 'absolute',
+              }),
+            }}
+            onClick={setActive}
+          >
+            <pre>
+              <code
+                className={css`
+                  * {
+                    font-family: var(--astr-fonts-mono);
+                    font-size: 12px;
+                    line-height: 1;
+                  }
+                  div {
+                    height: 18px;
+                  }
+                `}
+              >
+                <CodePreview code={brick.text} language="jsx" />
+              </code>
+            </pre>
+          </div>
+        )}
+        {language === 'markdown' && (
+          <div
+            className={clsx(
+              css`
+                position: absolute;
+                top: 0;
+                width: 100%;
+                display: flex;
+                justify-content: start;
+                align-items: flex-start;
+              `
+            )}
+            style={{
+              ...(isActive && {
+                pointerEvents: 'none',
+                opacity: 0,
+                position: 'absolute',
+              }),
+            }}
+            onClick={setActive}
+          >
+            <div
+              className={css`
+                width: 50%;
+                margin: -1rem 2.5rem 0 2.5rem;
+                min-height: 4rem;
+                padding-right: 2rem;
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+              `}
+            >
+              <MarkdownPreview md={brick.text} />
+              {!brick.text.trim() && (
+                <p
+                  className={css`
+                    color: var(--astr-colors-gray-400);
+                  `}
+                >
+                  No content
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       <div
         className={clsx(
           css`
             position: absolute;
             bottom: -2rem;
-            left: -1.375rem;
+            left: -1.125rem;
             width: 50%;
             height: 2rem;
             display: flex;
