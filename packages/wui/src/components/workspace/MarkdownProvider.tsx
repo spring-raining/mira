@@ -17,6 +17,7 @@ const useMarkdownStyling = () => {
       border-width: 0;
       border-style: solid;
       box-sizing: border-box;
+      word-break: break-word;
     }
     blockquote,
     dl,

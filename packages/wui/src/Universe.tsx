@@ -30,7 +30,11 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
-  const { updateDependency } = useDependency({ path, depsRootPath, moduleLoader });
+  const { updateDependency } = useDependency({
+    path,
+    depsRootPath,
+    moduleLoader,
+  });
   const onCreateCodeBlockClick = useCallback(() => {
     pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
   }, [pushBrick]);
@@ -92,17 +96,9 @@ const UniverseView: React.VFC<UniverseProps> = ({
             margin-inline-start: 1.5rem;
           `}
         >
-          {bricks.map((brick) => {
-            if (brick.noteType === 'script') {
-              return (
-                <pre key={brick.brickId}>
-                  <code>{brick.text}</code>
-                </pre>
-              );
-            } else {
-              return <Block key={brick.brickId} {...brick} />;
-            }
-          })}
+          {bricks.map((brick) => (
+            <Block key={brick.brickId} {...brick} />
+          ))}
           <button onClick={onCreateCodeBlockClick}>Create code block</button>
           <button onClick={onCreateTextBlockClick}>Create text block</button>
         </div>

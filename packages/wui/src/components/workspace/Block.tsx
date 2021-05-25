@@ -8,6 +8,7 @@ import {
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
 import { Brick } from '../../types';
+import { CodePreview } from '../CodePreview';
 import { Editor } from '../Editor';
 import { PlusIcon, XIcon } from '../icon';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
@@ -46,10 +47,12 @@ const useStyle = () => {
 export const BlockComponent: React.FC<{
   brickId: string;
   language: string;
+  noteType: Brick['noteType'];
   isLived?: boolean;
-}> = ({ brickId, language: initialLanguage, isLived }) => {
-  const { brick, isActive, updateBrick, updateLanguage, setActive } =
-    useBrick(brickId);
+}> = ({ brickId, language: initialLanguage, noteType, isLived }) => {
+  const { brick, isActive, updateBrick, updateLanguage, setActive } = useBrick(
+    brickId
+  );
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId });
   const live = useLivedComponent();
@@ -176,7 +179,11 @@ export const BlockComponent: React.FC<{
                 &:hover {
                   color: var(--astr-colors-red-500);
                 }
-              `
+              `,
+              noteType !== 'content' &&
+                css`
+                  visibility: hidden;
+                `
             )}
             aria-label="Delete"
             onClick={deleteBrick}
@@ -204,6 +211,42 @@ export const BlockComponent: React.FC<{
             `
         )}
       >
+        {noteType === 'script' && (
+          <div
+            className={clsx(
+              css`
+                width: 100%;
+                padding-left: 2.5rem;
+                padding-right: 1rem;
+              `
+            )}
+            style={{
+              ...(isActive && {
+                pointerEvents: 'none',
+                opacity: 0,
+                position: 'absolute',
+              }),
+            }}
+            onClick={setActive}
+          >
+            <pre>
+              <code
+                className={css`
+                  * {
+                    font-family: var(--astr-fonts-mono);
+                    font-size: 12px;
+                    line-height: 1;
+                  }
+                  div {
+                    height: 18px;
+                  }
+                `}
+              >
+                <CodePreview code={brick.text} language="jsx" />
+              </code>
+            </pre>
+          </div>
+        )}
         {language === 'markdown' && (
           <div
             className={clsx(
@@ -226,7 +269,7 @@ export const BlockComponent: React.FC<{
             <div
               className={css`
                 width: 50%;
-                margin: 0 1.5rem;
+                margin: 0 2.5rem;
                 min-height: 4rem;
                 padding-right: 2rem;
                 display: flex;
@@ -257,7 +300,7 @@ export const BlockComponent: React.FC<{
             `
           )}
           style={{
-            ...(language === 'markdown' &&
+            ...((language === 'markdown' || noteType === 'script') &&
               !isActive && {
                 pointerEvents: 'none',
                 opacity: 0,
@@ -406,16 +449,23 @@ export const BlockComponent: React.FC<{
 export const Block: React.VFC<Pick<Brick, 'brickId'>> = ({ brickId }) => {
   const { brick } = useBrick(brickId);
 
-  if (brick.noteType !== 'content') {
-    return null;
+  if (brick.noteType === 'script') {
+    return <BlockComponent {...brick} language="jsx" />;
   }
   if (brick.asteroid?.isLived) {
     return (
       <LiveProvider asteroid={brick.asteroid} code={brick.text}>
-        <BlockComponent {...{ brickId, language: brick.language }} isLived />
+        <BlockComponent
+          {...{ brickId, language: brick.language, noteType: brick.noteType }}
+          isLived
+        />
       </LiveProvider>
     );
   } else {
-    return <BlockComponent {...{ brickId, language: brick.language }} />;
+    return (
+      <BlockComponent
+        {...{ brickId, language: brick.language, noteType: brick.noteType }}
+      />
+    );
   }
 };
