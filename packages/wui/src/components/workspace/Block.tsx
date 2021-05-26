@@ -12,6 +12,7 @@ import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor } from '../Editor';
 import { PlusIcon, XIcon } from '../icon';
+import { ErrorPreText } from '../styled/common';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
 import {
   LiveProvider,
@@ -124,8 +125,14 @@ const ScriptPreviewPart = styled.div`
   position: absolute;
   top: 0;
   width: 100%;
-  padding-left: 2.5rem;
-  padding-right: 1rem;
+  display: flex;
+  justify-content: start;
+  align-items: flex-start;
+`;
+const ScriptPreviewContainer = styled.div`
+  width: 50%;
+  margin: 0 1rem;
+  padding-left: 1.5rem;
 `;
 const ScriptPreviewCode = styled.code`
   * {
@@ -173,9 +180,14 @@ export const BlockComponent: React.FC<{
   noteType: Brick['noteType'];
   isLived?: boolean;
 }> = ({ brickId, language: initialLanguage, noteType, isLived }) => {
-  const { brick, isActive, updateBrick, updateLanguage, setActive } = useBrick(
-    brickId
-  );
+  const {
+    brick,
+    isActive,
+    updateBrick,
+    updateLanguage,
+    setActive,
+    importError,
+  } = useBrick(brickId);
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId });
   const live = useLivedComponent();
@@ -310,11 +322,20 @@ export const BlockComponent: React.FC<{
             className={cx(isActive && visibilityHidden)}
             onClick={setActive}
           >
-            <pre>
-              <ScriptPreviewCode>
-                <CodePreview code={brick.text} language="jsx" />
-              </ScriptPreviewCode>
-            </pre>
+            <ScriptPreviewContainer>
+              <pre>
+                <ScriptPreviewCode>
+                  <CodePreview code={brick.text} language="jsx" />
+                </ScriptPreviewCode>
+              </pre>
+            </ScriptPreviewContainer>
+            {importError && (
+              <LivePreviewPart>
+                <LivePreviewContainer>
+                  <ErrorPreText>{String(importError)}</ErrorPreText>
+                </LivePreviewContainer>
+              </LivePreviewPart>
+            )}
           </ScriptPreviewPart>
         )}
         {language === 'markdown' && (

@@ -2,7 +2,6 @@ import {
   init as initTranspiler,
   Service as TranspilerService,
 } from '@asteroid-mdx/transpiler';
-import { styled } from '@linaria/react';
 import React, {
   createContext,
   useCallback,
@@ -14,6 +13,7 @@ import React, {
 import { useProvidence } from '../../state/providence';
 import { MarkerMessage } from '../Editor';
 import { Asteroid } from '../../types';
+import { ErrorPreText } from '../styled/common';
 import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
 // eslint-disable-next-line no-new-func
@@ -330,15 +330,11 @@ export const LivedPreview: React.FC = () => {
   return live?.output.element ? <>{live.output.element}</> : null;
 };
 
-const LivedErrorPre = styled.pre`
-  white-space: pre-wrap;
-`;
-
 export const LivedError: React.FC = () => {
   const live = useLivedComponent();
   return live?.output.error ? (
     <div>
-      <LivedErrorPre>{live.output.error.toString()}</LivedErrorPre>
+      <ErrorPreText>{live.output.error.toString()}</ErrorPreText>
     </div>
   ) : null;
 };

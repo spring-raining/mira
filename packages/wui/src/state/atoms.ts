@@ -26,17 +26,23 @@ export const asteroidValuesExportedState = atom<Record<AsteroidId, string[]>>({
   default: {},
 });
 
-export const asteroidImportDefinitionDictState = atom<Record<string, ParsedImportStatement>>({
+export const asteroidImportDefinitionDictState = atom<
+  Record<string, ParsedImportStatement>
+>({
   key: 'asteroidImportDefinitionDictState',
   default: {},
 });
 
-export const asteroidImportedValueByStatementDictState = atom<Record<string, Record<string, unknown>>>({
+export const asteroidImportedValueByStatementDictState = atom<
+  Record<string, Record<string, unknown>>
+>({
   key: 'asteroidImportedValueByStatementDictState',
   default: {},
 });
 
-export const asteroidImportErrorState = atom<Record<Brick['brickId'], Error>>({
-  key: 'asteroidImportErrorState',
+export const asteroidImportErrorDictState = atom<
+  Record<Brick['brickId'], Error>
+>({
+  key: 'asteroidImportErrorDictState',
   default: {},
 });

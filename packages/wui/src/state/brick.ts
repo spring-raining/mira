@@ -15,6 +15,7 @@ import {
   activeBrickIdState,
   asteroidDeclaredValueDictState,
   asteroidValuesExportedState,
+  asteroidImportErrorDictState,
   brickDictState,
   brickOrderState,
 } from './atoms';
@@ -24,20 +25,15 @@ const transpiledMdxCache = new WeakMap<Brick, string>();
 
 const brickStateFamily = selectorFamily<Brick, string>({
   key: 'brickStateFamily',
-  get:
-    (brickId) =>
-    ({ get }) =>
-      get(brickDictState)[brickId],
-  set:
-    (brickId) =>
-    ({ set }, newValue) => {
-      if (!(newValue instanceof DefaultValue)) {
-        set(brickDictState, (prevState) => ({
-          ...prevState,
-          [brickId]: newValue,
-        }));
-      }
-    },
+  get: (brickId) => ({ get }) => get(brickDictState)[brickId],
+  set: (brickId) => ({ set }, newValue) => {
+    if (!(newValue instanceof DefaultValue)) {
+      set(brickDictState, (prevState) => ({
+        ...prevState,
+        [brickId]: newValue,
+      }));
+    }
+  },
 });
 
 const bricksState = selector({
@@ -46,6 +42,15 @@ const bricksState = selector({
     get(brickOrderState)
       .map((brickId) => get(brickDictState)[brickId])
       .filter((brick) => !!brick),
+});
+
+const asteroidImportErrorStateFamily = selectorFamily<
+  Error | null,
+  Brick['brickId']
+>({
+  key: 'brickStateFamily',
+  get: (brickId) => ({ get }) =>
+    get(asteroidImportErrorDictState)[brickId] ?? null,
 });
 
 const cancellable = (fn: () => void, ms = 100) => {
@@ -126,6 +131,7 @@ export const useBricks = ({
 export const useBrick = (brickId: string) => {
   const [brick] = useRecoilState(brickStateFamily(brickId));
   const [activeBrickId] = useRecoilState(activeBrickIdState);
+  const importError = useRecoilValue(asteroidImportErrorStateFamily(brickId));
   const setActive = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
   });
@@ -207,68 +213,67 @@ export const useBrick = (brickId: string) => {
     updateLanguage,
     isActive: brickId === activeBrickId,
     setActive,
+    importError,
   };
 };
 
 export const useBrickManipulator = () => {
   const insertBrick = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async ({
-        newBrick,
-        targetBrickId,
-        offset = 0,
-      }: {
-        newBrick: Brick;
-        targetBrickId?: string;
-        offset?: number;
-      }) => {
-        const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
-        const brickOrder = [...(await snapshot.getPromise(brickOrderState))];
-        if (targetBrickId && !brickOrder.includes(targetBrickId)) {
-          throw new Error('target brick not found');
-        }
-        brickDict[newBrick.brickId] = newBrick;
-        brickOrder.splice(
-          (targetBrickId ? brickOrder.indexOf(targetBrickId) : 0) + offset,
-          0,
-          newBrick.brickId
-        );
-        set(brickDictState, brickDict);
-        set(brickOrderState, brickOrder);
+    ({ snapshot, set }) => async ({
+      newBrick,
+      targetBrickId,
+      offset = 0,
+    }: {
+      newBrick: Brick;
+      targetBrickId?: string;
+      offset?: number;
+    }) => {
+      const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
+      const brickOrder = [...(await snapshot.getPromise(brickOrderState))];
+      if (targetBrickId && !brickOrder.includes(targetBrickId)) {
+        throw new Error('target brick not found');
       }
+      brickDict[newBrick.brickId] = newBrick;
+      brickOrder.splice(
+        (targetBrickId ? brickOrder.indexOf(targetBrickId) : 0) + offset,
+        0,
+        newBrick.brickId
+      );
+      set(brickDictState, brickDict);
+      set(brickOrderState, brickOrder);
+    }
   );
 
   const cleanup = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async (brickId: string) => {
-        const brickDict = await snapshot.getPromise(brickDictState);
-        const filterDict = <T>(dict: Record<string, T>, excludeKey: string[]) =>
-          Object.entries(dict).reduce<Record<string, T>>(
-            (prev, [k, v]) =>
-              excludeKey.includes(k) ? prev : { ...prev, [k]: v },
-            {}
-          );
-        set(brickOrderState, (brickOrder) =>
-          brickOrder.filter((id) => id !== brickId)
+    ({ snapshot, set }) => async (brickId: string) => {
+      const brickDict = await snapshot.getPromise(brickDictState);
+      const filterDict = <T>(dict: Record<string, T>, excludeKey: string[]) =>
+        Object.entries(dict).reduce<Record<string, T>>(
+          (prev, [k, v]) =>
+            excludeKey.includes(k) ? prev : { ...prev, [k]: v },
+          {}
         );
-        set(activeBrickIdState, (activeBrickId) =>
-          activeBrickId === brickId ? null : activeBrickId
+      set(brickOrderState, (brickOrder) =>
+        brickOrder.filter((id) => id !== brickId)
+      );
+      set(activeBrickIdState, (activeBrickId) =>
+        activeBrickId === brickId ? null : activeBrickId
+      );
+      set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
+      delete editorRefs[brickId];
+      const brick = brickDict[brickId];
+      if (brick?.noteType === 'content' && brick?.asteroid) {
+        const asteroidId = brick.asteroid.id;
+        const exportedValues =
+          (await snapshot.getPromise(asteroidValuesExportedState)) ?? [];
+        set(asteroidDeclaredValueDictState, (decalredValueDict) =>
+          filterDict(decalredValueDict, exportedValues[asteroidId] ?? [])
         );
-        set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
-        delete editorRefs[brickId];
-        const brick = brickDict[brickId];
-        if (brick?.noteType === 'content' && brick?.asteroid) {
-          const asteroidId = brick.asteroid.id;
-          const exportedValues =
-            (await snapshot.getPromise(asteroidValuesExportedState)) ?? [];
-          set(asteroidDeclaredValueDictState, (decalredValueDict) =>
-            filterDict(decalredValueDict, exportedValues[asteroidId] ?? [])
-          );
-          set(asteroidValuesExportedState, (exportedValues) =>
-            filterDict(exportedValues ?? [], [asteroidId])
-          );
-        }
+        set(asteroidValuesExportedState, (exportedValues) =>
+          filterDict(exportedValues ?? [], [asteroidId])
+        );
       }
+    }
   );
 
   return { insertBrick, cleanup };

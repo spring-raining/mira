@@ -9,7 +9,7 @@ import { Brick, ParsedImportStatement } from '../types';
 import {
   asteroidImportDefinitionDictState,
   asteroidImportedValueByStatementDictState,
-  asteroidImportErrorState,
+  asteroidImportErrorDictState,
 } from './atoms';
 
 const asteroidImportedValueFamily = selectorFamily<
@@ -67,7 +67,7 @@ export const useDependency = ({
                 },
               ];
             } catch (error) {
-              set(asteroidImportErrorState, (val) => ({
+              set(asteroidImportErrorDictState, (val) => ({
                 ...val,
                 [brick.brickId]: error,
               }));
@@ -76,7 +76,7 @@ export const useDependency = ({
           })
         )
       ).flatMap((_) => _);
-      set(asteroidImportErrorState, (val) =>
+      set(asteroidImportErrorDictState, (val) =>
         imported.reduce((acc, { brick }) => {
           delete acc[brick.brickId];
           return acc;
