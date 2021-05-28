@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { WorkspaceRepository } from '@asteroid-mdx/cli-workspace';
 import { CliArgs } from './commands';
+import { hmrUpdateEventName, hmrPreambleCode } from './hmr/runtime';
 import { globFiles } from './util';
 
 export const getWorkspaceRepository = ({
@@ -29,6 +30,10 @@ export const getWorkspaceRepository = ({
           };
         })
       );
+    },
+    constants: {
+      hmrUpdateEventName,
+      hmrPreambleCode,
     },
   };
 };

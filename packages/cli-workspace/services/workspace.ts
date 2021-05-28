@@ -6,6 +6,10 @@ export const workspaceServiceToken = 'WorkspaceService';
 
 export interface WorkspaceRepository {
   getAsteroidFiles(): Promise<AsteroidFileItem[]>;
+  constants: {
+    hmrUpdateEventName: string;
+    hmrPreambleCode: string;
+  };
 }
 
 @injectable()

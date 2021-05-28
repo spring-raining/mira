@@ -1,6 +1,7 @@
 import { styled } from '@linaria/react';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
+import { useUniverseContext, RefreshModuleEvent } from './context';
 import { useBricks, createNewBrick } from './state/brick';
 import { useDependency } from './state/dependency';
 import { PlanetarySystem } from './components/planetarySystem';
@@ -52,11 +53,15 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
-  const { updateDependency } = useDependency({
+  const { loadDependency } = useDependency({
     path,
     depsRootPath,
     moduleLoader,
   });
+  const {
+    addRefreshModuleListener,
+    removeRefreshModuleListener,
+  } = useUniverseContext();
   const onCreateCodeBlockClick = useCallback(() => {
     pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
   }, [pushBrick]);
@@ -65,14 +70,22 @@ const UniverseView: React.VFC<UniverseProps> = ({
   }, [pushBrick]);
 
   useEffect(() => {
+    const refreshModule = (event: RefreshModuleEvent) => {
+      console.log('>>', event);
+    };
+
     (async () => {
       if (initialMdx) {
         const initialBricks = hydrateMdx(initialMdx);
         console.log(initialBricks);
-        await updateDependency(initialBricks);
+        await loadDependency(initialBricks);
         importBricks(initialBricks);
+        addRefreshModuleListener(refreshModule);
       }
     })();
+    return () => {
+      removeRefreshModuleListener(refreshModule);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

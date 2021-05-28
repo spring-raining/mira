@@ -40,7 +40,7 @@ export const useDependency = ({
   depsRootPath: string;
   moduleLoader: (specifier: string) => Promise<any>;
 }) => {
-  const updateDependency = useRecoilCallback(
+  const loadDependency = useRecoilCallback(
     ({ set, snapshot }) => async (bricks: Brick[]) => {
       const imported = (
         await Promise.all(
@@ -108,7 +108,7 @@ export const useDependency = ({
     [path, depsRootPath, moduleLoader]
   );
 
-  return { updateDependency };
+  return { loadDependency };
 };
 
 export const useImportedValues = () => {

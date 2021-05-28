@@ -85,15 +85,18 @@ export const loadModule = async ({
   moduleLoader: (specifier: string) => Promise<any>;
 }): Promise<Record<string, any>> => {
   const mod = await moduleLoader(definition.specifier);
-  const importValues = Object.entries(definition.importBinding).reduce((acc, [name, binding]) => {
-    if (!(name in mod)) {
-      throw new ReferenceError(
-        `Module '${definition.specifier}' has no exported member '${name}'`
-      );
-    }
-    acc[binding] = mod[name];
-    return acc;
-  }, {} as Record<string, any>);
+  const importValues = Object.entries(definition.importBinding).reduce(
+    (acc, [name, binding]) => {
+      if (!(name in mod)) {
+        throw new ReferenceError(
+          `Module '${definition.specifier}' has no exported member '${name}'`
+        );
+      }
+      acc[binding] = mod[name];
+      return acc;
+    },
+    {} as Record<string, any>
+  );
   if (definition.namespaceImport) {
     importValues[definition.namespaceImport] = mod;
   }

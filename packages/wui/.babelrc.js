@@ -1,4 +1,7 @@
-module.exports = () => ({
-  presets: ['@babel/preset-env', 'react-app', '@linaria'],
-  plugins: [],
-});
+module.exports = (api) => {
+  api.cache(true);
+  return {
+    presets: ['@babel/preset-env', 'react-app', '@linaria'],
+    plugins: [],
+  };
+};
