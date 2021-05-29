@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { Logger, Plugin, Middleware } from '@web/dev-server-core';
 import { createConfiguration, startServer, SnowpackDevServer } from 'snowpack';
+import { refreshPluginFactory } from './snowpack/refreshPlugin';
 
 const MIDDLEWARE_PREFIX = '/_asteroid';
 
@@ -33,6 +34,7 @@ export function snowpackPluginFactory(): {
           hmr: true,
         },
       });
+      snowpackConfig.plugins.push(refreshPluginFactory(snowpackConfig));
       _snowpack = await startServer(
         { config: snowpackConfig },
         { isDev: true, isWatch: true }
@@ -76,8 +78,10 @@ export function snowpackPluginFactory(): {
       await next();
       return;
     }
-    if (ctx.url.startsWith(`${MIDDLEWARE_PREFIX}/resolve/`)) {
-      const locator = ctx.url.substring(`${MIDDLEWARE_PREFIX}/resolve/`.length);
+    if (ctx.url.startsWith(`${MIDDLEWARE_PREFIX}/-/resolve/`)) {
+      const locator = ctx.url.substring(
+        `${MIDDLEWARE_PREFIX}/-/resolve/`.length
+      );
       try {
         const nextUrl = await _snowpack.getUrlForPackage(locator);
         const tmpl = `export * from '${nextUrl}';

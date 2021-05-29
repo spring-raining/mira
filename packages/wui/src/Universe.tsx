@@ -53,7 +53,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
-  const { loadDependency } = useDependency({
+  const { loadDependency, refreshDependency } = useDependency({
     path,
     depsRootPath,
     moduleLoader,
@@ -71,7 +71,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
 
   useEffect(() => {
     const refreshModule = (event: RefreshModuleEvent) => {
-      console.log('>>', event);
+      refreshDependency(event);
     };
 
     (async () => {

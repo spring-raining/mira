@@ -26,17 +26,15 @@ export const asteroidValuesExportedState = atom<Record<AsteroidId, string[]>>({
   default: {},
 });
 
-export const asteroidImportDefinitionDictState = atom<
-  Record<string, ParsedImportStatement>
->({
-  key: 'asteroidImportDefinitionDictState',
+export const importedModulesRefDictState = atom<Record<string, string>>({
+  key: 'importedModulesDictState',
   default: {},
 });
 
-export const asteroidImportedValueByStatementDictState = atom<
-  Record<string, Record<string, unknown>>
+export const asteroidImportMappingState = atom<
+  Record<string, { specifier: string; name: string | null }>
 >({
-  key: 'asteroidImportedValueByStatementDictState',
+  key: 'asteroidImportMappingState',
   default: {},
 });
 
