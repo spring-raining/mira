@@ -1,39 +1,46 @@
 import WebSocket from 'ws';
-import { Logger, Plugin, Middleware } from '@web/dev-server-core';
-import { createConfiguration, startServer, SnowpackDevServer } from 'snowpack';
+import { Plugin, DevServerCoreConfig } from '@web/dev-server-core';
+import {
+  createConfiguration,
+  startServer,
+  SnowpackDevServer,
+  SnowpackConfig,
+} from 'snowpack';
+import { MIDDLEWARE_PATH_PREFIX } from '../../constants';
 import { refreshPluginFactory } from './snowpack/refreshPlugin';
 
-const MIDDLEWARE_PREFIX = '/_asteroid';
-
-export function snowpackPluginFactory(): {
+export function snowpackPluginFactory(
+  coreConfig: DevServerCoreConfig
+): {
   snowpackPlugin: Plugin;
-  snowpackMiddleware: Middleware;
+  snowpackConfig: SnowpackConfig;
 } {
   let _snowpack: SnowpackDevServer;
+  const snowpackConfig = createConfiguration({
+    root: coreConfig.rootDir,
+    workspaceRoot: coreConfig.rootDir,
+    mode: 'development',
+    mount: {
+      [coreConfig.rootDir]: {
+        url: MIDDLEWARE_PATH_PREFIX,
+      },
+    },
+    alias: {},
+    plugins: [],
+    dependencies: {},
+    devOptions: {
+      port: 0, // stop starting dev server
+      hmr: true,
+    },
+  });
 
   const snowpackPlugin: Plugin = {
     name: 'snowpack',
     injectWebSocket: true,
-    async serverStart({ webSockets, config, server }) {
+    async serverStart({ webSockets, server }) {
       if (!webSockets) {
         throw new Error('webSockets is not enabled');
       }
-      const snowpackConfig = createConfiguration({
-        root: config.rootDir,
-        mode: 'development',
-        mount: {
-          [config.rootDir]: {
-            url: MIDDLEWARE_PREFIX,
-          },
-        },
-        alias: {},
-        plugins: [],
-        dependencies: {},
-        devOptions: {
-          port: 0, // stop starting dev server
-          hmr: true,
-        },
-      });
       snowpackConfig.plugins.push(refreshPluginFactory(snowpackConfig));
       _snowpack = await startServer(
         { config: snowpackConfig },
@@ -65,40 +72,43 @@ export function snowpackPluginFactory(): {
         });
       });
     },
+    async serve(ctx) {
+      const handleBySnowpack = async () => {
+        await _snowpack.handleRequest(ctx.req, ctx.res);
+        ctx.respond = false;
+      };
+
+      if (ctx.path.startsWith('/_snowpack')) {
+        return await handleBySnowpack();
+      }
+      if (ctx.path.startsWith(MIDDLEWARE_PATH_PREFIX)) {
+        if (!ctx.url.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/`)) {
+          return await handleBySnowpack();
+        }
+        if (ctx.path.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/resolve/`)) {
+          const locator = ctx.path.substring(
+            `${MIDDLEWARE_PATH_PREFIX}/-/resolve/`.length
+          );
+          try {
+            const nextUrl = await _snowpack.getUrlForPackage(locator);
+            const tmpl = `export * from '${nextUrl}';
+export {default} from '${nextUrl}';`;
+            return {
+              body: tmpl,
+              type: '.js',
+            };
+          } catch {
+            _snowpack.sendResponseError(ctx.req, ctx.res, 404);
+            ctx.respond = false;
+            return;
+          }
+        }
+      }
+    },
     async serverStop() {
       await _snowpack?.shutdown();
     },
   };
 
-  const snowpackMiddleware: Middleware = async (ctx, next) => {
-    if (
-      !ctx.url.startsWith(MIDDLEWARE_PREFIX) &&
-      !ctx.url.startsWith('/_snowpack')
-    ) {
-      await next();
-      return;
-    }
-    if (ctx.url.startsWith(`${MIDDLEWARE_PREFIX}/-/resolve/`)) {
-      const locator = ctx.url.substring(
-        `${MIDDLEWARE_PREFIX}/-/resolve/`.length
-      );
-      try {
-        const nextUrl = await _snowpack.getUrlForPackage(locator);
-        const tmpl = `export * from '${nextUrl}';
-export {default} from '${nextUrl}';`;
-        ctx.body = tmpl;
-        ctx.set('Content-Type', 'application/javascript; charset=utf-8');
-        return;
-      } catch {
-        _snowpack.sendResponseError(ctx.req, ctx.res, 404);
-      }
-      ctx.respond = false;
-      return;
-    }
-    await _snowpack.handleRequest(ctx.req, ctx.res);
-    ctx.respond = false;
-    return;
-  };
-
-  return { snowpackPlugin, snowpackMiddleware };
+  return { snowpackPlugin, snowpackConfig };
 }

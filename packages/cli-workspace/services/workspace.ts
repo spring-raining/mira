@@ -1,14 +1,16 @@
 import { injectable } from 'tsyringe';
 import 'reflect-metadata';
-import { AsteroidFileItem } from '../types/workspace';
+import { AsteroidMdxFileItem } from '../types/workspace';
 
 export const workspaceServiceToken = 'WorkspaceService';
 
 export interface WorkspaceRepository {
-  getAsteroidFiles(): Promise<AsteroidFileItem[]>;
+  getAsteroidFiles(): Promise<AsteroidMdxFileItem<number>[]>;
   constants: {
     hmrUpdateEventName: string;
-    hmrPreambleCode: string;
+    hmrPreambleImportPath: string;
+    devServerWatcherUpdateEventName: string;
+    devServerWatcherImportPath: string;
   };
 }
 

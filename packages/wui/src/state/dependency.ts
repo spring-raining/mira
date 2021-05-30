@@ -32,7 +32,6 @@ const importedModulesRefFamily = selectorFamily<string | null, string>({
 const asteroidImportedValues = selector<Record<string, unknown>>({
   key: 'asteroidImportedValues',
   get: ({ get }) => {
-    console.log(moduleMap);
     return Object.entries(get(asteroidImportMappingState)).reduce(
       (acc, [name, mapping]) => {
         const key = get(importedModulesRefFamily(mapping.specifier));
@@ -97,7 +96,7 @@ export const useDependency = ({
             }
           })
         )
-      ).flatMap((_) => _);
+      ).flat();
       set(importedModulesRefDictState, (modRef) =>
         imported
           .flatMap(({ result }) =>

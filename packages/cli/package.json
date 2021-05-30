@@ -31,6 +31,7 @@
     "@types/command-line-usage": "^5.0.1",
     "@types/debounce": "^1.2.0",
     "@types/ip": "^1.1.0",
+    "@types/picomatch": "^2.2.4",
     "npm-run-all": "^4.1.5",
     "rollup": "^2.40.0",
     "shx": "^0.3.3",
@@ -43,6 +44,7 @@
     "es-module-lexer": "^0.4.1",
     "esbuild": "^0.11.9",
     "globby": "^11.0.2",
+    "picomatch": "^2.2.2",
     "reflect-metadata": "0.1.13",
     "snowpack": "3.4.0"
   }

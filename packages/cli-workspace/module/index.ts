@@ -8,8 +8,18 @@ import {
   WorkspaceRepository,
   WorkspaceService,
 } from '../services/workspace';
+import type {
+  AsteroidMdxFileItem,
+  FileStat,
+  DevServerEvent,
+} from '../types/workspace';
 
-export type { WorkspaceRepository };
+export type {
+  WorkspaceRepository,
+  AsteroidMdxFileItem,
+  FileStat,
+  DevServerEvent,
+};
 
 export default (
   { workspaceRepository }: { workspaceRepository: WorkspaceRepository },

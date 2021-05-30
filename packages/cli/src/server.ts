@@ -1,31 +1,28 @@
 import { DevServer, Plugin } from '@web/dev-server-core';
 import { hmrPlugin } from '@web/dev-server-hmr';
 import { CliArgs } from './commands';
+import { collectProjectConfig } from './config';
 import { createLogger } from './server/logger/createLogger';
 import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
-import { asteroidObserverPlugin } from './server/plugins/asteroidObserverPlugin';
+import { asteroidWebSocketPlugin } from './server/plugins/asteroidWebSocketPlugin';
 import { esbuildPlugin } from './server/plugins/esbuildPlugin';
 import { nodeResolvePlugin } from './server/plugins/nodeResolvePlugin';
-// import { proactiveWatchPlugin } from './server/plugins/proactiveWatchPlugin';
+import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
 import { getWorkspaceRepository } from './workspace';
 
 export async function startAsteroidServer(args: CliArgs) {
   try {
-    const coreConfig = {
-      port: args.port,
-      rootDir: args.rootDir, //path.resolve(__dirname, '../public'),
-      hostname: 'localhost',
-      basePath: '',
-      injectWebSocket: true,
-    };
-    const { snowpackPlugin, snowpackMiddleware } = snowpackPluginFactory();
+    const config = await collectProjectConfig(args);
+    const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
+      config.server
+    );
     const plugins: Plugin[] = [
       // nodeResolvePlugin(coreConfig.rootDir),
       // esbuildPlugin(),
       // hmrPlugin() as any, // FIXME
-      // asteroidObserverPlugin(),
-      // proactiveWatchPlugin(),
+      asteroidWebSocketPlugin(),
+      watcherPlugin({ config, snowpackConfig }),
       snowpackPlugin,
     ];
     const { logger, loggerPlugin } = createLogger({
@@ -36,11 +33,10 @@ export async function startAsteroidServer(args: CliArgs) {
     plugins.unshift(loggerPlugin);
     const server = new DevServer(
       {
-        ...coreConfig,
+        ...config.server,
         middleware: [
-          snowpackMiddleware,
           await workspaceMiddleware({
-            workspaceRepository: getWorkspaceRepository(args),
+            workspaceRepository: getWorkspaceRepository({ config }),
           }),
         ],
         plugins,

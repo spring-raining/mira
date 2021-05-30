@@ -68,7 +68,7 @@ export const collectImports = async ({
           })
           .filter((_): _ is ParsedImportStatement => !!_);
       }) ?? [];
-  const importDefs = await (await Promise.all(parseAll)).flatMap((_) => _);
+  const importDefs = await (await Promise.all(parseAll)).flat();
 
   const rewrited = importDefs.map((def) => rewriteEsmImport(def, { path }));
   return rewrited;

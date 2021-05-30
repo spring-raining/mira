@@ -4934,6 +4934,11 @@
   resolved "https://registry.yarnpkg.com/@types/parse5/-/parse5-5.0.3.tgz#e7b5aebbac150f8b5fdd4a46e7f0bd8e65e19109"
   integrity sha512-kUNnecmtkunAoQ3CnjmMkzNU/gtxG8guhi+Fk2U/kOpIKjIMKnXGp4IJCgQJrXSgMsWYimYG4TGjz/UzbGEBTw==
 
+"@types/picomatch@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@types/picomatch/-/picomatch-2.2.4.tgz#71acb6361deb7a68a9fd857c2fe6ccb2edf5c090"
+  integrity sha512-O4Cf3nFZbS1mFGbCjkimivto15zsf1uaEIT3Fxx3+Ek9PtAA8tu6jrsjt775GOAyHFJSjkZsz5gT3c/7gUYCRQ==
+
 "@types/prettier@^2.0.0":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-2.2.1.tgz#374e31645d58cb18a07b3ecd8e9dede4deb2cccd"

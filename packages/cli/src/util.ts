@@ -1,25 +1,27 @@
 import globby from 'globby';
 
-const DEFAULT_IGNORE = [
+export const DEFAULT_IGNORE = [
   '**/node_modules/**',
   '**/flow-typed/**',
   '**/coverage/**',
-  '**/.git',
+  '**/.git/**',
 ];
 
 export async function globFiles({
-  patterns,
+  includes,
+  excludes = [],
   cwd,
   gitignore = false,
-  absolute = false,
+  absolute = true,
 }: {
-  patterns: string | readonly string[]
+  includes: readonly string[];
+  excludes?: readonly string[];
   cwd: string;
   gitignore?: boolean;
   absolute?: boolean;
 }): Promise<string[]> {
-  return await globby(patterns, {
-    ignore: DEFAULT_IGNORE,
+  return await globby(includes, {
+    ignore: [...DEFAULT_IGNORE, ...excludes],
     cwd,
     gitignore,
     absolute,

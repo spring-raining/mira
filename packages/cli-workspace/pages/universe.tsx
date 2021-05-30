@@ -16,10 +16,10 @@ import {
   WorkspaceService,
   WorkspaceRepository,
 } from '../services/workspace';
-import { AsteroidFileItem } from '../types/workspace';
+import { AsteroidMdxFileItem } from '../types/workspace';
 
 interface PageProps {
-  file: AsteroidFileItem<number> | null;
+  file: AsteroidMdxFileItem<number> | null;
   constants: WorkspaceRepository['constants'];
 }
 
@@ -58,11 +58,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
   context
 ) => {
   const cli = container.resolve<WorkspaceService>(workspaceServiceToken);
-  const asteroid = (await cli.service.getAsteroidFiles()).map((it) => ({
-    ...it,
-    mtime: it.mtime.getTime(),
-    birthtime: it.mtime.getTime(),
-  }));
+  const asteroid = await cli.service.getAsteroidFiles();
   const filepath = context.query['mdx'];
   const filepathStr =
     filepath && Array.isArray(filepath) ? filepath[0] : filepath;
@@ -81,9 +77,7 @@ export default function Home({ file, constants }: PageProps) {
       <UniverseProvider>
         <Head>
           <title>{file?.path ?? 'Universe'}</title>
-          <script
-            dangerouslySetInnerHTML={{ __html: constants.hmrPreambleCode }}
-          />
+          <script type="module" src={constants.hmrPreambleImportPath} />
         </Head>
         <Global
           styles={css`
