@@ -1,10 +1,10 @@
 import {
-  AsteroidWui,
+  MiraWui,
   theme,
   UniverseProvider,
   useUniverseContext,
   RefreshModuleEvent,
-} from '@asteroid-mdx/wui';
+} from '@mirajs/wui';
 import { ThemeProvider, toCSSVar } from '@chakra-ui/react';
 import { Global, css } from '@emotion/react';
 import { GetServerSideProps } from 'next';
@@ -16,10 +16,10 @@ import {
   WorkspaceService,
   WorkspaceRepository,
 } from '../services/workspace';
-import { AsteroidMdxFileItem } from '../types/workspace';
+import { MiraMdxFileItem } from '../types/workspace';
 
 interface PageProps {
-  file: AsteroidMdxFileItem<number> | null;
+  file: MiraMdxFileItem<number> | null;
   constants: WorkspaceRepository['constants'];
 }
 
@@ -42,7 +42,7 @@ const UniverseView: React.VFC<PageProps> = ({
   }, []);
 
   return (
-    <AsteroidWui
+    <MiraWui
       mdx={file?.body ?? undefined}
       path={file?.path}
       depsRootPath={file?.depsRootPath}
@@ -58,13 +58,13 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
   context
 ) => {
   const cli = container.resolve<WorkspaceService>(workspaceServiceToken);
-  const asteroid = await cli.service.getAsteroidFiles();
+  const mira = await cli.service.getMiraFiles();
   const filepath = context.query['mdx'];
   const filepathStr =
     filepath && Array.isArray(filepath) ? filepath[0] : filepath;
   const file =
     (filepathStr &&
-      asteroid.find((f) => f.path === decodeURIComponent(filepathStr))) ||
+      mira.find((f) => f.path === decodeURIComponent(filepathStr))) ||
     null;
   return {
     props: { file, constants: cli.service.constants },

@@ -1,9 +1,9 @@
 import yaml from 'js-yaml';
-import type { Plugin } from "unified";
+import type { Plugin } from 'unified';
 import { Node } from 'unist';
 import visit from 'unist-util-visit';
 
-export const loadAsteroidConfig: Plugin = () =>
+export const loadMiraConfig: Plugin = () =>
   function (this: any, tree: Node) {
     let config = {};
     visit(tree, 'yaml', ({ value }, index, parent) => {
@@ -16,12 +16,12 @@ export const loadAsteroidConfig: Plugin = () =>
         if (!data || typeof data !== 'object') {
           return;
         }
-        const { asteroid } = data as any;
-        config = asteroid;
+        const { mira } = data as any;
+        config = mira;
       } catch (error) {
         this.file.fail(error.message);
       }
     });
-    tree.asteroidConfig = config;
+    tree.miraConfig = config;
     return tree;
   };

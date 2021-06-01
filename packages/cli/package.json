@@ -1,5 +1,5 @@
 {
-  "name": "@asteroid-mdx/cli",
+  "name": "@mirajs/cli",
   "version": "1.0.0",
   "types": "./module/index.d.ts",
   "main": "./dist/index.js",
@@ -8,7 +8,7 @@
     "node": "./dist/index.js"
   },
   "bin": {
-    "asteroid": "bin/asteroid.js"
+    "mira": "bin/mira.js"
   },
   "license": "MIT",
   "scripts": {
@@ -19,7 +19,7 @@
     "predev": "shx rm -rf dist",
     "dev": "run-p dev:*",
     "dev:cli": "tsc -w --incremental -p tsconfig.dev.json",
-    "dev:wui": "yarn workspace @asteroid-mdx/wui dev:module"
+    "dev:wui": "yarn workspace @mirajs/wui dev:module"
   },
   "publishConfig": {
     "access": "public"
@@ -38,7 +38,7 @@
     "typescript": "^4.1.2"
   },
   "dependencies": {
-    "@asteroid-mdx/cli-workspace": "1.0.0",
+    "@mirajs/cli-workspace": "1.0.0",
     "@web/dev-server": "^0.1.14",
     "@web/dev-server-hmr": "^0.1.9",
     "es-module-lexer": "^0.4.1",

@@ -3,7 +3,7 @@ import React from 'react';
 import { useWorkspaceFile } from '../hooks/workspace';
 
 export const UniverseView: React.VFC = () => {
-  const { activeAsteroidFile: file } = useWorkspaceFile();
+  const { activeMiraFile: file } = useWorkspaceFile();
 
   if (!file) {
     return <Flex>No file</Flex>;

@@ -15,8 +15,8 @@ import {
 import { Brick } from '../types';
 import {
   importedModulesRefDictState,
-  asteroidImportMappingState,
-  asteroidImportErrorDictState,
+  miraImportMappingState,
+  miraImportErrorDictState,
 } from './atoms';
 
 // Reference of actual imported modules
@@ -29,10 +29,10 @@ const importedModulesRefFamily = selectorFamily<string | null, string>({
     get(importedModulesRefDictState)[specifier] ?? null,
 });
 
-const asteroidImportedValues = selector<Record<string, unknown>>({
-  key: 'asteroidImportedValues',
+const miraImportedValues = selector<Record<string, unknown>>({
+  key: 'miraImportedValues',
   get: ({ get }) => {
-    return Object.entries(get(asteroidImportMappingState)).reduce(
+    return Object.entries(get(miraImportMappingState)).reduce(
       (acc, [name, mapping]) => {
         const key = get(importedModulesRefFamily(mapping.specifier));
         const mod = key && moduleMap.get(key);
@@ -88,7 +88,7 @@ export const useDependency = ({
               );
               return [{ brick, result }];
             } catch (error) {
-              set(asteroidImportErrorDictState, (val) => ({
+              set(miraImportErrorDictState, (val) => ({
                 ...val,
                 [brick.brickId]: error,
               }));
@@ -133,14 +133,14 @@ export const useDependency = ({
           mapping = { ...mapping, ...localMapping };
           importSucceedBricks.push(brick);
         } catch (error) {
-          set(asteroidImportErrorDictState, (val) => ({
+          set(miraImportErrorDictState, (val) => ({
             ...val,
             [brick.brickId]: error,
           }));
         }
       }
-      set(asteroidImportMappingState, mapping);
-      set(asteroidImportErrorDictState, (val) =>
+      set(miraImportMappingState, mapping);
+      set(miraImportErrorDictState, (val) =>
         importSucceedBricks.reduce((acc, brick) => {
           delete acc[brick.brickId];
           return acc;
@@ -169,6 +169,6 @@ export const useDependency = ({
 };
 
 export const useImportedValues = () => {
-  const importedValues = useRecoilValue(asteroidImportedValues);
+  const importedValues = useRecoilValue(miraImportedValues);
   return { importedValues };
 };

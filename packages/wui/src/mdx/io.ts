@@ -1,4 +1,4 @@
-import { createCompiler } from '@asteroid-mdx/core';
+import { createCompiler } from '@mirajs/core';
 import mdxMarkdownExt from 'mdast-util-mdx/to-markdown';
 import toMarkdown from 'mdast-util-to-markdown';
 import { nanoid } from 'nanoid/non-secure';
@@ -13,7 +13,7 @@ const scriptTypes = [
   'mdxjsEsm',
 ];
 const omitProperties = ['position', 'data', 'attributes'];
-const asteroidMetaRe = /^asteroid/;
+const miraMetaRe = /^mira/;
 
 type Note = Omit<Brick, 'text'> & { children: ASTNode[] };
 type ContentNote = Omit<ContentBrick, 'text'> & { children: ASTNode[] };
@@ -46,14 +46,14 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
         },
       ];
     } else if (node.type === 'code') {
-      const asteroidMetaMatch = node.meta?.match(asteroidMetaRe);
+      const miraMetaMatch = node.meta?.match(miraMetaRe);
       const note: ContentNote = {
         brickId: nanoid(),
         noteType: 'content',
         language: node.lang ?? '',
         children: [node],
-        ...(asteroidMetaMatch && {
-          asteroid: {
+        ...(miraMetaMatch && {
+          mira: {
             id: node.id,
             isLived: true,
           },

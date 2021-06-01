@@ -46,7 +46,7 @@ const MainSticky = styled.div`
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
   path = '/',
-  depsRootPath = '/_asteroid',
+  depsRootPath = '/_mira',
   moduleLoader = defaultModuleLoader,
   onUpdate = () => {},
 }) => {

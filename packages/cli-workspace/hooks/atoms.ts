@@ -1,8 +1,8 @@
 import { atom } from 'recoil';
-import { AsteroidFileItem } from '../types/workspace';
+import { MiraMdxFileItem } from '../types/workspace';
 
-export const asteroidFilesState = atom<AsteroidFileItem[]>({
-  key: 'asteroidFilesState',
+export const miraFilesState = atom<MiraMdxFileItem[]>({
+  key: 'miraFilesState',
   default: [],
 });
 

@@ -1,4 +1,4 @@
-import { WorkspaceRepository } from '@asteroid-mdx/cli-workspace';
+import { WorkspaceRepository } from '@mirajs/cli-workspace';
 import { devServerWatcherUpdateEventName } from './clientCode/devServer';
 import { hmrUpdateEventName } from './clientCode/hmr';
 import { readProjectFileObject } from './file';
@@ -15,19 +15,19 @@ export const getWorkspaceRepository = ({
   config: ProjectConfig;
 }): WorkspaceRepository => {
   return {
-    getAsteroidFiles: async () => {
-      const { includes, excludes } = config.asteroid.mdx;
+    getMiraFiles: async () => {
+      const { includes, excludes } = config.mira.mdx;
       const paths = await globFiles({
         includes,
         excludes,
-        cwd: config.asteroid.workspace,
+        cwd: config.mira.workspace,
         gitignore: true,
       });
       return (
         await Promise.all(
           paths.map(async (pathname) => {
             const file = await readProjectFileObject({ pathname, config });
-            return 'supports' in file && file.supports === 'asteroidMdx'
+            return 'supports' in file && file.supports === 'miraMdx'
               ? [file]
               : [];
           })

@@ -9,17 +9,12 @@ import {
   WorkspaceService,
 } from '../services/workspace';
 import type {
-  AsteroidMdxFileItem,
+  MiraMdxFileItem,
   FileStat,
   DevServerEvent,
 } from '../types/workspace';
 
-export type {
-  WorkspaceRepository,
-  AsteroidMdxFileItem,
-  FileStat,
-  DevServerEvent,
-};
+export type { WorkspaceRepository, MiraMdxFileItem, FileStat, DevServerEvent };
 
 export default (
   { workspaceRepository }: { workspaceRepository: WorkspaceRepository },

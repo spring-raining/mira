@@ -98,7 +98,7 @@ export const Editor: React.FC<EditorProps> = ({
     if (!monaco) {
       return;
     }
-    monaco.editor.defineTheme('asteroidLightTheme', {
+    monaco.editor.defineTheme('miraLightTheme', {
       base: 'vs',
       inherit: true,
       rules: [],
@@ -106,7 +106,7 @@ export const Editor: React.FC<EditorProps> = ({
         'editor.background': '#00000000',
       },
     });
-    monaco.editor.defineTheme('asteroidDarkTheme', {
+    monaco.editor.defineTheme('miraDarkTheme', {
       base: 'vs-dark',
       inherit: true,
       rules: [],
@@ -225,7 +225,7 @@ export const Editor: React.FC<EditorProps> = ({
           },
           padding,
         }}
-        theme="asteroidLightTheme"
+        theme="miraLightTheme"
         loading={<></>}
         beforeMount={beforeEditorMount}
         onMount={onEditorMount}

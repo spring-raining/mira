@@ -1,5 +1,5 @@
-import { ComponentType } from "react";
-import { RuntimeScope } from '@asteroid-mdx/core';
+import { ComponentType } from 'react';
+import { RuntimeScope } from '@mirajs/core';
 
 export const getRuntimeScope = ({
   resultCallback,

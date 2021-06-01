@@ -7,7 +7,7 @@ import {
   DEV_SERVER_WATCHER_PREAMBLE_IMPORT_PATH,
 } from '../../constants';
 
-export function asteroidWebSocketPlugin(): Plugin {
+export function webSocketPlugin(): Plugin {
   let _handler: (params: {
     webSocket: WebSocket;
     data: {
@@ -17,13 +17,13 @@ export function asteroidWebSocketPlugin(): Plugin {
   }) => void;
 
   return {
-    name: 'steroidWebSocket',
+    name: 'webSocket',
     serverStart({ webSockets, logger }) {
       if (!webSockets) {
         throw new Error('webSockets is not enabled');
       }
       _handler = ({ data }) => {
-        if (!data.type.startsWith('asteroid:')) {
+        if (!data.type.startsWith('mira:')) {
           return;
         }
         logger.log(data);

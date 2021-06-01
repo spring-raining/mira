@@ -3,7 +3,7 @@ import { CliArgs } from './commands';
 
 export interface ProjectConfig {
   server: DevServerCoreConfig;
-  asteroid: {
+  mira: {
     workspace: string;
     mdx: {
       includes: string[];
@@ -23,7 +23,7 @@ export const collectProjectConfig = async (
       basePath: '',
       injectWebSocket: true,
     },
-    asteroid: {
+    mira: {
       workspace: cliArgs.rootDir,
       mdx: {
         includes: ['**/*.mdx'],

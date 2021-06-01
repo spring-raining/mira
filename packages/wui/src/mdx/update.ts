@@ -14,7 +14,7 @@ export const updateBrickByText = (
     brick.noteType === 'content' &&
     !markdownLanguage.includes(brick.language.toLowerCase())
   ) {
-    const meta: string = brick.asteroid?.isLived ? 'asteroid' : '';
+    const meta: string = brick.mira?.isLived ? 'mira' : '';
     const textEscaped = newText.replace(/```/g, '');
 
     mdx = `\`\`\`${brick.language} ${meta}\n${textEscaped}\n\`\`\``;
@@ -46,9 +46,9 @@ export const updateBrickLanguage = (
   }
   const newBrick = { ...brick };
   if (liveLanguage.includes(newLanguage.toLowerCase())) {
-    newBrick.asteroid = { id: nanoid(), isLived: true };
+    newBrick.mira = { id: nanoid(), isLived: true };
   } else {
-    delete newBrick.asteroid;
+    delete newBrick.mira;
   }
   newBrick.language = newLanguage;
   return updateBrickByText(newBrick, newBrick.text);

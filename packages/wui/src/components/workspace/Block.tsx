@@ -375,9 +375,9 @@ export const Block: React.VFC<Pick<Brick, 'brickId'>> = ({ brickId }) => {
   if (brick.noteType === 'script') {
     return <BlockComponent {...brick} language="jsx" />;
   }
-  if (brick.asteroid?.isLived) {
+  if (brick.mira?.isLived) {
     return (
-      <LiveProvider asteroid={brick.asteroid} code={brick.text}>
+      <LiveProvider mira={brick.mira} code={brick.text}>
         <BlockComponent
           {...{ brickId, language: brick.language, noteType: brick.noteType }}
           isLived

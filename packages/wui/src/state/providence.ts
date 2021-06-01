@@ -6,12 +6,9 @@ import {
   selectorFamily,
   DefaultValue,
 } from 'recoil';
-import { Asteroid } from '../types';
+import { Mira } from '../types';
 import { RuntimeEnvironment } from '../components/workspace/runtimeScope';
-import {
-  asteroidDeclaredValueDictState,
-  asteroidValuesExportedState,
-} from './atoms';
+import { miraDeclaredValueDictState, miraValuesExportedState } from './atoms';
 import { useImportedValues } from './dependency';
 
 const compareByArrayContent = <T extends string | number>(a: T[], b: T[]) => {
@@ -21,28 +18,27 @@ const compareByArrayContent = <T extends string | number>(a: T[], b: T[]) => {
 
 export const exportedValuesFamily = selectorFamily<string[], string>({
   key: 'exportedValuesFamily',
-  get: (asteroidId) => ({ get }) =>
-    get(asteroidValuesExportedState)[asteroidId] ?? [],
-  set: (asteroidId) => ({ set, get }, newValue) => {
+  get: (miraId) => ({ get }) => get(miraValuesExportedState)[miraId] ?? [],
+  set: (miraId) => ({ set, get }, newValue) => {
     if (newValue instanceof DefaultValue) {
       return;
     }
-    const prevValue = get(asteroidValuesExportedState)[asteroidId] ?? [];
+    const prevValue = get(miraValuesExportedState)[miraId] ?? [];
     if (!compareByArrayContent(prevValue, newValue)) {
-      set(asteroidValuesExportedState, (prevState) => {
+      set(miraValuesExportedState, (prevState) => {
         return {
           ...prevState,
-          [asteroidId]: newValue,
+          [miraId]: newValue,
         };
       });
     }
   },
 });
 
-const useScope = (asteroidId: string) => {
+const useScope = (miraId: string) => {
   const { importedValues } = useImportedValues();
-  const selfExportValNames = useRecoilValue(exportedValuesFamily(asteroidId));
-  const declaredValueDict = useRecoilValue(asteroidDeclaredValueDictState);
+  const selfExportValNames = useRecoilValue(exportedValuesFamily(miraId));
+  const declaredValueDict = useRecoilValue(miraDeclaredValueDictState);
   const [declaredValues, setDeclaredValues] = useState(() =>
     Object.keys(declaredValueDict).filter(
       (v) => !selfExportValNames.includes(v)
@@ -82,11 +78,9 @@ const useScope = (asteroidId: string) => {
   return { scope, declaredValues };
 };
 
-const useValueEvaluator = <T extends RuntimeEnvironment>(
-  asteroidId: string
-) => {
+const useValueEvaluator = <T extends RuntimeEnvironment>(miraId: string) => {
   const [exportVal, setExportVal] = useRecoilState(
-    exportedValuesFamily(asteroidId)
+    exportedValuesFamily(miraId)
   );
   const updateDeclaredVals = useRecoilCallback(
     ({ snapshot, set }) => async (
@@ -94,13 +88,13 @@ const useValueEvaluator = <T extends RuntimeEnvironment>(
       deleteValNames: string[]
     ) => {
       const newVals = {
-        ...(await snapshot.getPromise(asteroidDeclaredValueDictState)),
+        ...(await snapshot.getPromise(miraDeclaredValueDictState)),
         ...addVals,
       };
       deleteValNames.forEach((name) => {
         delete newVals[name];
       });
-      set(asteroidDeclaredValueDictState, newVals);
+      set(miraDeclaredValueDictState, newVals);
     }
   );
 
@@ -185,10 +179,10 @@ const useValueEvaluator = <T extends RuntimeEnvironment>(
 };
 
 export const useProvidence = <T extends RuntimeEnvironment>({
-  id: asteroidId,
-}: Asteroid) => {
-  const { scope, declaredValues } = useScope(asteroidId);
-  const valueEvaluatorRef = useValueEvaluator(asteroidId);
+  id: miraId,
+}: Mira) => {
+  const { scope, declaredValues } = useScope(miraId);
+  const valueEvaluatorRef = useValueEvaluator(miraId);
 
   const runtimeEnvironment = useRef<T>();
   const evaluate = useCallback(

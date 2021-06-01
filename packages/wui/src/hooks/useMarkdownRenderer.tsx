@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createCompiler } from '@asteroid-mdx/core';
+import { createCompiler } from '@mirajs/core';
 import { MDXProvider, mdx } from '@mdx-js/react';
 import toHast from 'mdast-util-to-hast';
 import toH from 'hast-to-hyperscript';

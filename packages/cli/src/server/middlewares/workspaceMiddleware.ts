@@ -1,4 +1,4 @@
-import createApp, { WorkspaceRepository } from '@asteroid-mdx/cli-workspace';
+import createApp, { WorkspaceRepository } from '@mirajs/cli-workspace';
 import { Middleware } from '@web/dev-server-core';
 
 export async function workspaceMiddleware({

@@ -4,14 +4,14 @@ import { CliArgs } from './commands';
 import { collectProjectConfig } from './config';
 import { createLogger } from './server/logger/createLogger';
 import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
-import { asteroidWebSocketPlugin } from './server/plugins/asteroidWebSocketPlugin';
+import { webSocketPlugin } from './server/plugins/webSocketPlugin';
 import { esbuildPlugin } from './server/plugins/esbuildPlugin';
 import { nodeResolvePlugin } from './server/plugins/nodeResolvePlugin';
 import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
 import { getWorkspaceRepository } from './workspace';
 
-export async function startAsteroidServer(args: CliArgs) {
+export async function startServer(args: CliArgs) {
   try {
     const config = await collectProjectConfig(args);
     const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
@@ -21,7 +21,7 @@ export async function startAsteroidServer(args: CliArgs) {
       // nodeResolvePlugin(coreConfig.rootDir),
       // esbuildPlugin(),
       // hmrPlugin() as any, // FIXME
-      asteroidWebSocketPlugin(),
+      webSocketPlugin(),
       watcherPlugin({ config, snowpackConfig }),
       snowpackPlugin,
     ];

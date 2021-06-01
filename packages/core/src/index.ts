@@ -1,12 +1,8 @@
 import * as mdx from '@mdx-js/mdx';
 import frontmatter from 'remark-frontmatter';
 import type { Plugin, Processor } from 'unified';
-import {
-  asteroidDiv,
-  asteroidCodeBlock,
-  insertAsteroidComponent,
-} from './remark/asteroid';
-import { loadAsteroidConfig } from './remark/loadAsteroidConfig';
+import { miraDiv, miraCodeBlock, insertMiraComponent } from './remark/mira';
+import { loadMiraConfig } from './remark/loadMiraConfig';
 
 export type Options = mdx.Options;
 export type { Plugin, Processor };
@@ -17,15 +13,15 @@ export {
   scanImportSpecifier,
   importModules,
 } from './ecmaImport';
-export type { AsteroidConfig, RuntimeScope } from './types';
+export type { MiraConfig, RuntimeScope } from './types';
 
 export const mdxOptions: Options = {
   remarkPlugins: [
     frontmatter,
-    loadAsteroidConfig,
-    asteroidDiv,
-    asteroidCodeBlock,
-    insertAsteroidComponent,
+    loadMiraConfig,
+    miraDiv,
+    miraCodeBlock,
+    insertMiraComponent,
   ] as Plugin[],
   rehypePlugins: [],
 };

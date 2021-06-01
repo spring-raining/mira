@@ -1,1 +1,1 @@
-export { startAsteroidServer } from './server';
+export { startServer } from './server';

@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { Brick, AsteroidId, ParsedImportStatement } from '../types';
+import { Brick, MiraId } from '../types';
 
 export const brickDictState = atom<Record<string, Brick>>({
   key: 'brickDictState',
@@ -16,13 +16,13 @@ export const activeBrickIdState = atom<string | null>({
   default: null,
 });
 
-export const asteroidDeclaredValueDictState = atom<Record<string, unknown>>({
-  key: 'asteroidDeclaredValueDictState',
+export const miraDeclaredValueDictState = atom<Record<string, unknown>>({
+  key: 'miraDeclaredValueDictState',
   default: {},
 });
 
-export const asteroidValuesExportedState = atom<Record<AsteroidId, string[]>>({
-  key: 'asteroidValuesExportedState',
+export const miraValuesExportedState = atom<Record<MiraId, string[]>>({
+  key: 'miraValuesExportedState',
   default: {},
 });
 
@@ -31,16 +31,14 @@ export const importedModulesRefDictState = atom<Record<string, string>>({
   default: {},
 });
 
-export const asteroidImportMappingState = atom<
+export const miraImportMappingState = atom<
   Record<string, { specifier: string; name: string | null }>
 >({
-  key: 'asteroidImportMappingState',
+  key: 'miraImportMappingState',
   default: {},
 });
 
-export const asteroidImportErrorDictState = atom<
-  Record<Brick['brickId'], Error>
->({
-  key: 'asteroidImportErrorDictState',
+export const miraImportErrorDictState = atom<Record<Brick['brickId'], Error>>({
+  key: 'miraImportErrorDictState',
   default: {},
 });

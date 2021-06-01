@@ -1,4 +1,4 @@
-export interface AsteroidConfig {
+export interface MiraConfig {
   framework?: 'react';
   module?: string[];
 }

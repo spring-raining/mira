@@ -11,13 +11,13 @@ const transformJs = (contents: string) => {
 
 if (import.meta.hot) {
   import.meta.hot.accept((e) => {
-    window.__ASTEROID_HMR__.update({ ...e, url: import.meta.url });
+    window.__MIRA_HMR__.update({ ...e, url: import.meta.url });
   });
 }`;
 };
 
 export const refreshPluginFactory: SnowpackPluginFactory = () => ({
-  name: 'asteroid-hmr-refresh',
+  name: 'mira-hmr-refresh',
   async transform({ contents, fileExt, isDev, isHmrEnabled, isSSR }) {
     if (!isHmrEnabled || !isDev) {
       return;

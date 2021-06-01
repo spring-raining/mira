@@ -1,11 +1,11 @@
 import { injectable } from 'tsyringe';
 import 'reflect-metadata';
-import { AsteroidMdxFileItem } from '../types/workspace';
+import { MiraMdxFileItem } from '../types/workspace';
 
 export const workspaceServiceToken = 'WorkspaceService';
 
 export interface WorkspaceRepository {
-  getAsteroidFiles(): Promise<AsteroidMdxFileItem<number>[]>;
+  getMiraFiles(): Promise<MiraMdxFileItem<number>[]>;
   constants: {
     hmrUpdateEventName: string;
     hmrPreambleImportPath: string;

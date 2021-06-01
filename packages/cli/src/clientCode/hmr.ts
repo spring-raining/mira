@@ -1,5 +1,5 @@
-export const hmrNamespace = '__ASTEROID_HMR__';
-export const hmrUpdateEventName = '__ASTEROID_HMR_UPDATE__';
+export const hmrNamespace = '__MIRA_HMR__';
+export const hmrUpdateEventName = '__MIRA_HMR_UPDATE__';
 
 export const hmrPreambleCode = `const exports = {};
 exports.update = (msg) => {

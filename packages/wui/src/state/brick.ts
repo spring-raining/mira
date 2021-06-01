@@ -13,9 +13,9 @@ import { updateBrickByText, updateBrickLanguage } from '../mdx/update';
 import { Brick } from '../types';
 import {
   activeBrickIdState,
-  asteroidDeclaredValueDictState,
-  asteroidValuesExportedState,
-  asteroidImportErrorDictState,
+  miraDeclaredValueDictState,
+  miraValuesExportedState,
+  miraImportErrorDictState,
   brickDictState,
   brickOrderState,
 } from './atoms';
@@ -44,13 +44,12 @@ const bricksState = selector({
       .filter((brick) => !!brick),
 });
 
-const asteroidImportErrorStateFamily = selectorFamily<
+const miraImportErrorStateFamily = selectorFamily<
   Error | null,
   Brick['brickId']
 >({
-  key: 'brickStateFamily',
-  get: (brickId) => ({ get }) =>
-    get(asteroidImportErrorDictState)[brickId] ?? null,
+  key: 'miraImportErrorStateFamily',
+  get: (brickId) => ({ get }) => get(miraImportErrorDictState)[brickId] ?? null,
 });
 
 const cancellable = (fn: () => void, ms = 100) => {
@@ -93,8 +92,8 @@ export const useBricks = ({
     reset(activeBrickIdState);
     reset(brickOrderState);
     reset(brickDictState);
-    reset(asteroidDeclaredValueDictState);
-    reset(asteroidValuesExportedState);
+    reset(miraDeclaredValueDictState);
+    reset(miraValuesExportedState);
   });
   const importBricks = useRecoilCallback(
     () => async (bricks: Brick[]) => {
@@ -131,7 +130,7 @@ export const useBricks = ({
 export const useBrick = (brickId: string) => {
   const [brick] = useRecoilState(brickStateFamily(brickId));
   const [activeBrickId] = useRecoilState(activeBrickIdState);
-  const importError = useRecoilValue(asteroidImportErrorStateFamily(brickId));
+  const importError = useRecoilValue(miraImportErrorStateFamily(brickId));
   const setActive = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
   });
@@ -262,15 +261,15 @@ export const useBrickManipulator = () => {
       set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
       delete editorRefs[brickId];
       const brick = brickDict[brickId];
-      if (brick?.noteType === 'content' && brick?.asteroid) {
-        const asteroidId = brick.asteroid.id;
+      if (brick?.noteType === 'content' && brick?.mira) {
+        const miraId = brick.mira.id;
         const exportedValues =
-          (await snapshot.getPromise(asteroidValuesExportedState)) ?? [];
-        set(asteroidDeclaredValueDictState, (decalredValueDict) =>
-          filterDict(decalredValueDict, exportedValues[asteroidId] ?? [])
+          (await snapshot.getPromise(miraValuesExportedState)) ?? [];
+        set(miraDeclaredValueDictState, (declaredValueDict) =>
+          filterDict(declaredValueDict, exportedValues[miraId] ?? [])
         );
-        set(asteroidValuesExportedState, (exportedValues) =>
-          filterDict(exportedValues ?? [], [asteroidId])
+        set(miraValuesExportedState, (exportedValues) =>
+          filterDict(exportedValues ?? [], [miraId])
         );
       }
     }
@@ -293,7 +292,7 @@ export const createNewBrick = ({
     text: '',
     children: null,
     ...(isLived && {
-      asteroid: {
+      mira: {
         id: nanoid(),
         isLived,
       },

@@ -1,5 +1,5 @@
 import path from 'path';
-import { DevServerEvent } from '@asteroid-mdx/cli-workspace';
+import { DevServerEvent } from '@mirajs/cli-workspace';
 import { Plugin, WebSocketsManager } from '@web/dev-server-core';
 import chokidar, { FSWatcher } from 'chokidar';
 import debounce from 'debounce';
@@ -54,7 +54,7 @@ export function watcherPlugin({
       event: 'add' | 'unlink' | 'change',
       pathname: string
     ) => {
-      const relPath = path.relative(config.asteroid.workspace, pathname);
+      const relPath = path.relative(config.mira.workspace, pathname);
       if (relPath.includes('..')) {
         return; // File changes outside of workspace
       }

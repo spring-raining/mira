@@ -5,8 +5,8 @@ export interface FileStat<T = Date> {
   birthtime: T;
 }
 
-export type AsteroidMdxFileItem<T = Date> = FileStat<T> & {
-  supports: 'asteroidMdx';
+export type MiraMdxFileItem<T = Date> = FileStat<T> & {
+  supports: 'miraMdx';
   body: string;
   depsRootPath: string;
 };
@@ -15,6 +15,6 @@ export type DevServerEvent = {
   type: 'watcher';
   data: {
     event: 'add' | 'unlink' | 'change';
-    file: AsteroidMdxFileItem<number> | FileStat<number>;
+    file: MiraMdxFileItem<number> | FileStat<number>;
   };
 };

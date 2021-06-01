@@ -1,5 +1,5 @@
 {
-  "name": "@asteroid-mdx/cli-workspace",
+  "name": "@mirajs/cli-workspace",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -14,7 +14,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@asteroid-mdx/wui": "1.0.0",
+    "@mirajs/wui": "1.0.0",
     "@babel/plugin-proposal-decorators": "^7.13.15",
     "@chakra-ui/react": "1.6.0",
     "@emotion/react": "11.1.5",

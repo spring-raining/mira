@@ -1,5 +1,5 @@
 {
-  "name": "@asteroid-mdx/transpiler",
+  "name": "@mirajs/transpiler",
   "version": "1.0.0",
   "types": "./lib/index.d.ts",
   "main": "./lib/index.js",

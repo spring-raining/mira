@@ -60,7 +60,7 @@ export const PlanetarySystem: React.VFC = () => {
         <PlanetaryListItem
           key={brick.brickId}
           brickId={brick.brickId}
-          isLived={!!(brick.noteType === 'content' && brick.asteroid?.isLived)}
+          isLived={!!(brick.noteType === 'content' && brick.mira?.isLived)}
         >
           {brick.noteType === 'content' &&
             brick.language === 'markdown' &&

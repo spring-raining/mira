@@ -1,4 +1,4 @@
-import { ImportDefinition } from '@asteroid-mdx/core/lib/ecmaImport';
+import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 
 export type ParsedImportStatement = ImportDefinition & {
   statement: string;
@@ -9,9 +9,9 @@ export interface ASTNode {
   [field: string]: any;
 }
 
-export type AsteroidId = string;
-export interface Asteroid {
-  id: AsteroidId;
+export type MiraId = string;
+export interface Mira {
+  id: MiraId;
   isLived: boolean;
 }
 
@@ -23,7 +23,7 @@ interface BrickState {
 export type ContentBrick = BrickState & {
   noteType: 'content';
   language: string;
-  asteroid?: Asteroid;
+  mira?: Mira;
 };
 export type ScriptBrick = BrickState & {
   noteType: 'script';

@@ -1,6 +1,4 @@
-# Asteroid
-
-https://asteroid.spring-raining.now.sh/
+# Mira
 
 JavaScript & Markdown live editor on your browser (WIP)
 

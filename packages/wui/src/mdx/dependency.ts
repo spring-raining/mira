@@ -1,4 +1,4 @@
-import { parseImportStatement, scanImportSpecifier } from '@asteroid-mdx/core';
+import { parseImportStatement, scanImportSpecifier } from '@mirajs/core';
 import { Brick, ParsedImportStatement } from '../types';
 
 const getExtname = (path: string): string => {

@@ -1,5 +1,5 @@
-export const devServerWatcherNamespace = '__ASTEROID_WDS__';
-export const devServerWatcherUpdateEventName = '__ASTEROID_WDS_UPDATE__';
+export const devServerWatcherNamespace = '__MIRA_WDS__';
+export const devServerWatcherUpdateEventName = '__MIRA_WDS_UPDATE__';
 
 // Refers to @web/dev-server-core
 // https://github.com/modernweb-dev/web/blob/292c567517d846411f6bcdfd1d60b3f50e20a783/packages/dev-server-core/src/web-sockets/webSocketsPlugin.ts
@@ -97,7 +97,7 @@ function setupWebSocket() {
         });
         window.dispatchEvent(ev);
       } catch (error) {
-        console.error('[Asteroid] Error while handling websocket message.');
+        console.error('[Mira] Error while handling websocket message.');
         console.error(error);
       }
     });

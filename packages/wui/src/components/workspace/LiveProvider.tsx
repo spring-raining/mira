@@ -1,7 +1,7 @@
 import {
   init as initTranspiler,
   Service as TranspilerService,
-} from '@asteroid-mdx/transpiler';
+} from '@mirajs/transpiler';
 import React, {
   createContext,
   useCallback,
@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { useProvidence } from '../../state/providence';
 import { MarkerMessage } from '../Editor';
-import { Asteroid } from '../../types';
+import { Mira } from '../../types';
 import { ErrorPreText } from '../styled/common';
 import { setupRuntimeEnvironment, RuntimeEnvironment } from './runtimeScope';
 
@@ -87,7 +87,7 @@ const useTranspilerService = () => {
     }> => {
       if (!transpilerService) {
         return {
-          errorObject: new Error('Asteroid transpiler is not initialized'),
+          errorObject: new Error('Mira transpiler is not initialized'),
           errors: [],
           warnings: [],
         };
@@ -103,11 +103,11 @@ const useTranspilerService = () => {
           stdin: {
             contents: code,
             loader: 'jsx',
-            sourcefile: '[Asteroid]',
+            sourcefile: '[Mira]',
           },
           plugins: [
             {
-              name: 'asteroidResolver',
+              name: 'miraResolver',
               setup: (build) => {
                 build.onResolve({ filter: /.*/ }, (args) => ({
                   path: args.path,
@@ -213,15 +213,15 @@ const LiveContext = createContext<LiveContextValue | null>(null);
 
 export interface LiveProviderProps {
   code: string;
-  asteroid: Asteroid;
+  mira: Mira;
 }
 
 export const LiveProvider: React.FC<LiveProviderProps> = ({
   code: propsCode,
-  asteroid,
+  mira,
   children,
 }) => {
-  const { evaluate, scope, declaredValues } = useProvidence(asteroid);
+  const { evaluate, scope, declaredValues } = useProvidence(mira);
 
   const [code, setCode] = useState(() => propsCode);
   const [transpiledCode, setTranspiledCode] = useState<string | null>(null);

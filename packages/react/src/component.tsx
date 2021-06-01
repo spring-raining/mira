@@ -3,8 +3,8 @@ import {
   parseImportStatement,
   scanImportSpecifier,
   importModules,
-  AsteroidConfig,
-} from '@asteroid-mdx/core';
+  MiraConfig,
+} from '@mirajs/core';
 import { getRuntimeScope } from './runtimeScope';
 
 const importCache: Record<string, any> = {};
@@ -27,7 +27,7 @@ const loadModule = async (modules: string[]) => {
         });
       })
     )
-  ).flatMap((_) => _);
+  ).flat();
   const ret = await importModules(defs);
   importCache[key] = ret;
   return ret;
@@ -60,7 +60,7 @@ const buildErrorBoundary = (errorCallback: (error: Error) => void) => (
 };
 
 export const component = (
-  config: AsteroidConfig,
+  config: MiraConfig,
   render: (scope: any) => Promise<any>
 ): React.FC<{}> => {
   return () => {
