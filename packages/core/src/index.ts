@@ -2,7 +2,7 @@ import * as mdx from '@mdx-js/mdx';
 import frontmatter from 'remark-frontmatter';
 import type { Plugin, Processor } from 'unified';
 import { miraDiv, miraCodeBlock, insertMiraComponent } from './remark/mira';
-import { loadMiraConfig } from './remark/loadMiraConfig';
+// import { loadMiraConfig } from './remark/loadMiraConfig';
 
 export type Options = mdx.Options;
 export type { Plugin, Processor };
@@ -18,7 +18,7 @@ export type { MiraConfig, RuntimeScope } from './types';
 export const mdxOptions: Options = {
   remarkPlugins: [
     frontmatter,
-    loadMiraConfig,
+    // loadMiraConfig,
     miraDiv,
     miraCodeBlock,
     insertMiraComponent,

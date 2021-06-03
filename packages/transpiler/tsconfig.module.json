@@ -1,11 +1,11 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "outDir": "./module"
-  },
+  "extends": "@tsconfig/node12/tsconfig.json",
   "include": [
     "src/**/*.ts"
-  ]
+  ],
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true
+  }
 }

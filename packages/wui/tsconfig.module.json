@@ -10,8 +10,9 @@
       "dom.iterable",
       "esnext"
     ],
+    "module": "esnext",
+    "moduleResolution": "node",
     "declaration": true,
-    "jsx": "react-jsx",
-    "outDir": "./dist"
+    "jsx": "react-jsx"
   }
 }

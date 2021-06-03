@@ -4,6 +4,8 @@
     "src/**/*.ts"
   ],
   "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
     "declaration": true
   }
 }

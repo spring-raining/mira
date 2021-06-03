@@ -1,4 +1,5 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import next from 'next';
 import type createServer from 'next/dist/server/next';
 import { NextServer } from 'next/dist/server/next';
@@ -27,7 +28,7 @@ export default (
   });
   return {
     app: next({
-      dir: path.resolve(__dirname, '..'),
+      dir: path.resolve(fileURLToPath(import.meta.url), '../..'),
       ...options,
     }),
   };

@@ -1,10 +1,12 @@
 import path from 'path';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
+import * as packageJson from './package.json';
 
 const plugins = [
   nodeResolve({ preferBuiltins: true }),
   typescript({
+    tsconfig: './tsconfig.module.json',
     declaration: false,
   }),
 ];
@@ -16,30 +18,32 @@ const nodeOutput = {
   ],
   output: [
     {
-      dir: path.resolve(__dirname, 'module'),
+      dir: path.resolve(__dirname, 'lib'),
+      entryFileNames: '[name].mjs',
+      chunkFileNames: '[name]-[hash].mjs',
       format: 'module',
       exports: 'named',
       sourcemap: true,
     },
-    {
-      dir: path.resolve(__dirname, 'dist'),
-      format: 'cjs',
-      exports: 'named',
-      sourcemap: true,
-    },
+    // {
+    //   dir: path.resolve(__dirname, 'dist'),
+    //   format: 'cjs',
+    //   exports: 'named',
+    //   sourcemap: true,
+    // },
   ],
   external: [
+    ...Object.keys(packageJson.dependencies),
     '@babel/code-frame',
     '@web/dev-server-core',
-    '@web/dev-server-hmr',
     'camelcase',
     'chalk',
     'chokidar',
     'command-line-args',
     'command-line-usage',
     'debounce',
-    'globby',
     'ip',
+    'ws',
   ],
   plugins,
 };

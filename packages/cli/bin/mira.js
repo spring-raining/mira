@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-"use strict";
+'use strict';
 
-require("reflect-metadata");
+import 'reflect-metadata';
 
-const { main } = require('../dist/cli');
-main();
+(async () => {
+  const { main } = await import('../lib/cli.mjs');
+  main();
+})();

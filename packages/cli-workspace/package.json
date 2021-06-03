@@ -2,23 +2,26 @@
   "name": "@mirajs/cli-workspace",
   "version": "1.0.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/module/index.d.ts",
+  "exports": {
+    ".": "./lib/index.mjs"
+  },
+  "types": "./lib/module/index.d.ts",
   "scripts": {
+    "prebuild": "shx rm -rf lib",
     "dev": "next dev",
     "build": "run-s build:*",
     "build:next": "next build",
-    "build:entrypoint": "run-p build:entrypoint:*",
-    "build:entrypoint:rollup": "rollup -c",
-    "build:entrypoint:types": "tsc --emitDeclarationOnly -p tsconfig.entrypoint.json",
+    "build:module": "run-p build:module:*",
+    "build:module:rollup": "rollup -c",
+    "build:module:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
     "start": "next start"
   },
   "dependencies": {
-    "@mirajs/wui": "1.0.0",
     "@babel/plugin-proposal-decorators": "^7.13.15",
     "@chakra-ui/react": "1.6.0",
     "@emotion/react": "11.1.5",
     "@emotion/styled": "11.3.0",
+    "@mirajs/wui": "1.0.0",
     "framer-motion": "4.1.11",
     "nanoid": "3.1.20",
     "next": "10.2.0",
@@ -29,10 +32,6 @@
     "tsyringe": "4.5.0"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^8.2.0",
-    "@tsconfig/node12": "^1.0.7",
-    "npm-run-all": "^4.1.5",
-    "rollup": "^2.40.0",
-    "typescript": "^4.1.2"
+    "babel-plugin-transform-typescript-metadata": "^0.3.2"
   }
 }

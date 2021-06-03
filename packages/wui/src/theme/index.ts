@@ -1,11 +1,11 @@
-import { theme as defaultTheme } from '@chakra-ui/theme';
+import { theme as defaultTheme, ChakraTheme } from '@chakra-ui/theme';
 import { toCSSVar } from '@chakra-ui/react';
 
-export const theme = {
+export const theme: ChakraTheme = {
   ...defaultTheme,
   config: {
     ...defaultTheme.config,
-    cssVarPrefix: 'astr',
+    cssVarPrefix: 'mira',
   },
 };
 

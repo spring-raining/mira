@@ -6,7 +6,6 @@ import { createLogger } from './server/logger/createLogger';
 import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
 import { webSocketPlugin } from './server/plugins/webSocketPlugin';
 import { esbuildPlugin } from './server/plugins/esbuildPlugin';
-import { nodeResolvePlugin } from './server/plugins/nodeResolvePlugin';
 import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
 import { getWorkspaceRepository } from './workspace';

@@ -1,22 +1,23 @@
 {
   "name": "@mirajs/cli",
   "version": "1.0.0",
-  "types": "./module/index.d.ts",
-  "main": "./dist/index.js",
+  "type": "module",
   "exports": {
-    "import": "./module/index.js",
-    "node": "./dist/index.js"
+    ".": {
+      "import": "./module/index.mjs"
+    }
   },
+  "types": "./module/index.d.ts",
   "bin": {
     "mira": "bin/mira.js"
   },
   "license": "MIT",
   "scripts": {
-    "prebuild": "shx rm -rf dist module",
+    "prebuild": "shx rm -rf lib",
     "build": "run-p build:*",
     "build:rollup": "rollup -c",
-    "build:types": "tsc --emitDeclarationOnly --outDir module",
-    "predev": "shx rm -rf dist",
+    "build:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
+    "predev": "shx rm -rf lib",
     "dev": "run-p dev:*",
     "dev:cli": "tsc -w --incremental -p tsconfig.dev.json",
     "dev:wui": "yarn workspace @mirajs/wui dev:module"
@@ -25,17 +26,11 @@
     "access": "public"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^8.2.0",
-    "@tsconfig/node12": "^1.0.7",
     "@types/babel__code-frame": "^7.0.2",
     "@types/command-line-usage": "^5.0.1",
     "@types/debounce": "^1.2.0",
     "@types/ip": "^1.1.0",
-    "@types/picomatch": "^2.2.4",
-    "npm-run-all": "^4.1.5",
-    "rollup": "^2.40.0",
-    "shx": "^0.3.3",
-    "typescript": "^4.1.2"
+    "@types/picomatch": "^2.2.4"
   },
   "dependencies": {
     "@mirajs/cli-workspace": "1.0.0",
@@ -43,6 +38,7 @@
     "@web/dev-server-hmr": "^0.1.9",
     "es-module-lexer": "^0.4.1",
     "esbuild": "^0.11.9",
+    "esm": "^3.2.25",
     "globby": "^11.0.2",
     "picomatch": "^2.2.2",
     "reflect-metadata": "0.1.13",
