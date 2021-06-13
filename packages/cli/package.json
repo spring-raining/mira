@@ -19,7 +19,7 @@
     "build:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
     "predev": "shx rm -rf lib",
     "dev": "run-p dev:*",
-    "dev:cli": "tsc -w --incremental -p tsconfig.dev.json",
+    "dev:cli": "rollup -c -w --no-watch.clearScreen",
     "dev:wui": "yarn workspace @mirajs/wui dev:module"
   },
   "publishConfig": {

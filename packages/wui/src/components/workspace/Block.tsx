@@ -1,5 +1,6 @@
 import { css, cx } from '@linaria/core';
 import { styled } from '@linaria/react';
+import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import {
   useBrick,
@@ -10,7 +11,7 @@ import { useEditorCallbacks } from '../../state/editor';
 import { cssVar } from '../../theme';
 import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
-import { Editor } from '../Editor';
+import { Editor, EditorLoaderConfig } from '../Editor';
 import { PlusIcon, XIcon } from '../icon';
 import { ErrorPreText } from '../styled/common';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
@@ -32,7 +33,7 @@ const FlexCenter = styled.div`
 const RelativeFlexStart = styled.div`
   position: relative;
   display: flex;
-  justify-content: start;
+  justify-content: flex-start;
   align-items: flex-start;
   width: 100%;
 `;
@@ -126,7 +127,7 @@ const ScriptPreviewPart = styled.div`
   top: 0;
   width: 100%;
   display: flex;
-  justify-content: start;
+  justify-content: flex-start;
   align-items: flex-start;
 `;
 const ScriptPreviewContainer = styled.div`
@@ -149,7 +150,7 @@ const MarkdownPreviewPart = styled.div`
   top: 0;
   width: 100%;
   display: flex;
-  justify-content: start;
+  justify-content: flex-start;
   align-items: flex-start;
 `;
 const MarkdownPreviewContainer = styled.div`
@@ -179,7 +180,14 @@ export const BlockComponent: React.FC<{
   language: string;
   noteType: Brick['noteType'];
   isLived?: boolean;
-}> = ({ brickId, language: initialLanguage, noteType, isLived }) => {
+  editorLoaderConfig?: EditorLoaderConfig;
+}> = ({
+  brickId,
+  language: initialLanguage,
+  noteType,
+  isLived,
+  editorLoaderConfig,
+}) => {
   const {
     brick,
     isActive,
@@ -294,6 +302,7 @@ export const BlockComponent: React.FC<{
                 language={editorLanguage}
                 onChange={onEditorChange}
                 padding={{ top: 16, bottom: 16 }}
+                {...{ editorLoaderConfig }}
                 {...editorCallbacks}
                 {...(live && isLived
                   ? {
@@ -369,7 +378,12 @@ export const BlockComponent: React.FC<{
   );
 };
 
-export const Block: React.VFC<Pick<Brick, 'brickId'>> = ({ brickId }) => {
+export const Block: React.VFC<
+  Pick<Brick, 'brickId'> & {
+    transpilerConfig?: ServiceOptions;
+    editorLoaderConfig?: EditorLoaderConfig;
+  }
+> = ({ brickId, transpilerConfig, editorLoaderConfig }) => {
   const { brick } = useBrick(brickId);
 
   if (brick.noteType === 'script') {
@@ -377,9 +391,18 @@ export const Block: React.VFC<Pick<Brick, 'brickId'>> = ({ brickId }) => {
   }
   if (brick.mira?.isLived) {
     return (
-      <LiveProvider mira={brick.mira} code={brick.text}>
+      <LiveProvider
+        mira={brick.mira}
+        code={brick.text}
+        {...{ transpilerConfig }}
+      >
         <BlockComponent
-          {...{ brickId, language: brick.language, noteType: brick.noteType }}
+          {...{
+            brickId,
+            language: brick.language,
+            noteType: brick.noteType,
+            editorLoaderConfig,
+          }}
           isLived
         />
       </LiveProvider>
@@ -387,7 +410,12 @@ export const Block: React.VFC<Pick<Brick, 'brickId'>> = ({ brickId }) => {
   } else {
     return (
       <BlockComponent
-        {...{ brickId, language: brick.language, noteType: brick.noteType }}
+        {...{
+          brickId,
+          language: brick.language,
+          noteType: brick.noteType,
+          editorLoaderConfig,
+        }}
       />
     );
   }

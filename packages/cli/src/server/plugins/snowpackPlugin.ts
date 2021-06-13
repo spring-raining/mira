@@ -1,3 +1,5 @@
+import path from 'path';
+import { createRequire } from 'module';
 import WebSocket from 'ws';
 import { Plugin, DevServerCoreConfig } from '@web/dev-server-core';
 import {
@@ -8,6 +10,8 @@ import {
 } from 'snowpack';
 import { MIDDLEWARE_PATH_PREFIX } from '../../constants';
 import { refreshPluginFactory } from './snowpack/refreshPlugin';
+
+const require = createRequire(import.meta.url);
 
 export function snowpackPluginFactory(
   coreConfig: DevServerCoreConfig
@@ -23,6 +27,16 @@ export function snowpackPluginFactory(
     mount: {
       [coreConfig.rootDir]: {
         url: MIDDLEWARE_PATH_PREFIX,
+      },
+      [path.dirname(require.resolve('esbuild-wasm/package.json'))]: {
+        url: `${MIDDLEWARE_PATH_PREFIX}/-/node_modules/esbuild-wasm`,
+        static: true,
+        resolve: false,
+      },
+      [path.dirname(require.resolve('monaco-editor/package.json'))]: {
+        url: `${MIDDLEWARE_PATH_PREFIX}/-/node_modules/monaco-editor`,
+        static: true,
+        resolve: false,
       },
     },
     alias: {},
@@ -82,7 +96,10 @@ export function snowpackPluginFactory(
         return await handleBySnowpack();
       }
       if (ctx.path.startsWith(MIDDLEWARE_PATH_PREFIX)) {
-        if (!ctx.url.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/`)) {
+        if (
+          !ctx.url.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/`) ||
+          ctx.url.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/node_modules/`)
+        ) {
           return await handleBySnowpack();
         }
         if (ctx.path.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/resolve/`)) {

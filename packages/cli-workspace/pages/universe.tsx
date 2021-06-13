@@ -50,6 +50,15 @@ const UniverseView: React.VFC<PageProps> = ({
       onUpdate={(mdx) => {
         console.debug(mdx);
       }}
+      transpilerConfig={{
+        wasmURL: '/_mira/-/node_modules/esbuild-wasm/esbuild.wasm',
+        worker: true,
+      }}
+      editorLoaderConfig={{
+        paths: {
+          vs: '/_mira/-/node_modules/monaco-editor/min/vs',
+        },
+      }}
     />
   );
 };

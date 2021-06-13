@@ -1,12 +1,21 @@
 import { styled } from '@linaria/react';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MonacoEditor, {
-  useMonaco,
+  loader as editorLoader,
   OnMount as OnEditorMount,
   BeforeMount as BeforeEditorMount,
   Monaco,
 } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+
+export interface EditorLoaderConfig {
+  paths?: {
+    vs?: string;
+  };
+  'vs/nls'?: {
+    availableLanguages?: object;
+  };
+}
 
 const useAsyncEvent = (callback: (...args: any[]) => void) => {
   const eventStack = useRef<any[][]>([]);
@@ -51,6 +60,7 @@ export interface EditorProps {
     top?: number;
     bottom?: number;
   };
+  editorLoaderConfig?: EditorLoaderConfig;
   onEditorUpdate?: (
     editor: editor.IStandaloneCodeEditor,
     monaco: Monaco
@@ -75,6 +85,7 @@ export const Editor: React.FC<EditorProps> = ({
     top: 24,
     bottom: 24,
   },
+  editorLoaderConfig,
   onEditorUpdate = () => {},
   onChange = () => {},
   onCreateNewBlockCommand = () => {},
@@ -83,7 +94,8 @@ export const Editor: React.FC<EditorProps> = ({
   onFocus = () => {},
 }) => {
   const [initialCode] = useState(() => code);
-  const monaco = useMonaco();
+  const [canLoadEditor, setCanLoadEditor] = useState(false);
+  const [monaco, setMonaco] = useState<Monaco | null>(null);
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
     null
   );
@@ -141,6 +153,20 @@ export const Editor: React.FC<EditorProps> = ({
     });
     editor.onDidFocusEditorText(focusHandler);
   };
+
+  useEffect(() => {
+    if (editorLoaderConfig) {
+      editorLoader.config(editorLoaderConfig);
+    }
+    const cancellable = editorLoader.init() as Promise<any> & {
+      cancel: () => void;
+    };
+    cancellable.then((monaco) => {
+      setMonaco(monaco);
+      setCanLoadEditor(true);
+    });
+    return () => cancellable?.cancel();
+  }, [editorLoaderConfig]);
 
   useEffect(() => {
     if (!editor) {
@@ -206,6 +232,10 @@ export const Editor: React.FC<EditorProps> = ({
     language = 'javascript';
   } else if (language === 'tsx') {
     language = 'typescript';
+  }
+
+  if (!canLoadEditor) {
+    return null;
   }
   return (
     <EditorContainer>

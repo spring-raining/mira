@@ -1,6 +1,7 @@
 import {
   init as initTranspiler,
   Service as TranspilerService,
+  ServiceOptions,
 } from '@mirajs/transpiler';
 import React, {
   createContext,
@@ -56,17 +57,26 @@ const errorBoundary = (errorCallback: (error: Error) => void) => {
   };
 };
 
-const useTranspilerService = () => {
+const useTranspilerService = ({
+  transpilerConfig,
+}: {
+  transpilerConfig?: ServiceOptions;
+}) => {
   const [
     transpilerService,
     setTranspilerService,
   ] = useState<TranspilerService | null>(null);
 
   useEffect(() => {
+    let service: TranspilerService;
     (async () => {
-      setTranspilerService(await initTranspiler());
+      service = await initTranspiler(transpilerConfig);
+      setTranspilerService(service);
     })();
-  }, []);
+    return () => {
+      service?.stop();
+    };
+  }, [transpilerConfig]);
 
   const build = useMemo(() => {
     if (!transpilerService) {
@@ -214,12 +224,14 @@ const LiveContext = createContext<LiveContextValue | null>(null);
 export interface LiveProviderProps {
   code: string;
   mira: Mira;
+  transpilerConfig?: ServiceOptions;
 }
 
 export const LiveProvider: React.FC<LiveProviderProps> = ({
   code: propsCode,
   mira,
   children,
+  transpilerConfig,
 }) => {
   const { evaluate, scope, declaredValues } = useProvidence(mira);
 
@@ -228,7 +240,7 @@ export const LiveProvider: React.FC<LiveProviderProps> = ({
   const [output, setOutput] = useState<LiveContextValue['output']>({});
   const [errorMarkers, setErrorMarkers] = useState<MarkerMessage[]>([]);
   const [warnMarkers, setWarnMarkers] = useState<MarkerMessage[]>([]);
-  const { build } = useTranspilerService();
+  const { build } = useTranspilerService({ transpilerConfig });
   const [canEdit, setCanEdit] = useState(false);
 
   // transpile code

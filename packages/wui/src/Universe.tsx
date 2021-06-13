@@ -1,17 +1,15 @@
 import { styled } from '@linaria/react';
+import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useUniverseContext, RefreshModuleEvent } from './context';
 import { useBricks, createNewBrick } from './state/brick';
 import { useDependency } from './state/dependency';
+import { EditorLoaderConfig } from './components/Editor';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
 import { hydrateMdx } from './mdx/io';
-import {
-  collectImports,
-  loadModule,
-  moduleLoader as defaultModuleLoader,
-} from './mdx/dependency';
+import { moduleLoader as defaultModuleLoader } from './mdx/dependency';
 
 export interface UniverseProps {
   mdx?: string;
@@ -19,6 +17,8 @@ export interface UniverseProps {
   depsRootPath?: string;
   moduleLoader?: (specifier: string) => Promise<any>;
   onUpdate?: (mdx: string) => void;
+  transpilerConfig?: ServiceOptions;
+  editorLoaderConfig?: EditorLoaderConfig;
 }
 
 const UniverseContainer = styled.div`
@@ -49,6 +49,8 @@ const UniverseView: React.VFC<UniverseProps> = ({
   depsRootPath = '/_mira',
   moduleLoader = defaultModuleLoader,
   onUpdate = () => {},
+  transpilerConfig,
+  editorLoaderConfig,
 }) => {
   const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
@@ -106,7 +108,11 @@ const UniverseView: React.VFC<UniverseProps> = ({
       <MainPane>
         <MainSticky>
           {bricks.map((brick) => (
-            <Block key={brick.brickId} {...brick} />
+            <Block
+              key={brick.brickId}
+              {...{ transpilerConfig, editorLoaderConfig }}
+              {...brick}
+            />
           ))}
           <button onClick={onCreateCodeBlockClick}>Create code block</button>
           <button onClick={onCreateTextBlockClick}>Create text block</button>
