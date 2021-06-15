@@ -37,10 +37,6 @@ const useAsyncEvent = (callback: (...args: any[]) => void) => {
   return handler;
 };
 
-const EditorContainer = styled.div`
-  height: 100%;
-`;
-
 export interface MarkerMessage {
   location: {
     line: number;
@@ -70,6 +66,7 @@ export interface EditorProps {
   onMoveForwardCommand?: () => void;
   onMoveBackwardCommand?: () => void;
   onFocus?: () => void;
+  onContentHeightChange?: (height: number) => void;
 }
 
 export const editorFontFamily =
@@ -92,6 +89,7 @@ export const Editor: React.FC<EditorProps> = ({
   onMoveForwardCommand = () => {},
   onMoveBackwardCommand = () => {},
   onFocus = () => {},
+  onContentHeightChange = () => {},
 }) => {
   const [initialCode] = useState(() => code);
   const [canLoadEditor, setCanLoadEditor] = useState(false);
@@ -182,6 +180,7 @@ export const Editor: React.FC<EditorProps> = ({
       const contentHeight = editor.getContentHeight();
       if (prevHeight !== contentHeight) {
         prevHeight = contentHeight;
+        onContentHeightChange(contentHeight);
         requestAnimationFrame(() => {
           el.style.height = `${contentHeight}px`;
           editor.layout();
@@ -192,7 +191,7 @@ export const Editor: React.FC<EditorProps> = ({
     editor.onDidContentSizeChange(() => {
       updateEditorHeight();
     });
-  }, [editor]);
+  }, [editor, onContentHeightChange]);
 
   useEffect(() => {
     if (!editor) {
@@ -238,28 +237,27 @@ export const Editor: React.FC<EditorProps> = ({
     return null;
   }
   return (
-    <EditorContainer>
-      <MonacoEditor
-        defaultValue={initialCode}
-        language={language}
-        options={{
-          minimap: { enabled: false },
-          fontFamily: editorFontFamily,
-          lineHeight: 18,
-          lineNumbers: 'off',
-          scrollBeyondLastLine: false,
-          scrollbar: {
-            alwaysConsumeMouseWheel: false,
-            vertical: 'hidden',
-            verticalScrollbarSize: 0,
-          },
-          padding,
-        }}
-        theme="miraLightTheme"
-        loading={<></>}
-        beforeMount={beforeEditorMount}
-        onMount={onEditorMount}
-      />
-    </EditorContainer>
+    <MonacoEditor
+      defaultValue={initialCode}
+      language={language}
+      options={{
+        minimap: { enabled: false },
+        fontFamily: editorFontFamily,
+        lineHeight: 18,
+        lineNumbers: 'off',
+        scrollBeyondLastLine: false,
+        scrollbar: {
+          alwaysConsumeMouseWheel: false,
+          vertical: 'hidden',
+          verticalScrollbarSize: 0,
+        },
+        padding,
+        wordWrap: 'on',
+      }}
+      theme="miraLightTheme"
+      loading={<></>}
+      beforeMount={beforeEditorMount}
+      onMount={onEditorMount}
+    />
   );
 };

@@ -30,13 +30,6 @@ const FlexCenter = styled.div`
   display: flex;
   align-items: center;
 `;
-const RelativeFlexStart = styled.div`
-  position: relative;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  width: 100%;
-`;
 const IconButton = styled.button`
   display: inline-block;
   appearance: none;
@@ -69,31 +62,45 @@ const RemoveIconButton = styled(IconButton)`
 `;
 const BlockContainer = styled.div`
   position: relative;
-  margin: 2rem 0;
+  margin: 3rem 0;
+  pointer-events: none;
 `;
 const TopToolPart = styled.div`
   position: absolute;
-  top: -2rem;
+  top: -3rem;
   left: -1.125rem;
   width: 50%;
-  height: 2rem;
+  height: 3rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  pointer-events: auto;
 `;
 const MiddleToolContainer = styled.div<{ active?: boolean }>`
   position: relative;
   width: 100%;
-  margin: 2rem 0;
+  margin: 3rem 0;
+  display: flex;
   border-left: ${(props) =>
     props.active
       ? `5px dotted ${cssVar('colors.gray.400')}`
       : '5px solid transparent'};
 `;
+const EditorStickyArea = styled.div`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+`;
 const EditorPart = styled.div`
   width: 50%;
-  margin: 0 1rem;
-  position: relative;
+  position: sticky;
+  top: 0;
+  pointer-events: auto;
 `;
 const LanguageCompletionContainer = styled.div<{ active?: boolean }>`
   position: absolute;
@@ -105,15 +112,29 @@ const LanguageCompletionContainer = styled.div<{ active?: boolean }>`
     props.active ? cssVar('colors.gray.100') : cssVar('colors.gray.50')};
 `;
 const EditorContainer = styled.div<{ active?: boolean }>`
-  position: relative;
-  padding-right: 1rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   border-radius: 0 4px 4px 4px;
   background-color: ${(props) =>
     props.active ? cssVar('colors.gray.100') : cssVar('colors.gray.50')};
 `;
+const LivePreviewStickyArea = styled.div`
+  position: relative;
+  width: 100%;
+  align-self: stretch;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+`;
 const LivePreviewPart = styled.div`
   width: 50%;
-  margin: 0 1rem;
+  padding-left: 1.5rem;
+  position: sticky;
+  top: 0;
+  pointer-events: auto;
 `;
 const LivePreviewContainer = styled.div`
   width: 100%;
@@ -129,6 +150,7 @@ const ScriptPreviewPart = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
+  pointer-events: auto;
 `;
 const ScriptPreviewContainer = styled.div`
   width: 50%;
@@ -146,12 +168,13 @@ const ScriptPreviewCode = styled.code`
   }
 `;
 const MarkdownPreviewPart = styled.div`
-  position: absolute;
+  position: relative;
   top: 0;
   width: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
+  pointer-events: auto;
 `;
 const MarkdownPreviewContainer = styled.div`
   width: 50%;
@@ -167,12 +190,13 @@ const MarkdownPreviewNoContentParagraph = styled.p`
 `;
 const BottomToolPart = styled.div`
   position: absolute;
-  bottom: -2rem;
+  bottom: -3rem;
   left: -1.125rem;
   width: 50%;
-  height: 2rem;
+  height: 3rem;
   display: flex;
   align-items: center;
+  pointer-events: auto;
 `;
 
 export const BlockComponent: React.FC<{
@@ -256,6 +280,11 @@ export const BlockComponent: React.FC<{
     }
   }, [isActive, brick.text, editorText, updateBrick]);
 
+  const [editorHeight, setEditorHeight] = useState(0);
+  const onContentHeightChange = useCallback((height) => {
+    setEditorHeight(height);
+  }, []);
+
   return (
     <BlockContainer {...containerCallbacks}>
       <TopToolPart className={cx(!isFocus && !isActive && visibilityHidden)}>
@@ -278,15 +307,19 @@ export const BlockComponent: React.FC<{
           </RemoveIconButton>
         </FlexCenter>
       </TopToolPart>
-      <MiddleToolContainer active={isFocus || isActive}>
-        <RelativeFlexStart
-          className={cx(
-            (language === 'markdown' || noteType === 'script') &&
-              !isActive &&
-              visibilityHidden
-          )}
-        >
-          <EditorPart>
+      <MiddleToolContainer
+        active={isFocus || isActive}
+        style={{ minHeight: editorHeight }}
+      >
+        <EditorStickyArea>
+          <EditorPart
+            style={{ height: editorHeight }}
+            className={cx(
+              (language === 'markdown' || noteType === 'script') &&
+                !isActive &&
+                visibilityHidden
+            )}
+          >
             <LanguageCompletionContainer
               active={isActive}
               className={cx(!isActive && !isFocus && visibilityHidden)}
@@ -302,7 +335,7 @@ export const BlockComponent: React.FC<{
                 language={editorLanguage}
                 onChange={onEditorChange}
                 padding={{ top: 16, bottom: 16 }}
-                {...{ editorLoaderConfig }}
+                {...{ editorLoaderConfig, onContentHeightChange }}
                 {...editorCallbacks}
                 {...(live && isLived
                   ? {
@@ -317,15 +350,17 @@ export const BlockComponent: React.FC<{
               />
             </EditorContainer>
           </EditorPart>
-          <LivePreviewPart>
-            {isLived && (
+        </EditorStickyArea>
+        {isLived && (
+          <LivePreviewStickyArea>
+            <LivePreviewPart>
               <LivePreviewContainer>
                 <LivedPreview />
                 <LivedError />
               </LivePreviewContainer>
-            )}
-          </LivePreviewPart>
-        </RelativeFlexStart>
+            </LivePreviewPart>
+          </LivePreviewStickyArea>
+        )}
         {noteType === 'script' && (
           <ScriptPreviewPart
             className={cx(isActive && visibilityHidden)}

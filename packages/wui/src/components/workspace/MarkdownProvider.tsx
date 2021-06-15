@@ -183,6 +183,9 @@ const markdownStyling = css`
     background-color: ${cssVar('colors.gray.100')};
     border-radius: 0.125rem;
   }
+  img {
+    max-width: 100%;
+  }
 `;
 
 export const MarkdownPreview: React.VFC<{ md: string }> = ({ md }) => {
