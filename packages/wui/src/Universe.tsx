@@ -25,12 +25,12 @@ const UniverseContainer = styled.div`
   display: flex;
 `;
 const PlanetarySystemPane = styled.div`
-  width: 10rem;
+  width: 12rem;
 `;
 const PlanetarySystemSticky = styled.div`
   top: 0;
   position: sticky;
-  padding: 5rem 0;
+  padding: 70px 0;
 `;
 const MainPane = styled.div`
   flex: 1;
@@ -39,8 +39,8 @@ const MainSticky = styled.div`
   width: '100%';
   position: sticky;
   top: 0;
-  padding: 5rem 0;
-  margin-inline-start: 1.5rem;
+  padding: 70px 0;
+  margin-inline-start: 1rem;
 `;
 
 const UniverseView: React.VFC<UniverseProps> = ({

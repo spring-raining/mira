@@ -1,7 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 import { useEffect } from 'react';
 import {
-  useRecoilState,
   useRecoilValue,
   useRecoilCallback,
   selector,
@@ -13,6 +12,8 @@ import { updateBrickByText, updateBrickLanguage } from '../mdx/update';
 import { Brick } from '../types';
 import {
   activeBrickIdState,
+  focusedBrickIdState,
+  inViewBrickIdsState,
   miraDeclaredValueDictState,
   miraValuesExportedState,
   miraImportErrorDictState,
@@ -128,11 +129,17 @@ export const useBricks = ({
 };
 
 export const useBrick = (brickId: string) => {
-  const [brick] = useRecoilState(brickStateFamily(brickId));
-  const [activeBrickId] = useRecoilState(activeBrickIdState);
+  const brick = useRecoilValue(brickStateFamily(brickId));
+  const activeBrickId = useRecoilValue(activeBrickIdState);
+  const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const importError = useRecoilValue(miraImportErrorStateFamily(brickId));
   const setActive = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
+  });
+  const setFocused = useRecoilCallback(({ set }) => (isFocused: boolean) => {
+    set(focusedBrickIdState, (current) =>
+      isFocused ? brickId : current === brickId ? null : current
+    );
   });
   const updateBrick = useRecoilCallback(
     ({ set, snapshot }) =>
@@ -211,7 +218,9 @@ export const useBrick = (brickId: string) => {
     updateBrick,
     updateLanguage,
     isActive: brickId === activeBrickId,
+    isFocused: brickId === focusedBrickId,
     setActive,
+    setFocused,
     importError,
   };
 };
@@ -276,6 +285,28 @@ export const useBrickManipulator = () => {
   );
 
   return { insertBrick, cleanup };
+};
+
+export const useInViewBrickState = () => {
+  const inViewBrickIds = useRecoilValue(inViewBrickIdsState);
+  const updateInViewState = useRecoilCallback(
+    ({ set }) => (brickId: string, inView: boolean) => {
+      // console.log(brickId, inView);
+      set(inViewBrickIdsState, (ids) => {
+        const includes = ids.includes(brickId);
+        return inView && !includes
+          ? [...ids, brickId]
+          : !inView && includes
+          ? ids.filter((id) => id !== brickId)
+          : ids;
+      });
+    }
+  );
+
+  return {
+    inViewBrickIds,
+    updateInViewState,
+  };
 };
 
 export const createNewBrick = ({

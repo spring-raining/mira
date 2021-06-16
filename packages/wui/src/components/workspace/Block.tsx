@@ -2,9 +2,11 @@ import { css, cx } from '@linaria/core';
 import { styled } from '@linaria/react';
 import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 import {
   useBrick,
   useBrickManipulator,
+  useInViewBrickState,
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
@@ -215,9 +217,11 @@ export const BlockComponent: React.FC<{
   const {
     brick,
     isActive,
+    isFocused,
     updateBrick,
     updateLanguage,
     setActive,
+    setFocused,
     importError,
   } = useBrick(brickId);
   const { insertBrick, cleanup } = useBrickManipulator();
@@ -254,10 +258,9 @@ export const BlockComponent: React.FC<{
     cleanup(brickId);
   }, [cleanup, brickId]);
 
-  const [isFocus, setFocus] = useState(false);
   const containerCallbacks = {
-    onMouseOver: useCallback(() => setFocus(true), []),
-    onMouseOut: useCallback(() => setFocus(false), []),
+    onMouseOver: useCallback(() => setFocused(true), [setFocused]),
+    onMouseOut: useCallback(() => setFocused(false), [setFocused]),
     onClick: useCallback((e: React.MouseEvent) => {
       e.stopPropagation();
     }, []),
@@ -285,9 +288,15 @@ export const BlockComponent: React.FC<{
     setEditorHeight(height);
   }, []);
 
+  const [observerRef, inView] = useInView({ threshold: 0 });
+  const { updateInViewState } = useInViewBrickState();
+  useEffect(() => {
+    updateInViewState(brickId, inView);
+  }, [brickId, inView, updateInViewState]);
+
   return (
-    <BlockContainer {...containerCallbacks}>
-      <TopToolPart className={cx(!isFocus && !isActive && visibilityHidden)}>
+    <BlockContainer ref={observerRef} {...containerCallbacks}>
+      <TopToolPart className={cx(!isFocused && !isActive && visibilityHidden)}>
         <FlexCenter>
           <AddIconButton aria-label="Prepend" onClick={prependBrick}>
             <PlusIcon
@@ -308,7 +317,7 @@ export const BlockComponent: React.FC<{
         </FlexCenter>
       </TopToolPart>
       <MiddleToolContainer
-        active={isFocus || isActive}
+        active={isFocused || isActive}
         style={{ minHeight: editorHeight }}
       >
         <EditorStickyArea>
@@ -322,7 +331,7 @@ export const BlockComponent: React.FC<{
           >
             <LanguageCompletionContainer
               active={isActive}
-              className={cx(!isActive && !isFocus && visibilityHidden)}
+              className={cx(!isActive && !isFocused && visibilityHidden)}
             >
               <LanguageCompletionForm
                 language={language}
@@ -398,7 +407,9 @@ export const BlockComponent: React.FC<{
           </MarkdownPreviewPart>
         )}
       </MiddleToolContainer>
-      <BottomToolPart className={cx(!isFocus && !isActive && visibilityHidden)}>
+      <BottomToolPart
+        className={cx(!isFocused && !isActive && visibilityHidden)}
+      >
         <FlexCenter>
           <AddIconButton aria-label="Append" onClick={appendBrick}>
             <PlusIcon
