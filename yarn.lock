@@ -2671,6 +2671,20 @@
     source-map "^0.6.1"
     stylis "^3.5.4"
 
+"@linaria/babel-preset@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@linaria/babel-preset/-/babel-preset-3.0.0-beta.7.tgz#015f4406ce11d6c78bc6dec58801dc5a500e1c0e"
+  integrity sha512-NE5f//T9ywXZA+W+Pw1YjWKdzskUpaV7GVkxXhkxLM2la1+S4xOoZR1rzW77bR1C9GFFwzZTeb8XP85whb2ZqQ==
+  dependencies:
+    "@babel/generator" ">=7"
+    "@babel/plugin-syntax-dynamic-import" ">=7"
+    "@babel/template" ">=7"
+    "@linaria/core" "^3.0.0-beta.4"
+    "@linaria/logger" "^3.0.0-beta.3"
+    cosmiconfig "^5.1.0"
+    source-map "^0.7.3"
+    stylis "^3.5.4"
+
 "@linaria/core@^3.0.0-beta.4":
   version "3.0.0-beta.4"
   resolved "https://registry.yarnpkg.com/@linaria/core/-/core-3.0.0-beta.4.tgz#ae878874773c15b189792e277771f68fef18019a"
@@ -2683,41 +2697,41 @@
   dependencies:
     debug "^4.1.1"
 
-"@linaria/preeval@^3.0.0-beta.4":
-  version "3.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@linaria/preeval/-/preeval-3.0.0-beta.4.tgz#a402e448530077c276ce9aa32f570717ad8702bb"
-  integrity sha512-bIH5tUP+V29ShETab993a5aKMikIB1dyVywUkEWg0fF3ZvhVduQph9GgK+WKu4S5oEIwTHTHYwGzYvT1gBWUvQ==
+"@linaria/preeval@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@linaria/preeval/-/preeval-3.0.0-beta.7.tgz#cc8264c5f1465974eb0d81e003187211ef1f77d1"
+  integrity sha512-fTFgxtjBGKh9P2rsqhBnHTqFo1d8VzznmXKpILM0ClAclVn+FB+KJl+nWyEbQ8nT9/ceRoTwbdZHZ/M3DFHG+w==
   dependencies:
-    "@linaria/babel-preset" "^3.0.0-beta.4"
+    "@linaria/babel-preset" "^3.0.0-beta.7"
 
-"@linaria/react@^3.0.0-beta.4":
-  version "3.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@linaria/react/-/react-3.0.0-beta.4.tgz#3652812d42e8f7bbd2bae0ee7fd468ef0c68ddc9"
-  integrity sha512-RSlFO3W+77PCtFnDFKVdITLUdBude+zICtumticDU76l5Xc5i0lEUXPDvYjD7s9+uk70K4GSNvgh7bqhkGgxKA==
+"@linaria/react@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@linaria/react/-/react-3.0.0-beta.7.tgz#a1983acd752cda5c0b740735b9112a663dfd180d"
+  integrity sha512-sAup35gSRuenwbziPhp1hmkfziY72BS9jr5Lp0GQ9NRG5fnxYBQ36TY4rrGE09mSBjw/uq2i7XsvYL8MNm1f1Q==
   dependencies:
     "@emotion/is-prop-valid" "^0.8.8"
     "@linaria/core" "^3.0.0-beta.4"
 
-"@linaria/rollup@^3.0.0-beta.4":
-  version "3.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@linaria/rollup/-/rollup-3.0.0-beta.4.tgz#3a34e412f24592f2aa1f14fb9d998ed7aa7e4738"
-  integrity sha512-L24jxXf3SX+VTS/Dwx6YLblKekykgzdtEwcf97yxSix7wHaI1XELs2t1+QoWGJ6PURP6EY5Bv0qaN2pYR3VoGQ==
+"@linaria/rollup@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@linaria/rollup/-/rollup-3.0.0-beta.7.tgz#eb1e926565eacc86e9f6ce570f9dd4763858b727"
+  integrity sha512-5bghkIaITLjotLd0c76VQSHcsETYjTSav9a6LNu5EarCi6oZ9prW8n6BaCKBDbG6njLGfSNhdLXrANx9AQOjyw==
   dependencies:
-    "@linaria/babel-preset" "^3.0.0-beta.4"
+    "@linaria/babel-preset" "^3.0.0-beta.7"
     "@rollup/pluginutils" "^4.1.0"
 
-"@linaria/shaker@^3.0.0-beta.4":
-  version "3.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@linaria/shaker/-/shaker-3.0.0-beta.4.tgz#4028aa948b877ff92f545f6d54529e7167e35582"
-  integrity sha512-4YEa7BRQsvXrK1k9ytfiThw6e98YNBsi7UUAu+/D9EhntM3PFEalQ6w0o1C6kKptWHuf5BYodVldg4xcYJCx4Q==
+"@linaria/shaker@^3.0.0-beta.7":
+  version "3.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@linaria/shaker/-/shaker-3.0.0-beta.7.tgz#d21363493c5abd07a55370295f9022e31753de9f"
+  integrity sha512-fWDbbKcS8EiAnoNhTQa+2Or7QyR3Ofyqjtcrb1aeLN2ecVI2u7B5jAZgVPg9euTnhQ2ieUU3G9hh1INkoGKS/A==
   dependencies:
     "@babel/generator" ">=7"
     "@babel/plugin-transform-runtime" ">=7"
     "@babel/plugin-transform-template-literals" ">=7"
     "@babel/preset-env" ">=7"
-    "@linaria/babel-preset" "^3.0.0-beta.4"
+    "@linaria/babel-preset" "^3.0.0-beta.7"
     "@linaria/logger" "^3.0.0-beta.3"
-    "@linaria/preeval" "^3.0.0-beta.4"
+    "@linaria/preeval" "^3.0.0-beta.7"
     babel-plugin-transform-react-remove-prop-types "^0.4.24"
 
 "@mdx-js/mdx@2.0.0-next.9":
@@ -2926,6 +2940,21 @@
   dependencies:
     prop-types "^15.7.2"
     tslib "^2.1.0"
+
+"@react-dnd/asap@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@react-dnd/asap/-/asap-4.0.0.tgz#b300eeed83e9801f51bd66b0337c9a6f04548651"
+  integrity sha512-0XhqJSc6pPoNnf8DhdsPHtUhRzZALVzYMTzRwV4VI6DJNJ/5xxfL9OQUwb8IH5/2x7lSf7nAZrnzUD+16VyOVQ==
+
+"@react-dnd/invariant@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@react-dnd/invariant/-/invariant-2.0.0.tgz#09d2e81cd39e0e767d7da62df9325860f24e517e"
+  integrity sha512-xL4RCQBCBDJ+GRwKTFhGUW8GXa4yoDfJrPbLblc3U09ciS+9ZJXJ3Qrcs/x2IODOdIE5kQxvMmE2UKyqUictUw==
+
+"@react-dnd/shallowequal@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@react-dnd/shallowequal/-/shallowequal-2.0.0.tgz#a3031eb54129f2c66b2753f8404266ec7bf67f0a"
+  integrity sha512-Pc/AFTdwZwEKJxFJvlxrSmGe/di+aAOBn60sremrpLo6VI/6cmiUYNNwlI5KNYttg7uypzA3ILPMPgxB2GYZEg==
 
 "@rollup/plugin-babel@^5.3.0":
   version "5.3.0"
@@ -6268,6 +6297,15 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
+dnd-core@14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/dnd-core/-/dnd-core-14.0.0.tgz#973ab3470d0a9ac5a0fa9021c4feba93ad12347d"
+  integrity sha512-wTDYKyjSqWuYw3ZG0GJ7k+UIfzxTNoZLjDrut37PbcPGNfwhlKYlPUqjAKUjOOv80izshUiqusaKgJPItXSevA==
+  dependencies:
+    "@react-dnd/asap" "^4.0.0"
+    "@react-dnd/invariant" "^2.0.0"
+    redux "^4.0.5"
+
 dns-equal@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/dns-equal/-/dns-equal-1.0.0.tgz#b39e7f1da6eb0a75ba9c17324b34753c47e0654d"
@@ -7163,7 +7201,7 @@ extsprintf@^1.2.0:
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
 
-fast-deep-equal@^3.1.1:
+fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
@@ -7919,7 +7957,7 @@ hmac-drbg@^1.0.1:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
 
-hoist-non-react-statics@^3.3.1:
+hoist-non-react-statics@^3.3.1, hoist-non-react-statics@^3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"
   integrity sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==
@@ -12532,6 +12570,24 @@ react-dev-utils@^11.0.2:
     strip-ansi "6.0.0"
     text-table "0.2.0"
 
+react-dnd-html5-backend@14.0.1:
+  version "14.0.1"
+  resolved "https://registry.yarnpkg.com/react-dnd-html5-backend/-/react-dnd-html5-backend-14.0.1.tgz#37d43d6b6ddd91069101969d9eac6d688a9d57ef"
+  integrity sha512-ZDmpvFpd1NR4riw/CMbr8C3mgP6ZhsTf0c48a36kw4ZW8emgiugNlAz/qhhZ4/Pz9TO6DZ63sQohUTTl+AWGiA==
+  dependencies:
+    dnd-core "14.0.0"
+
+react-dnd@14.0.3:
+  version "14.0.3"
+  resolved "https://registry.yarnpkg.com/react-dnd/-/react-dnd-14.0.3.tgz#1762c1ec84815439f2d8a6a40efd1f57eee41ba6"
+  integrity sha512-i73Hx5SKfDRdwXe30+CjF/DidiRdt/gwpPN14ajkPR20t/0osnNKFNHg3DLV6RZym+DJ0pO9H5APeMsBWGU3+Q==
+  dependencies:
+    "@react-dnd/invariant" "^2.0.0"
+    "@react-dnd/shallowequal" "^2.0.0"
+    dnd-core "14.0.0"
+    fast-deep-equal "^3.1.3"
+    hoist-non-react-statics "^3.3.2"
+
 react-dom@17.0.2:
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.2.tgz#ecffb6845e3ad8dbfcdc498f0d0a939736502c23"
@@ -12743,6 +12799,13 @@ reduce-flatten@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/reduce-flatten/-/reduce-flatten-2.0.0.tgz#734fd84e65f375d7ca4465c69798c25c9d10ae27"
   integrity sha512-EJ4UNY/U1t2P/2k6oqotuX2Cc3T6nxJwsM0N0asT7dhrtH1ltUxDn4NalSYmPE2rCkVpcf/X6R0wDwcFpzhd4w==
+
+redux@^4.0.5:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/redux/-/redux-4.1.1.tgz#76f1c439bb42043f985fbd9bf21990e60bd67f47"
+  integrity sha512-hZQZdDEM25UY2P493kPYuKqviVwZ58lEmGQNeQ+gXa+U0gYPUBf7NKYazbe3m+bs/DzM/ahN12DbF+NG8i0CWw==
+  dependencies:
+    "@babel/runtime" "^7.9.2"
 
 reflect-metadata@0.1.13:
   version "0.1.13"
