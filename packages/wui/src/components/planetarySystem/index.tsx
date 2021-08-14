@@ -15,14 +15,20 @@ import { cssVar } from '../../theme';
 const PlanetarySystemContainer = styled.div`
   transition: all 200ms ease;
 `;
-const ItemRow = styled.div`
+const ItemRow = styled.div<{
+  isSelected?: boolean;
+  isDragging?: boolean;
+}>`
   display: flex;
   align-items: center;
   height: 1.5rem;
   cursor: pointer;
-  background-color: ${cssVar('colors.white')};
+  background-color: ${(props) =>
+    props.isSelected ? cssVar('colors.cyan.50') : cssVar('colors.white')};
+  opacity: ${(props) => (props.isDragging ? 0.5 : 1)};
   &:hover {
-    background-color: ${cssVar('colors.gray.100')};
+    background-color: ${(props) =>
+      props.isSelected ? cssVar('colors.cyan.50') : cssVar('colors.gray.100')};
   }
 `;
 const ItemPinContainer = styled.div`
@@ -95,17 +101,18 @@ interface ListItemDragObject {
   brickIds: string[];
 }
 
-const PlanetaryListItem: React.FC<
-  React.HTMLAttributes<HTMLDivElement> & {
-    brickId: string;
-    index: number;
-    hasInsertGutter?: boolean;
-    isLarge?: boolean;
-    onHoverDragItem: (index: number) => void;
-    onDropItem: (obj: ListItemDragObject) => void;
-    onDragEnd: () => void;
-  }
-> = ({
+const PlanetaryListItem: React.FC<{
+  brickId: string;
+  index: number;
+  hasInsertGutter?: boolean;
+  isLarge?: boolean;
+  onHoverDragItem: (index: number) => void;
+  onDropItem: (obj: ListItemDragObject) => void;
+  onDragEnd: () => void;
+  onSelect: (brickId: string) => void;
+  onRangeSelect: (brickId: string) => void;
+  onMultipleSelect: (brickId: string) => void;
+}> = ({
   children,
   brickId,
   index,
@@ -114,10 +121,26 @@ const PlanetaryListItem: React.FC<
   onHoverDragItem,
   onDropItem,
   onDragEnd,
-  ...other
+  onSelect,
+  onRangeSelect,
+  onMultipleSelect,
 }) => {
-  const { setActive, isActive, isFocused } = useBrick(brickId);
+  const { setActive, isActive, isFocused, isSelected } = useBrick(brickId);
   const ref = useRef<HTMLDivElement>(null);
+  const onClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.metaKey) {
+        onMultipleSelect(brickId);
+        return;
+      } else if (e.shiftKey) {
+        onRangeSelect(brickId);
+        return;
+      }
+      onSelect(brickId);
+      setActive();
+    },
+    [brickId, onSelect, onRangeSelect, onMultipleSelect, setActive]
+  );
   const [, drop] = useDrop<ListItemDragObject, unknown, unknown>(
     () => ({
       accept: 'PlanetaryListItem',
@@ -162,19 +185,11 @@ const PlanetaryListItem: React.FC<
   drag(drop(ref));
 
   return (
-    <ItemRowContainer {...other}>
+    <ItemRowContainer>
       {hasInsertGutter && <ItemRowInsertGutter />}
-      <ItemRow
-        ref={ref}
-        {...{ onClick: setActive }}
-        style={{ opacity: isDragging ? 0.5 : undefined }}
-      >
+      <ItemRow ref={ref} {...{ isSelected, isDragging, onClick }}>
         <ItemPinContainer>
-          <ItemPin
-            isLarge={isLarge}
-            isActive={isActive}
-            isFocused={isFocused}
-          />
+          <ItemPin {...{ isLarge, isActive, isFocused }} />
         </ItemPinContainer>
         <ItemRowText>{children}</ItemRowText>
       </ItemRow>
@@ -183,7 +198,8 @@ const PlanetaryListItem: React.FC<
 };
 
 export const PlanetarySystem: React.VFC = () => {
-  const { bricks, updateBrickOrder } = useBricks();
+  const { bricks, selectedBrickIds, updateBrickOrder, setSelectedBrickIds } =
+    useBricks();
   const onClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
@@ -200,17 +216,54 @@ export const PlanetarySystem: React.VFC = () => {
         return;
       }
       const brickOrder = bricks.map((b) => b.brickId);
+      const draggingBrickIds =
+        selectedBrickIds.length > 0
+          ? brickOrder.filter((id) => selectedBrickIds.includes(id))
+          : brickIds;
       updateBrickOrder([
-        ...brickOrder.slice(0, index).filter((id) => !brickIds.includes(id)),
-        ...brickIds,
-        ...brickOrder.slice(index).filter((id) => !brickIds.includes(id)),
+        ...brickOrder
+          .slice(0, index)
+          .filter((id) => !draggingBrickIds.includes(id)),
+        ...draggingBrickIds,
+        ...brickOrder
+          .slice(index)
+          .filter((id) => !draggingBrickIds.includes(id)),
       ]);
     },
-    [bricks, updateBrickOrder, hoverTargetIndex]
+    [bricks, selectedBrickIds, updateBrickOrder, hoverTargetIndex]
   );
   const onDragEnd = useCallback(() => {
     setHoverTargetIndex(null);
   }, []);
+  const [lastSelectId, setLastSelectId] = useState<string | null>(null);
+  const onSelect = useCallback(
+    (brickId: string) => {
+      setLastSelectId(brickId);
+      setSelectedBrickIds([brickId]);
+    },
+    [setSelectedBrickIds]
+  );
+  const onRangeSelect = useCallback(
+    (brickId: string) => {
+      const a = bricks.findIndex((b) => b.brickId === lastSelectId);
+      const b = bricks.findIndex((b) => b.brickId === brickId);
+      const selectedIds = bricks
+        .slice(Math.min(a, b), Math.max(a, b) + 1)
+        .map((b) => b.brickId);
+      setSelectedBrickIds(selectedIds);
+    },
+    [bricks, lastSelectId, setSelectedBrickIds]
+  );
+  const onMultipleSelect = useCallback(
+    (brickId: string) => {
+      setSelectedBrickIds((selectedIds) =>
+        selectedIds.includes(brickId)
+          ? selectedIds.filter((id) => id !== brickId)
+          : [...selectedIds, brickId]
+      );
+    },
+    [setSelectedBrickIds]
+  );
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -224,9 +277,14 @@ export const PlanetarySystem: React.VFC = () => {
             isLarge={
               !!(brick.noteType === 'content' && brick.language !== 'markdown')
             }
-            onHoverDragItem={onHoverDragItem}
-            onDropItem={onDropItem}
-            onDragEnd={onDragEnd}
+            {...{
+              onHoverDragItem,
+              onDropItem,
+              onDragEnd,
+              onSelect,
+              onRangeSelect,
+              onMultipleSelect,
+            }}
           >
             {brick.noteType === 'content' &&
               brick.language === 'markdown' &&

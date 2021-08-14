@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import {
   useRecoilValue,
   useRecoilCallback,
+  useRecoilState,
   selector,
   selectorFamily,
   DefaultValue,
@@ -14,6 +15,7 @@ import {
   activeBrickIdState,
   focusedBrickIdState,
   inViewBrickIdsState,
+  selectedBrickIdsState,
   miraDeclaredValueDictState,
   miraValuesExportedState,
   miraImportErrorDictState,
@@ -90,6 +92,9 @@ export const useBricks = ({
   onUpdateMdx?: (mdx: string) => void;
 } = {}) => {
   const bricks = useRecoilValue(bricksState);
+  const [selectedBrickIds, setSelectedBrickIds] = useRecoilState(
+    selectedBrickIdsState
+  );
   const pushBrick = useRecoilCallback(({ set }) => async (newBrick: Brick) => {
     set(brickDictState, (brickDict) => ({
       ...brickDict,
@@ -99,6 +104,9 @@ export const useBricks = ({
   });
   const flushAll = useRecoilCallback(({ reset }) => () => {
     reset(activeBrickIdState);
+    reset(focusedBrickIdState);
+    reset(inViewBrickIdsState);
+    reset(selectedBrickIdsState);
     reset(brickOrderState);
     reset(brickDictState);
     reset(miraDeclaredValueDictState);
@@ -115,11 +123,11 @@ export const useBricks = ({
   );
   const resetActiveBrick = useRecoilCallback(({ reset }) => () => {
     reset(activeBrickIdState);
+    reset(selectedBrickIdsState);
   });
   const updateBrickOrder = useRecoilCallback(
     ({ set }) =>
       (newBrickOrder: string[]) => {
-        console.log(newBrickOrder);
         set(brickOrderState, newBrickOrder);
       }
   );
@@ -142,11 +150,13 @@ export const useBricks = ({
 
   return {
     bricks,
+    selectedBrickIds,
     pushBrick,
     flushAll,
     importBricks,
     resetActiveBrick,
     updateBrickOrder,
+    setSelectedBrickIds,
   };
 };
 
@@ -154,6 +164,7 @@ export const useBrick = (brickId: string) => {
   const brick = useRecoilValue(brickStateFamily(brickId));
   const activeBrickId = useRecoilValue(activeBrickIdState);
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
+  const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
   const importError = useRecoilValue(miraImportErrorStateFamily(brickId));
   const setActive = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
@@ -241,6 +252,7 @@ export const useBrick = (brickId: string) => {
     updateLanguage,
     isActive: brickId === activeBrickId,
     isFocused: brickId === focusedBrickId,
+    isSelected: selectedBrickIds.includes(brickId),
     setActive,
     setFocused,
     importError,

@@ -26,6 +26,11 @@ export const inViewBrickIdsState = atom<string[]>({
   default: [],
 });
 
+export const selectedBrickIdsState = atom<string[]>({
+  key: 'selectedBrickIdsState',
+  default: [],
+});
+
 export const miraDeclaredValueDictState = atom<Record<string, unknown>>({
   key: 'miraDeclaredValueDictState',
   default: {},
