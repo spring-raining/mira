@@ -3,6 +3,7 @@ import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useUniverseContext, RefreshModuleEvent } from './context';
+import { useHistory, HistoryObserver } from './hooks/useHistory';
 import { useBricks, createNewBrick } from './state/brick';
 import { useDependency } from './state/dependency';
 import { EditorLoaderConfig } from './components/Editor';
@@ -71,6 +72,8 @@ const UniverseView: React.VFC<UniverseProps> = ({
     pushBrick(createNewBrick({ language: 'markdown' }));
   }, [pushBrick]);
 
+  const history = useHistory();
+
   useEffect(() => {
     const refreshModule = (event: RefreshModuleEvent) => {
       refreshDependency(event);
@@ -100,6 +103,11 @@ const UniverseView: React.VFC<UniverseProps> = ({
 
   return (
     <UniverseContainer>
+      <div>
+        <button onClick={() => history.restore(-1)}>Undo</button>
+        <button onClick={() => history.restore(1)}>Redo</button>
+        <button onClick={history.commit}>Commit</button>
+      </div>
       <PlanetarySystemPane>
         <PlanetarySystemSticky>
           <PlanetarySystem />
@@ -125,6 +133,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
 export const Universe: React.VFC<UniverseProps> = (props) => {
   return (
     <RecoilRoot>
+      <HistoryObserver />
       <UniverseView {...props} />
     </RecoilRoot>
   );

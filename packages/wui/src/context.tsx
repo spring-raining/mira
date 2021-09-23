@@ -6,6 +6,7 @@ import React, {
   useState,
   useRef,
 } from 'react';
+import { useHistoryContext } from './hooks/history/context';
 
 export interface RefreshModuleEvent {
   module: any;
@@ -71,10 +72,11 @@ const useHmr = () => {
 
 export const UniverseProvider: React.FC = ({ children }) => {
   const hmrProvider = useHmr();
+  const { HistoryProvider } = useHistoryContext();
 
   return (
     <universeContext.Provider value={{ ...hmrProvider }}>
-      {children}
+      <HistoryProvider>{children}</HistoryProvider>
     </universeContext.Provider>
   );
 };
