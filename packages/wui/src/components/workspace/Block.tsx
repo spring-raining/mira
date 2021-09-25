@@ -270,18 +270,18 @@ export const BlockComponent: React.FC<{
   const onEditorChange = useCallback(
     (text: string) => {
       setEditorText(text);
+      updateBrick(text);
       if (live && isLived) {
-        updateBrick(text);
         live.onChange(text);
       }
     },
     [updateBrick, live, isLived]
   );
-  useEffect(() => {
-    if (!isActive && brick.text !== editorText) {
-      updateBrick(editorText);
-    }
-  }, [isActive, brick.text, editorText, updateBrick]);
+  // useEffect(() => {
+  //   if (!isActive && brick.text !== editorText) {
+  //     updateBrick(editorText);
+  //   }
+  // }, [isActive, brick.text, editorText, updateBrick]);
 
   const [editorHeight, setEditorHeight] = useState(0);
   const onContentHeightChange = useCallback((height) => {

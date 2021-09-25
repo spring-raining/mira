@@ -1,5 +1,11 @@
 import { styled } from '@linaria/react';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
 import MonacoEditor, {
   loader as editorLoader,
   OnMount as OnEditorMount,
@@ -18,12 +24,13 @@ export interface EditorLoaderConfig {
 }
 
 const useAsyncEvent = (callback: (...args: any[]) => void) => {
-  const eventStack = useRef<any[][]>([]);
+  const eventArgs = useRef<any[] | null>(null);
   useEffect(() => {
     let id: number;
     const tick = () => {
-      if (eventStack.current.length > 0) {
-        callback(...eventStack.current.shift()!);
+      if (eventArgs.current) {
+        callback(...eventArgs.current);
+        eventArgs.current = null;
       }
       id = requestAnimationFrame(tick);
     };
@@ -32,9 +39,61 @@ const useAsyncEvent = (callback: (...args: any[]) => void) => {
   }, [callback]);
 
   const handler = useCallback((...args) => {
-    eventStack.current.push(args);
+    eventArgs.current = args;
   }, []);
   return handler;
+};
+
+const useEditorContentManager = ({
+  code,
+  onChange,
+}: {
+  code: string | undefined;
+  onChange: (code: string) => void;
+}) => {
+  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
+    null
+  );
+  const outgoingQueue = useRef<string[]>([]);
+  const incomingQueue = useRef<string[]>([]);
+  const onChangeWrapped = useCallback(
+    (code: string) => {
+      if (incomingQueue.current.includes(code)) {
+        const q = incomingQueue.current;
+        incomingQueue.current = q.slice(q.indexOf(code) + 1);
+      } else {
+        outgoingQueue.current.push(code);
+        onChange(code);
+      }
+    },
+    [onChange]
+  );
+  const changeHandler = useAsyncEvent(onChangeWrapped);
+
+  useEffect(() => {
+    if (!editor || typeof code !== 'string') {
+      return;
+    }
+    if (outgoingQueue.current.includes(code)) {
+      const q = outgoingQueue.current;
+      outgoingQueue.current = q.slice(q.indexOf(code) + 1);
+    } else {
+      incomingQueue.current.push(code);
+      editor.setValue(code);
+    }
+  }, [editor, code]);
+
+  const setup = useCallback(
+    (editor: editor.IStandaloneCodeEditor) => {
+      editor.onDidChangeModelContent(() => {
+        const value = editor.getValue();
+        changeHandler(value);
+      });
+      setEditor(editor);
+    },
+    [changeHandler]
+  );
+  return { setup };
 };
 
 export interface MarkerMessage {
@@ -97,11 +156,11 @@ export const Editor: React.FC<EditorProps> = ({
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
     null
   );
+  const editorContentManager = useEditorContentManager({ code, onChange });
   const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
   const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
   const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
   const focusHandler = useAsyncEvent(onFocus);
-  const changeHandler = useAsyncEvent(onChange);
 
   // 1. get Monaco instance
   const beforeEditorMount: BeforeEditorMount = (monaco) => {
@@ -145,11 +204,8 @@ export const Editor: React.FC<EditorProps> = ({
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow,
       moveForwardCommandHandler
     );
-    editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
-      changeHandler(value);
-    });
     editor.onDidFocusEditorText(focusHandler);
+    editorContentManager.setup(editor);
   };
 
   useEffect(() => {
