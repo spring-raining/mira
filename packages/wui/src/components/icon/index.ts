@@ -1,2 +1,2 @@
 export { default as PlusIcon } from './plus';
-export { default as XIcon } from './x';
+export { default as TrashIcon } from './trash';

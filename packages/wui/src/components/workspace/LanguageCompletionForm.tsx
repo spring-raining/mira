@@ -7,7 +7,7 @@ const FormContainer = styled.div`
   align-items: center;
   position: relative;
   width: 100%;
-  height: 2rem;
+  height: 100%;
 `;
 const FormInput = styled.input<{ active?: boolean }>`
   flex: 1;

@@ -61,10 +61,8 @@ const UniverseView: React.VFC<UniverseProps> = ({
     depsRootPath,
     moduleLoader,
   });
-  const {
-    addRefreshModuleListener,
-    removeRefreshModuleListener,
-  } = useUniverseContext();
+  const { addRefreshModuleListener, removeRefreshModuleListener } =
+    useUniverseContext();
   const onCreateCodeBlockClick = useCallback(() => {
     pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
   }, [pushBrick]);
@@ -103,11 +101,6 @@ const UniverseView: React.VFC<UniverseProps> = ({
 
   return (
     <UniverseContainer>
-      <div>
-        <button onClick={() => history.restore(-1)}>Undo</button>
-        <button onClick={() => history.restore(1)}>Redo</button>
-        <button onClick={history.commit}>Commit</button>
-      </div>
       <PlanetarySystemPane>
         <PlanetarySystemSticky>
           <PlanetarySystem />
@@ -122,8 +115,6 @@ const UniverseView: React.VFC<UniverseProps> = ({
               {...brick}
             />
           ))}
-          <button onClick={onCreateCodeBlockClick}>Create code block</button>
-          <button onClick={onCreateTextBlockClick}>Create text block</button>
         </MainSticky>
       </MainPane>
     </UniverseContainer>

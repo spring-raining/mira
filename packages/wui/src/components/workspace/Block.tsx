@@ -14,7 +14,7 @@ import { cssVar } from '../../theme';
 import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
-import { PlusIcon, XIcon } from '../icon';
+import { PlusIcon, TrashIcon } from '../icon';
 import { ErrorPreText } from '../styled/common';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
 import {
@@ -64,15 +64,15 @@ const RemoveIconButton = styled(IconButton)`
 `;
 const BlockContainer = styled.div`
   position: relative;
-  margin: 3rem 0;
+  margin: 2rem 0;
   pointer-events: none;
 `;
 const TopToolPart = styled.div`
   position: absolute;
-  top: -3rem;
+  top: -2rem;
   left: -1.125rem;
   width: 50%;
-  height: 3rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -81,19 +81,19 @@ const TopToolPart = styled.div`
 const MiddleToolContainer = styled.div<{ active?: boolean }>`
   position: relative;
   width: 100%;
-  margin: 3rem 0;
+  margin: 2rem 0;
   display: flex;
   border-left: ${(props) =>
     props.active
-      ? `5px dotted ${cssVar('colors.gray.400')}`
-      : '5px solid transparent'};
+      ? `4px dashed ${cssVar('colors.gray.200')}`
+      : '4px solid transparent'};
 `;
 const EditorStickyArea = styled.div`
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 1rem;
-  right: 1rem;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
@@ -116,8 +116,8 @@ const LanguageCompletionContainer = styled.div<{ active?: boolean }>`
 const EditorContainer = styled.div<{ active?: boolean }>`
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 1rem;
+  right: 1rem;
   border-radius: 0 4px 4px 4px;
   background-color: ${(props) =>
     props.active ? cssVar('colors.gray.100') : cssVar('colors.gray.50')};
@@ -125,14 +125,16 @@ const EditorContainer = styled.div<{ active?: boolean }>`
 const LivePreviewStickyArea = styled.div`
   position: relative;
   width: 100%;
+  margin: -2rem 0;
+  padding: 2rem 0;
   align-self: stretch;
-  padding: 0 1rem;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
+  background-color: ${cssVar('colors.gray.50')};
 `;
 const LivePreviewPart = styled.div`
-  width: 50%;
+  width: 100%;
   padding-left: 1.5rem;
   position: sticky;
   top: 0;
@@ -141,12 +143,13 @@ const LivePreviewPart = styled.div`
 const LivePreviewContainer = styled.div`
   width: 100%;
   padding: 1rem;
-  border: 2px solid ${cssVar('colors.gray.50')};
+  border: 2px solid inherit;
   border-radius: 4px;
   box-sizing: border-box;
+  background-color: ${cssVar('colors.white')};
 `;
-const ScriptPreviewPart = styled.div`
-  position: absolute;
+const PreviewPart = styled.div`
+  position: relative;
   top: 0;
   width: 100%;
   display: flex;
@@ -155,7 +158,7 @@ const ScriptPreviewPart = styled.div`
   pointer-events: auto;
 `;
 const ScriptPreviewContainer = styled.div`
-  width: 50%;
+  width: 100%;
   margin: 0 1rem;
   padding-left: 1.5rem;
 `;
@@ -169,18 +172,9 @@ const ScriptPreviewCode = styled.code`
     height: 18px;
   }
 `;
-const MarkdownPreviewPart = styled.div`
-  position: relative;
-  top: 0;
-  width: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  pointer-events: auto;
-`;
 const MarkdownPreviewContainer = styled.div`
-  width: 50%;
-  margin: -1rem 2.5rem 0 2.5rem;
+  width: 100%;
+  margin: -0.5rem 2.5rem;
   min-height: 4rem;
   padding-right: 2rem;
   display: flex;
@@ -192,12 +186,35 @@ const MarkdownPreviewNoContentParagraph = styled.p`
 `;
 const BottomToolPart = styled.div`
   position: absolute;
-  bottom: -3rem;
+  bottom: -2rem;
   left: -1.125rem;
   width: 50%;
-  height: 3rem;
+  height: 2rem;
   display: flex;
   align-items: center;
+  pointer-events: auto;
+`;
+const MiddleToolHandle = styled.div`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1.125rem;
+  width: 2rem;
+  pointer-events: auto;
+`;
+const BlockToolBar = styled.div`
+  position: absolute;
+  top: -2.75rem;
+  left: 1rem;
+  width: 18rem;
+  height: 2.25rem;
+  padding: 0 0.75rem 0 1.125rem;
+  border-radius: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: ${cssVar('colors.white')};
+  box-shadow: ${cssVar('shadows.md')};
   pointer-events: auto;
 `;
 
@@ -306,20 +323,52 @@ export const BlockComponent: React.FC<{
             />
           </AddIconButton>
         </FlexCenter>
-        <FlexCenter>
-          <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
-            <XIcon
-              className={css`
-                height: 1.5rem;
-              `}
-            />
-          </RemoveIconButton>
-        </FlexCenter>
       </TopToolPart>
       <MiddleToolContainer
         active={isFocused || isActive}
         style={{ minHeight: editorHeight }}
       >
+        <PreviewPart
+          className={cx(isActive && visibilityHidden)}
+          onClick={setActive}
+        >
+          {noteType === 'script' && (
+            <ScriptPreviewContainer>
+              <pre>
+                <ScriptPreviewCode>
+                  <CodePreview code={brick.text} language="jsx" />
+                </ScriptPreviewCode>
+              </pre>
+            </ScriptPreviewContainer>
+          )}
+          {language === 'markdown' && (
+            <MarkdownPreviewContainer>
+              <MarkdownPreview md={brick.text} />
+              {!brick.text.trim() && (
+                <MarkdownPreviewNoContentParagraph>
+                  No content
+                </MarkdownPreviewNoContentParagraph>
+              )}
+            </MarkdownPreviewContainer>
+          )}
+        </PreviewPart>
+        <LivePreviewStickyArea>
+          {isLived && (
+            <LivePreviewPart>
+              <LivePreviewContainer>
+                <LivedPreview />
+                <LivedError />
+              </LivePreviewContainer>
+            </LivePreviewPart>
+          )}
+          {noteType === 'script' && importError && (
+            <LivePreviewPart>
+              <LivePreviewContainer>
+                <ErrorPreText>{String(importError)}</ErrorPreText>
+              </LivePreviewContainer>
+            </LivePreviewPart>
+          )}
+        </LivePreviewStickyArea>
         <EditorStickyArea>
           <EditorPart
             style={{ height: editorHeight }}
@@ -329,7 +378,7 @@ export const BlockComponent: React.FC<{
                 visibilityHidden
             )}
           >
-            <LanguageCompletionContainer
+            {/* <LanguageCompletionContainer
               active={isActive}
               className={cx(!isActive && !isFocused && visibilityHidden)}
             >
@@ -338,7 +387,7 @@ export const BlockComponent: React.FC<{
                 onUpdate={handleSubmitLanguage}
                 onFocus={setActive}
               />
-            </LanguageCompletionContainer>
+            </LanguageCompletionContainer> */}
             <EditorContainer active={isActive}>
               <Editor
                 language={editorLanguage}
@@ -360,52 +409,25 @@ export const BlockComponent: React.FC<{
             </EditorContainer>
           </EditorPart>
         </EditorStickyArea>
-        {isLived && (
-          <LivePreviewStickyArea>
-            <LivePreviewPart>
-              <LivePreviewContainer>
-                <LivedPreview />
-                <LivedError />
-              </LivePreviewContainer>
-            </LivePreviewPart>
-          </LivePreviewStickyArea>
+        {isActive && (
+          <BlockToolBar>
+            <LanguageCompletionForm
+              language={language}
+              onUpdate={handleSubmitLanguage}
+              onFocus={setActive}
+            />
+            <FlexCenter>
+              <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
+                <TrashIcon
+                  className={css`
+                    height: 1.5rem;
+                  `}
+                />
+              </RemoveIconButton>
+            </FlexCenter>
+          </BlockToolBar>
         )}
-        {noteType === 'script' && (
-          <ScriptPreviewPart
-            className={cx(isActive && visibilityHidden)}
-            onClick={setActive}
-          >
-            <ScriptPreviewContainer>
-              <pre>
-                <ScriptPreviewCode>
-                  <CodePreview code={brick.text} language="jsx" />
-                </ScriptPreviewCode>
-              </pre>
-            </ScriptPreviewContainer>
-            {importError && (
-              <LivePreviewPart>
-                <LivePreviewContainer>
-                  <ErrorPreText>{String(importError)}</ErrorPreText>
-                </LivePreviewContainer>
-              </LivePreviewPart>
-            )}
-          </ScriptPreviewPart>
-        )}
-        {language === 'markdown' && (
-          <MarkdownPreviewPart
-            className={cx(isActive && visibilityHidden)}
-            onClick={setActive}
-          >
-            <MarkdownPreviewContainer>
-              <MarkdownPreview md={brick.text} />
-              {!brick.text.trim() && (
-                <MarkdownPreviewNoContentParagraph>
-                  No content
-                </MarkdownPreviewNoContentParagraph>
-              )}
-            </MarkdownPreviewContainer>
-          </MarkdownPreviewPart>
-        )}
+        <MiddleToolHandle />
       </MiddleToolContainer>
       <BottomToolPart
         className={cx(!isFocused && !isActive && visibilityHidden)}
