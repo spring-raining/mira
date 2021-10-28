@@ -47,9 +47,6 @@ const UniverseView: React.VFC<PageProps> = ({
       path={file?.path}
       depsRootPath={file?.depsRootPath}
       moduleLoader={moduleLoader}
-      onUpdate={(mdx) => {
-        console.debug(mdx);
-      }}
       transpilerConfig={{
         wasmURL: '/_mira/-/node_modules/esbuild-wasm/esbuild.wasm',
         worker: true,

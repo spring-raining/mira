@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { Brick, MiraId } from '../types';
+import { Brick, MiraId, EvaluatedResult } from '../types';
 
 export const brickDictState = atom<Record<string, Brick>>({
   key: 'brickDictState',
@@ -31,16 +31,6 @@ export const selectedBrickIdsState = atom<string[]>({
   default: [],
 });
 
-export const miraDeclaredValueDictState = atom<Record<string, unknown>>({
-  key: 'miraDeclaredValueDictState',
-  default: {},
-});
-
-export const miraValuesExportedState = atom<Record<MiraId, string[]>>({
-  key: 'miraValuesExportedState',
-  default: {},
-});
-
 export const importedModulesRefDictState = atom<Record<string, string>>({
   key: 'importedModulesDictState',
   default: {},
@@ -57,3 +47,10 @@ export const miraImportErrorDictState = atom<Record<Brick['brickId'], Error>>({
   key: 'miraImportErrorDictState',
   default: {},
 });
+
+export const miraEvaluatedDataDictState = atom<Record<string, EvaluatedResult>>(
+  {
+    key: 'miraEvaluatedDataDictState',
+    default: {},
+  }
+);

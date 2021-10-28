@@ -1,4 +1,4 @@
-import { parseImportStatement, scanImportSpecifier } from '@mirajs/core';
+import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
 import { Brick, ParsedImportStatement } from '../types';
 
 const getExtname = (path: string): string => {
@@ -61,7 +61,7 @@ export const collectImports = async ({
     brick.children
       ?.filter((node) => node.type === 'mdxjsEsm')
       .map(async (node) => {
-        return (await scanImportSpecifier(node.value))
+        return (await scanModuleSpecifier(node.value))[0]
           .map((imp) => {
             const def = parseImportStatement(node.value, imp);
             return def && { ...def, statement: node.value.trim() };

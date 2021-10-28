@@ -16,8 +16,6 @@ import {
   focusedBrickIdState,
   inViewBrickIdsState,
   selectedBrickIdsState,
-  miraDeclaredValueDictState,
-  miraValuesExportedState,
   miraImportErrorDictState,
   brickDictState,
   brickOrderState,
@@ -28,20 +26,15 @@ const transpiledMdxCache = new WeakMap<Brick, string>();
 
 const brickStateFamily = selectorFamily<Brick, string>({
   key: 'brickStateFamily',
-  get:
-    (brickId) =>
-    ({ get }) =>
-      get(brickDictState)[brickId],
-  set:
-    (brickId) =>
-    ({ set }, newValue) => {
-      if (!(newValue instanceof DefaultValue)) {
-        set(brickDictState, (prevState) => ({
-          ...prevState,
-          [brickId]: newValue,
-        }));
-      }
-    },
+  get: (brickId) => ({ get }) => get(brickDictState)[brickId],
+  set: (brickId) => ({ set }, newValue) => {
+    if (!(newValue instanceof DefaultValue)) {
+      set(brickDictState, (prevState) => ({
+        ...prevState,
+        [brickId]: newValue,
+      }));
+    }
+  },
 });
 
 const bricksState = selector({
@@ -57,10 +50,7 @@ const miraImportErrorStateFamily = selectorFamily<
   Brick['brickId']
 >({
   key: 'miraImportErrorStateFamily',
-  get:
-    (brickId) =>
-    ({ get }) =>
-      get(miraImportErrorDictState)[brickId] ?? null,
+  get: (brickId) => ({ get }) => get(miraImportErrorDictState)[brickId] ?? null,
 });
 
 const cancellable = (fn: () => void, ms = 100) => {
@@ -109,8 +99,6 @@ export const useBricks = ({
     reset(selectedBrickIdsState);
     reset(brickOrderState);
     reset(brickDictState);
-    reset(miraDeclaredValueDictState);
-    reset(miraValuesExportedState);
   });
   const importBricks = useRecoilCallback(
     () => async (bricks: Brick[]) => {
@@ -126,10 +114,9 @@ export const useBricks = ({
     reset(selectedBrickIdsState);
   });
   const updateBrickOrder = useRecoilCallback(
-    ({ set }) =>
-      (newBrickOrder: string[]) => {
-        set(brickOrderState, newBrickOrder);
-      }
+    ({ set }) => (newBrickOrder: string[]) => {
+      set(brickOrderState, newBrickOrder);
+    }
   );
 
   useEffect(
@@ -261,63 +248,49 @@ export const useBrick = (brickId: string) => {
 
 export const useBrickManipulator = () => {
   const insertBrick = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async ({
-        newBrick,
-        targetBrickId,
-        offset = 0,
-      }: {
-        newBrick: Brick;
-        targetBrickId?: string;
-        offset?: number;
-      }) => {
-        const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
-        const brickOrder = [...(await snapshot.getPromise(brickOrderState))];
-        if (targetBrickId && !brickOrder.includes(targetBrickId)) {
-          throw new Error('target brick not found');
-        }
-        brickDict[newBrick.brickId] = newBrick;
-        brickOrder.splice(
-          (targetBrickId ? brickOrder.indexOf(targetBrickId) : 0) + offset,
-          0,
-          newBrick.brickId
-        );
-        set(brickDictState, brickDict);
-        set(brickOrderState, brickOrder);
+    ({ snapshot, set }) => async ({
+      newBrick,
+      targetBrickId,
+      offset = 0,
+    }: {
+      newBrick: Brick;
+      targetBrickId?: string;
+      offset?: number;
+    }) => {
+      const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
+      const brickOrder = [...(await snapshot.getPromise(brickOrderState))];
+      if (targetBrickId && !brickOrder.includes(targetBrickId)) {
+        throw new Error('target brick not found');
       }
+      brickDict[newBrick.brickId] = newBrick;
+      brickOrder.splice(
+        (targetBrickId ? brickOrder.indexOf(targetBrickId) : 0) + offset,
+        0,
+        newBrick.brickId
+      );
+      set(brickDictState, brickDict);
+      set(brickOrderState, brickOrder);
+    }
   );
 
   const cleanup = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async (brickId: string) => {
-        const brickDict = await snapshot.getPromise(brickDictState);
-        const filterDict = <T>(dict: Record<string, T>, excludeKey: string[]) =>
-          Object.entries(dict).reduce<Record<string, T>>(
-            (prev, [k, v]) =>
-              excludeKey.includes(k) ? prev : { ...prev, [k]: v },
-            {}
-          );
-        set(brickOrderState, (brickOrder) =>
-          brickOrder.filter((id) => id !== brickId)
+    ({ snapshot, set }) => async (brickId: string) => {
+      const brickDict = await snapshot.getPromise(brickDictState);
+      const filterDict = <T>(dict: Record<string, T>, excludeKey: string[]) =>
+        Object.entries(dict).reduce<Record<string, T>>(
+          (prev, [k, v]) =>
+            excludeKey.includes(k) ? prev : { ...prev, [k]: v },
+          {}
         );
-        set(activeBrickIdState, (activeBrickId) =>
-          activeBrickId === brickId ? null : activeBrickId
-        );
-        set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
-        delete editorRefs[brickId];
-        const brick = brickDict[brickId];
-        if (brick?.noteType === 'content' && brick?.mira) {
-          const miraId = brick.mira.id;
-          const exportedValues =
-            (await snapshot.getPromise(miraValuesExportedState)) ?? [];
-          set(miraDeclaredValueDictState, (declaredValueDict) =>
-            filterDict(declaredValueDict, exportedValues[miraId] ?? [])
-          );
-          set(miraValuesExportedState, (exportedValues) =>
-            filterDict(exportedValues ?? [], [miraId])
-          );
-        }
-      }
+      set(brickOrderState, (brickOrder) =>
+        brickOrder.filter((id) => id !== brickId)
+      );
+      set(activeBrickIdState, (activeBrickId) =>
+        activeBrickId === brickId ? null : activeBrickId
+      );
+      set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
+      delete editorRefs[brickId];
+    }
   );
 
   return { insertBrick, cleanup };
@@ -326,18 +299,17 @@ export const useBrickManipulator = () => {
 export const useInViewBrickState = () => {
   const inViewBrickIds = useRecoilValue(inViewBrickIdsState);
   const updateInViewState = useRecoilCallback(
-    ({ set }) =>
-      (brickId: string, inView: boolean) => {
-        // console.log(brickId, inView);
-        set(inViewBrickIdsState, (ids) => {
-          const includes = ids.includes(brickId);
-          return inView && !includes
-            ? [...ids, brickId]
-            : !inView && includes
-            ? ids.filter((id) => id !== brickId)
-            : ids;
-        });
-      }
+    ({ set }) => (brickId: string, inView: boolean) => {
+      // console.log(brickId, inView);
+      set(inViewBrickIdsState, (ids) => {
+        const includes = ids.includes(brickId);
+        return inView && !includes
+          ? [...ids, brickId]
+          : !inView && includes
+          ? ids.filter((id) => id !== brickId)
+          : ids;
+      });
+    }
   );
 
   return {

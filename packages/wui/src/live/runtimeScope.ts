@@ -1,21 +1,6 @@
 import { nanoid } from 'nanoid';
 import { createElement, Fragment } from 'react';
-
-export interface RuntimeScope {
-  $run(element: any): void;
-  $val(...args: any[]): void;
-  $use(val: any): void;
-  $jsxFactory: any;
-  $jsxFragment: any;
-}
-
-export interface RuntimeEnvironment {
-  envId: string;
-  render: any;
-  exportVal: Record<string, any>;
-  referenceVal: Record<string, any>;
-  getRuntimeScope: (e: { scope: Record<string, unknown> }) => RuntimeScope;
-}
+import { RuntimeEnvironment, RuntimeScope } from '../types';
 
 export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
   const environment: RuntimeEnvironment = {

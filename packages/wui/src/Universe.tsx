@@ -4,6 +4,7 @@ import React, { useCallback, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useUniverseContext, RefreshModuleEvent } from './context';
 import { useHistory, HistoryObserver } from './hooks/useHistory';
+import { ProvidenceObserver } from './hooks/useProvidence';
 import { useBricks, createNewBrick } from './state/brick';
 import { useDependency } from './state/dependency';
 import { EditorLoaderConfig } from './components/Editor';
@@ -125,6 +126,7 @@ export const Universe: React.VFC<UniverseProps> = (props) => {
   return (
     <RecoilRoot>
       <HistoryObserver />
+      <ProvidenceObserver />
       <UniverseView {...props} />
     </RecoilRoot>
   );

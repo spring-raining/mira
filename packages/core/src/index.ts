@@ -10,7 +10,7 @@ export type { Plugin, Processor };
 export {
   parseImportClause,
   parseImportStatement,
-  scanImportSpecifier,
+  scanModuleSpecifier,
   importModules,
 } from './ecmaImport';
 export type { MiraConfig, RuntimeScope } from './types';

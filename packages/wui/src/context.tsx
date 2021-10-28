@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from 'react';
 import { useHistoryContext } from './hooks/history/context';
+import { useProvidenceContext } from './hooks/providence/context';
 
 export interface RefreshModuleEvent {
   module: any;
@@ -73,10 +74,13 @@ const useHmr = () => {
 export const UniverseProvider: React.FC = ({ children }) => {
   const hmrProvider = useHmr();
   const { HistoryProvider } = useHistoryContext();
+  const { ProvidenceProvider } = useProvidenceContext();
 
   return (
     <universeContext.Provider value={{ ...hmrProvider }}>
-      <HistoryProvider>{children}</HistoryProvider>
+      <HistoryProvider>
+        <ProvidenceProvider>{children}</ProvidenceProvider>
+      </HistoryProvider>
     </universeContext.Provider>
   );
 };

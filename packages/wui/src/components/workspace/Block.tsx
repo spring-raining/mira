@@ -10,6 +10,7 @@ import {
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
+import { useRenderedData } from '../../state/evaluator';
 import { cssVar } from '../../theme';
 import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
@@ -17,12 +18,6 @@ import { Editor, EditorLoaderConfig } from '../Editor';
 import { PlusIcon, TrashIcon } from '../icon';
 import { ErrorPreText } from '../styled/common';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
-import {
-  LiveProvider,
-  LivedPreview,
-  LivedError,
-  useLivedComponent,
-} from './LiveProvider';
 import { MarkdownPreview } from './MarkdownProvider';
 
 const visibilityHidden = css`
@@ -103,15 +98,6 @@ const EditorPart = styled.div`
   position: sticky;
   top: 0;
   pointer-events: auto;
-`;
-const LanguageCompletionContainer = styled.div<{ active?: boolean }>`
-  position: absolute;
-  top: -2rem;
-  left: 0;
-  width: 12rem;
-  border-radius: 4px 4px 0 0;
-  background-color: ${(props) =>
-    props.active ? cssVar('colors.gray.100') : cssVar('colors.gray.50')};
 `;
 const EditorContainer = styled.div<{ active?: boolean }>`
   position: absolute;
@@ -218,17 +204,32 @@ const BlockToolBar = styled.div`
   pointer-events: auto;
 `;
 
+const EvalPresentation: React.VFC<{ brickId: string }> = ({ brickId }) => {
+  const { output } = useRenderedData(brickId);
+  return (
+    <>
+      {output?.error ? (
+        <div>
+          <ErrorPreText>{output.error.toString()}</ErrorPreText>
+        </div>
+      ) : (
+        output?.element
+      )}
+    </>
+  );
+};
+
 export const BlockComponent: React.FC<{
   brickId: string;
   language: string;
   noteType: Brick['noteType'];
-  isLived?: boolean;
+  // isLived?: boolean;
   editorLoaderConfig?: EditorLoaderConfig;
 }> = ({
   brickId,
   language: initialLanguage,
   noteType,
-  isLived,
+  // isLived,
   editorLoaderConfig,
 }) => {
   const {
@@ -243,7 +244,7 @@ export const BlockComponent: React.FC<{
   } = useBrick(brickId);
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId });
-  const live = useLivedComponent();
+  // const live = useLivedComponent();
 
   const [language, setLanguage] = useState(() => initialLanguage);
   const handleSubmitLanguage = useCallback(
@@ -282,23 +283,6 @@ export const BlockComponent: React.FC<{
       e.stopPropagation();
     }, []),
   };
-
-  const [editorText, setEditorText] = useState(() => brick.text);
-  const onEditorChange = useCallback(
-    (text: string) => {
-      setEditorText(text);
-      updateBrick(text);
-      if (live && isLived) {
-        live.onChange(text);
-      }
-    },
-    [updateBrick, live, isLived]
-  );
-  // useEffect(() => {
-  //   if (!isActive && brick.text !== editorText) {
-  //     updateBrick(editorText);
-  //   }
-  // }, [isActive, brick.text, editorText, updateBrick]);
 
   const [editorHeight, setEditorHeight] = useState(0);
   const onContentHeightChange = useCallback((height) => {
@@ -353,11 +337,12 @@ export const BlockComponent: React.FC<{
           )}
         </PreviewPart>
         <LivePreviewStickyArea>
-          {isLived && (
+          {brick.noteType === 'content' && brick.mira?.isLived && (
             <LivePreviewPart>
               <LivePreviewContainer>
-                <LivedPreview />
-                <LivedError />
+                <React.Suspense fallback={null}>
+                  <EvalPresentation brickId={brickId} />
+                </React.Suspense>
               </LivePreviewContainer>
             </LivePreviewPart>
           )}
@@ -378,33 +363,14 @@ export const BlockComponent: React.FC<{
                 visibilityHidden
             )}
           >
-            {/* <LanguageCompletionContainer
-              active={isActive}
-              className={cx(!isActive && !isFocused && visibilityHidden)}
-            >
-              <LanguageCompletionForm
-                language={language}
-                onUpdate={handleSubmitLanguage}
-                onFocus={setActive}
-              />
-            </LanguageCompletionContainer> */}
             <EditorContainer active={isActive}>
               <Editor
                 language={editorLanguage}
-                onChange={onEditorChange}
+                onChange={updateBrick}
                 padding={{ top: 16, bottom: 16 }}
+                code={brick.text}
                 {...{ editorLoaderConfig, onContentHeightChange }}
                 {...editorCallbacks}
-                {...(live && isLived
-                  ? {
-                      code: live.code,
-                      readOnly: !live.canEdit,
-                      errorMarkers: live.errorMarkers,
-                      warnMarkers: live.warnMarkers,
-                    }
-                  : {
-                      code: brick.text,
-                    })}
               />
             </EditorContainer>
           </EditorPart>
@@ -457,34 +423,14 @@ export const Block: React.VFC<
   if (brick.noteType === 'script') {
     return <BlockComponent {...brick} language="jsx" />;
   }
-  if (brick.mira?.isLived) {
-    return (
-      <LiveProvider
-        mira={brick.mira}
-        code={brick.text}
-        {...{ transpilerConfig }}
-      >
-        <BlockComponent
-          {...{
-            brickId,
-            language: brick.language,
-            noteType: brick.noteType,
-            editorLoaderConfig,
-          }}
-          isLived
-        />
-      </LiveProvider>
-    );
-  } else {
-    return (
-      <BlockComponent
-        {...{
-          brickId,
-          language: brick.language,
-          noteType: brick.noteType,
-          editorLoaderConfig,
-        }}
-      />
-    );
-  }
+  return (
+    <BlockComponent
+      {...{
+        brickId,
+        language: brick.language,
+        noteType: brick.noteType,
+        editorLoaderConfig,
+      }}
+    />
+  );
 };

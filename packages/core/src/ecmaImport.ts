@@ -114,7 +114,7 @@ export const parseImportStatement = (
       ...bindingDef,
       specifier,
       all: false,
-    }
+    };
   } else {
     return {
       specifier,
@@ -128,10 +128,12 @@ export const parseImportStatement = (
   }
 };
 
-export const scanImportSpecifier = async (source: string): Promise<readonly ImportSpecifier[]> => {
+export const scanModuleSpecifier = async (
+  source: string
+): Promise<[readonly ImportSpecifier[], readonly string[]]> => {
   await initEsModuleLexer;
-  const [imports] = await parse(source);
-  return imports;
+  const [imports, exports] = await parse(source);
+  return [imports, exports];
 };
 
 export const importModules = async (

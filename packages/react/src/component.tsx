@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, ReactChild } from 'react';
 import {
   parseImportStatement,
-  scanImportSpecifier,
+  scanModuleSpecifier,
   importModules,
   MiraConfig,
 } from '@mirajs/core';
@@ -17,7 +17,7 @@ const loadModule = async (modules: string[]) => {
   const defs = (
     await Promise.all(
       modules.map(async (mod) => {
-        const imports = await scanImportSpecifier(mod);
+        const [imports] = await scanModuleSpecifier(mod);
         return imports.map((imp) => {
           const statement = parseImportStatement(mod, imp);
           if (!statement) {
