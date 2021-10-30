@@ -16,7 +16,9 @@ import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
 import { PlusIcon, TrashIcon } from '../icon';
+import { PopperPortal } from '../PopperPortal';
 import { ErrorPreText } from '../styled/common';
+import { BlockTypeSelect } from './BlockTypeSelect';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
 import { MarkdownPreview } from './MarkdownProvider';
 
@@ -188,13 +190,14 @@ const MiddleToolHandle = styled.div`
   width: 2rem;
   pointer-events: auto;
 `;
+const BlockToolBarHolder = styled.div`
+  position: relative;
+  top: -1.75rem;
+`;
 const BlockToolBar = styled.div`
-  position: absolute;
-  top: -2.75rem;
-  left: 1rem;
   width: 18rem;
   height: 2.25rem;
-  padding: 0 0.75rem 0 1.125rem;
+  padding: 0 0.75rem 0 0.25rem;
   border-radius: 1.125rem;
   display: flex;
   align-items: center;
@@ -306,6 +309,41 @@ export const BlockComponent: React.FC<{
               `}
             />
           </AddIconButton>
+          {isActive && (
+            <BlockToolBarHolder>
+              <PopperPortal
+                popperOptions={{
+                  placement: 'bottom-start',
+                }}
+              >
+                <BlockToolBar>
+                  <BlockTypeSelect
+                    value={
+                      noteType === 'script'
+                        ? 'script'
+                        : language === 'markdown'
+                        ? 'note'
+                        : 'snippet'
+                    }
+                  />
+                  <LanguageCompletionForm
+                    language={language}
+                    onUpdate={handleSubmitLanguage}
+                    onFocus={setActive}
+                  />
+                  <FlexCenter>
+                    <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
+                      <TrashIcon
+                        className={css`
+                          height: 1.5rem;
+                        `}
+                      />
+                    </RemoveIconButton>
+                  </FlexCenter>
+                </BlockToolBar>
+              </PopperPortal>
+            </BlockToolBarHolder>
+          )}
         </FlexCenter>
       </TopToolPart>
       <MiddleToolContainer
@@ -375,24 +413,6 @@ export const BlockComponent: React.FC<{
             </EditorContainer>
           </EditorPart>
         </EditorStickyArea>
-        {isActive && (
-          <BlockToolBar>
-            <LanguageCompletionForm
-              language={language}
-              onUpdate={handleSubmitLanguage}
-              onFocus={setActive}
-            />
-            <FlexCenter>
-              <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
-                <TrashIcon
-                  className={css`
-                    height: 1.5rem;
-                  `}
-                />
-              </RemoveIconButton>
-            </FlexCenter>
-          </BlockToolBar>
-        )}
         <MiddleToolHandle />
       </MiddleToolContainer>
       <BottomToolPart
