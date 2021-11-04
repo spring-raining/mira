@@ -79,10 +79,11 @@ export const transpileCode = async ({
       errors: [],
     };
   } catch (error) {
+    const errorObject = error instanceof Error ? error : new SyntaxError();
     return {
-      errorObject: error,
-      errors: mapMessage(error.errors ?? []),
-      warnings: mapMessage(error.warnings ?? []),
+      errorObject,
+      errors: mapMessage((errorObject as any).errors ?? []),
+      warnings: mapMessage((errorObject as any).warnings ?? []),
     };
   }
 };

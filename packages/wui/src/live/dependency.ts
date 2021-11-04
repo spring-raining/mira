@@ -1,6 +1,6 @@
 import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
-import { EventTarget } from 'event-target-shim';
+import { EventTarget, Event } from 'event-target-shim';
 import { transpileCode } from './transpileCode';
 
 const intersection = <T extends string | number>(
@@ -21,12 +21,23 @@ const checkImportDeps = (
   );
 };
 
+class CustomEvent<T extends string, S> extends Event<T> {
+  public detail: S;
+  constructor(message: T, data: Event.EventInit & { detail: S }) {
+    super(message, data);
+    this.detail = data.detail;
+  }
+}
+
 type DependencyUpdatePayload = {
   id: string;
   exportVal: Record<string, unknown>;
   dependencyError: Error | undefined;
 };
-export type DependencyUpdateEvent = CustomEvent<DependencyUpdatePayload>;
+export type DependencyUpdateEvent = CustomEvent<
+  'dependencyUpdate',
+  DependencyUpdatePayload
+>;
 
 export class DependencyManager extends EventTarget<{
   dependencyUpdate: DependencyUpdateEvent;
@@ -38,10 +49,10 @@ export class DependencyManager extends EventTarget<{
   private miraValDependency: Record<string, Set<string>> = {};
   private miraDefinedValues: Set<string> = new Set();
   private blockingEvaluateSemaphore = 0;
-  private blockingUpdateEvent: CustomEvent<DependencyUpdatePayload>[] = [];
+  private blockingUpdateEvent: DependencyUpdateEvent[] = [];
 
   private safeDispatch(payload: DependencyUpdatePayload) {
-    const event = new CustomEvent<DependencyUpdatePayload>('dependencyUpdate', {
+    const event = new CustomEvent('dependencyUpdate', {
       detail: payload,
     });
     if (this.blockingEvaluateSemaphore > 0) {
@@ -127,7 +138,8 @@ export class DependencyManager extends EventTarget<{
       nextExports = namedExportVal;
       delete this.miraBrickDependencyError[id];
     } catch (error) {
-      this.miraBrickDependencyError[id] = error;
+      this.miraBrickDependencyError[id] =
+        error instanceof Error ? error : new Error();
     }
     const removedVal = prevExports.filter((v) => !nextExports.includes(v));
     nextExports.forEach((val) => this.miraDefinedValues.add(val));

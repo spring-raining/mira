@@ -52,7 +52,7 @@ export function esbuildPlugin(): Plugin {
     target: string | string[]
   ) => {
     try {
-      const {code: transformedCode, warnings} = await esbuildTransform({
+      const { code: transformedCode, warnings } = await esbuildTransform({
         config: esbuildConfig,
         code,
         filePath,
@@ -71,8 +71,8 @@ export function esbuildPlugin(): Plugin {
       }
       return transformedCode;
     } catch (e) {
-      if (Array.isArray(e.errors)) {
-        const msg = e.errors[0];
+      if (Array.isArray((e as any).errors)) {
+        const msg = (e as any).errors[0];
 
         if (msg.location) {
           throw new PluginSyntaxError(

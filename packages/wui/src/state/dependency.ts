@@ -90,7 +90,7 @@ export const useDependency = ({
             } catch (error) {
               set(miraImportErrorDictState, (val) => ({
                 ...val,
-                [brick.id]: error,
+                [brick.id]: (error instanceof Error) ? error : new Error(),
               }));
               return [];
             }
@@ -135,7 +135,7 @@ export const useDependency = ({
         } catch (error) {
           set(miraImportErrorDictState, (val) => ({
             ...val,
-            [brick.id]: error,
+            [brick.id]: (error instanceof Error) ? error : new Error(),
           }));
         }
       }

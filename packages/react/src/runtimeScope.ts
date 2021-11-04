@@ -17,7 +17,9 @@ export const getRuntimeScope = ({
       try {
         resultCallback(errorBoundary(element));
       } catch (error) {
-        errorCallback(error);
+        if (error instanceof Error) {
+          errorCallback(error);
+        }
       }
     }
   };

@@ -62,7 +62,10 @@ export const setupProvidence = ({
       return {
         id,
         environment,
-        error,
+        error:
+          error instanceof Error
+            ? error
+            : new EvalError('Unexpected exception was thrown'),
         errorMarkers: transpiledData.errors,
         warnMarkers: transpiledData.warnings,
       };

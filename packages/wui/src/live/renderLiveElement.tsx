@@ -49,7 +49,9 @@ export const renderLiveElement = ({
     }
     return environment;
   } catch (error) {
-    errorCallback(error);
+    if (error instanceof Error) {
+      errorCallback(error);
+    }
     return null;
   }
 };
