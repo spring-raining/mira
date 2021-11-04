@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useRecoilValue, useRecoilCallback } from 'recoil';
 import { setupProvidence, Providence } from '../live/providence';
 import { brickDictState, miraEvaluatedDataDictState } from '../state/atoms';
-import { Brick, ContentBrick, Mira, EvaluatedResult } from '../types';
+import { Brick, SnippetBrick, Mira, EvaluatedResult } from '../types';
 import { useProvidenceRef } from './providence/context';
 
 const usePrevState = <T>(state: T): [T, T | undefined] => {
@@ -43,21 +43,19 @@ export const ProvidenceObserver = () => {
     const [nextBrickDict, prevBrickDict = {}] = brickDictWithPrev;
     const isLivedBrick = (
       brick: Brick
-    ): brick is ContentBrick & { mira: Mira } =>
-      brick.noteType === 'content' && !!brick.mira?.isLived;
+    ): brick is SnippetBrick & { mira: Mira } =>
+      brick.type === 'snippet' && !!brick.mira?.isLived;
     const livedCode = Object.values(nextBrickDict)
       .filter(isLivedBrick)
       .map((brick) => ({
-        brickId: brick.brickId,
+        brickId: brick.id,
         code: brick.text,
         mira: brick.mira,
       }));
     const deadCode = Object.values(prevBrickDict)
-      .filter(
-        (brick) => isLivedBrick(brick) && !(brick.brickId in nextBrickDict)
-      )
+      .filter((brick) => isLivedBrick(brick) && !(brick.id in nextBrickDict))
       .map((brick) => ({
-        brickId: brick.brickId,
+        brickId: brick.id,
         code: undefined,
         mira: undefined,
       }));

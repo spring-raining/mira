@@ -16,19 +16,22 @@ export interface Mira {
 }
 
 interface BrickState {
-  brickId: string;
+  id: string;
   text: string;
   children?: ASTNode[] | null;
 }
-export type ContentBrick = BrickState & {
-  noteType: 'content';
+export type NoteBrick = BrickState & {
+  type: 'note';
+};
+export type SnippetBrick = BrickState & {
+  type: 'snippet';
   language: string;
   mira?: Mira;
 };
 export type ScriptBrick = BrickState & {
-  noteType: 'script';
+  type: 'script';
 };
-export type Brick = ContentBrick | ScriptBrick;
+export type Brick = NoteBrick | SnippetBrick | ScriptBrick;
 
 export interface MarkerMessage {
   location: {

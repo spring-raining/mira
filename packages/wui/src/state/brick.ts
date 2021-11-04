@@ -45,10 +45,7 @@ const bricksState = selector({
       .filter((brick) => !!brick),
 });
 
-const miraImportErrorStateFamily = selectorFamily<
-  Error | null,
-  Brick['brickId']
->({
+const miraImportErrorStateFamily = selectorFamily<Error | null, Brick['id']>({
   key: 'miraImportErrorStateFamily',
   get: (brickId) => ({ get }) => get(miraImportErrorDictState)[brickId] ?? null,
 });
@@ -88,9 +85,9 @@ export const useBricks = ({
   const pushBrick = useRecoilCallback(({ set }) => async (newBrick: Brick) => {
     set(brickDictState, (brickDict) => ({
       ...brickDict,
-      [newBrick.brickId]: newBrick,
+      [newBrick.id]: newBrick,
     }));
-    set(brickOrderState, (brickOrder) => [...brickOrder, newBrick.brickId]);
+    set(brickOrderState, (brickOrder) => [...brickOrder, newBrick.id]);
   });
   const flushAll = useRecoilCallback(({ reset }) => () => {
     reset(activeBrickIdState);
@@ -175,7 +172,7 @@ export const useBrick = (brickId: string) => {
             ...newBrick.reduce(
               (acc, brick) => ({
                 ...acc,
-                [brick.brickId]: brick,
+                [brick.id]: brick,
               }),
               {}
             ),
@@ -183,9 +180,9 @@ export const useBrick = (brickId: string) => {
           set(brickOrderState, (prevState) => {
             const arr = [...prevState];
             arr.splice(
-              prevState.indexOf(brick.brickId),
+              prevState.indexOf(brick.id),
               1,
-              ...newBrick.map(({ brickId }) => brickId)
+              ...newBrick.map(({ id }) => id)
             );
             return arr;
           });
@@ -199,7 +196,7 @@ export const useBrick = (brickId: string) => {
     ({ set, snapshot }) =>
       debounce(({ hasCancelled }) => async (language: string) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
-        if (brick.noteType !== 'content') {
+        if (brick.type !== 'snippet') {
           return;
         }
         const newBrick = updateBrickLanguage(brick, language);
@@ -212,7 +209,7 @@ export const useBrick = (brickId: string) => {
             ...newBrick.reduce(
               (acc, brick) => ({
                 ...acc,
-                [brick.brickId]: brick,
+                [brick.id]: brick,
               }),
               {}
             ),
@@ -220,9 +217,9 @@ export const useBrick = (brickId: string) => {
           set(brickOrderState, (prevState) => {
             const arr = [...prevState];
             arr.splice(
-              prevState.indexOf(brick.brickId),
+              prevState.indexOf(brick.id),
               1,
-              ...newBrick.map(({ brickId }) => brickId)
+              ...newBrick.map(({ id }) => id)
             );
             return arr;
           });
@@ -262,11 +259,11 @@ export const useBrickManipulator = () => {
       if (targetBrickId && !brickOrder.includes(targetBrickId)) {
         throw new Error('target brick not found');
       }
-      brickDict[newBrick.brickId] = newBrick;
+      brickDict[newBrick.id] = newBrick;
       brickOrder.splice(
         (targetBrickId ? brickOrder.indexOf(targetBrickId) : 0) + offset,
         0,
-        newBrick.brickId
+        newBrick.id
       );
       set(brickDictState, brickDict);
       set(brickOrderState, brickOrder);
@@ -319,16 +316,32 @@ export const useInViewBrickState = () => {
 };
 
 export const createNewBrick = ({
+  type,
   language,
   isLived,
 }: {
-  language: string;
+  type: Brick['type'];
+  language?: string;
   isLived?: boolean;
 }): Brick => {
+  if (type === 'snippet') {
+    return {
+      id: nanoid(),
+      type,
+      language: language ?? '',
+      text: '',
+      children: null,
+      ...(isLived && {
+        mira: {
+          id: nanoid(),
+          isLived,
+        },
+      }),
+    };
+  }
   return {
-    brickId: nanoid(),
-    noteType: 'content',
-    language,
+    id: nanoid(),
+    type,
     text: '',
     children: null,
     ...(isLived && {

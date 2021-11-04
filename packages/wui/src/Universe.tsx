@@ -1,11 +1,11 @@
 import { styled } from '@linaria/react';
 import { ServiceOptions } from '@mirajs/transpiler';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { useUniverseContext, RefreshModuleEvent } from './context';
 import { useHistory, HistoryObserver } from './hooks/useHistory';
 import { ProvidenceObserver } from './hooks/useProvidence';
-import { useBricks, createNewBrick } from './state/brick';
+import { useBricks } from './state/brick';
 import { useDependency } from './state/dependency';
 import { EditorLoaderConfig } from './components/Editor';
 import { PlanetarySystem } from './components/planetarySystem';
@@ -54,7 +54,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   transpilerConfig,
   editorLoaderConfig,
 }) => {
-  const { bricks, pushBrick, importBricks, resetActiveBrick } = useBricks({
+  const { bricks, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
   const { loadDependency, refreshDependency } = useDependency({
@@ -62,14 +62,10 @@ const UniverseView: React.VFC<UniverseProps> = ({
     depsRootPath,
     moduleLoader,
   });
-  const { addRefreshModuleListener, removeRefreshModuleListener } =
-    useUniverseContext();
-  const onCreateCodeBlockClick = useCallback(() => {
-    pushBrick(createNewBrick({ language: 'jsx', isLived: true }));
-  }, [pushBrick]);
-  const onCreateTextBlockClick = useCallback(() => {
-    pushBrick(createNewBrick({ language: 'markdown' }));
-  }, [pushBrick]);
+  const {
+    addRefreshModuleListener,
+    removeRefreshModuleListener,
+  } = useUniverseContext();
 
   const history = useHistory();
 
@@ -111,7 +107,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
         <MainSticky>
           {bricks.map((brick) => (
             <Block
-              key={brick.brickId}
+              key={brick.id}
               {...{ transpilerConfig, editorLoaderConfig }}
               {...brick}
             />

@@ -54,7 +54,7 @@ export const collectImports = async ({
   brick: Brick;
   path: string;
 }): Promise<ParsedImportStatement[]> => {
-  if (brick.noteType !== 'script') {
+  if (brick.type !== 'script') {
     return [];
   }
   const parseAll =

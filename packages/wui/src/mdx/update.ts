@@ -1,19 +1,15 @@
 import { nanoid } from 'nanoid/non-secure';
-import { ASTNode, Brick } from '../types';
+import { Brick } from '../types';
 import { hydrateMdx } from './io';
 
 const liveLanguage = ['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'];
-const markdownLanguage = ['md', 'mkd', 'markdn', 'markdown'];
 
 export const updateBrickByText = (
   brick: Brick,
   newText: string
 ): Brick | Brick[] => {
   let mdx = newText;
-  if (
-    brick.noteType === 'content' &&
-    !markdownLanguage.includes(brick.language.toLowerCase())
-  ) {
+  if (brick.type === 'snippet') {
     const meta: string = brick.mira?.isLived ? 'mira' : '';
     const textEscaped = newText.replace(/```/g, '');
 
@@ -32,7 +28,7 @@ export const updateBrickByText = (
     // there's possibility of divide to multiple bricks
     return bricks;
   } else {
-    bricks[0].brickId = brick.brickId;
+    bricks[0].id = brick.id;
     return bricks[0];
   }
 };
@@ -41,7 +37,7 @@ export const updateBrickLanguage = (
   brick: Brick,
   newLanguage: string
 ): Brick | Brick[] => {
-  if (brick.noteType !== 'content') {
+  if (brick.type !== 'snippet') {
     return brick;
   }
   const newBrick = { ...brick };

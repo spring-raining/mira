@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRecoilValue, selectorFamily } from 'recoil';
-import { ContentBrick, MarkerMessage, EvaluatedResult } from '../types';
+import { MarkerMessage, EvaluatedResult } from '../types';
 import { renderLiveElement } from '../live/renderLiveElement';
 import { brickDictState, miraEvaluatedDataDictState } from './atoms';
 
@@ -73,14 +73,10 @@ const miraRenderedDataFamily = selectorFamily<
   key: 'miraRenderedDataFamily',
   get: (brickId: string) => ({ get }) => {
     const brick = get(brickDictState)[brickId];
-    if (brick?.noteType !== 'content') {
+    if (brick?.type !== 'snippet' || !brick.mira?.id) {
       return undefined;
     }
-    const contentBrick: ContentBrick = brick;
-    if (!contentBrick.mira?.id) {
-      return undefined;
-    }
-    return get(miraOutputFamily(contentBrick.mira.id));
+    return get(miraOutputFamily(brick.mira.id));
   },
 });
 

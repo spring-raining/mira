@@ -222,19 +222,10 @@ const EvalPresentation: React.VFC<{ brickId: string }> = ({ brickId }) => {
   );
 };
 
-export const BlockComponent: React.FC<{
-  brickId: string;
-  language: string;
-  noteType: Brick['noteType'];
-  // isLived?: boolean;
+export const Block: React.FC<{
+  id: string;
   editorLoaderConfig?: EditorLoaderConfig;
-}> = ({
-  brickId,
-  language: initialLanguage,
-  noteType,
-  // isLived,
-  editorLoaderConfig,
-}) => {
+}> = ({ id, editorLoaderConfig }) => {
   const {
     brick,
     isActive,
@@ -244,12 +235,19 @@ export const BlockComponent: React.FC<{
     setActive,
     setFocused,
     importError,
-  } = useBrick(brickId);
+  } = useBrick(id);
   const { insertBrick, cleanup } = useBrickManipulator();
-  const editorCallbacks = useEditorCallbacks({ brickId });
-  // const live = useLivedComponent();
+  const editorCallbacks = useEditorCallbacks({ brickId: id });
 
-  const [language, setLanguage] = useState(() => initialLanguage);
+  const [language, setLanguage] = useState(() =>
+    brick.type === 'snippet'
+      ? brick.language
+      : brick.type === 'note'
+      ? 'markdown'
+      : brick.type === 'script'
+      ? 'jsx'
+      : ''
+  );
   const handleSubmitLanguage = useCallback(
     (lang: string) => {
       setLanguage(lang);
@@ -263,21 +261,29 @@ export const BlockComponent: React.FC<{
   );
   const prependBrick = useCallback(() => {
     insertBrick({
-      newBrick: createNewBrick({ language: 'jsx', isLived: true }),
-      targetBrickId: brickId,
+      newBrick: createNewBrick({
+        type: 'snippet',
+        language: 'jsx',
+        isLived: true,
+      }),
+      targetBrickId: id,
       offset: 0,
     });
-  }, [insertBrick, brickId]);
+  }, [insertBrick, id]);
   const appendBrick = useCallback(() => {
     insertBrick({
-      newBrick: createNewBrick({ language: 'jsx', isLived: true }),
-      targetBrickId: brickId,
+      newBrick: createNewBrick({
+        type: 'snippet',
+        language: 'jsx',
+        isLived: true,
+      }),
+      targetBrickId: id,
       offset: 1,
     });
-  }, [insertBrick, brickId]);
+  }, [insertBrick, id]);
   const deleteBrick = useCallback(() => {
-    cleanup(brickId);
-  }, [cleanup, brickId]);
+    cleanup(id);
+  }, [cleanup, id]);
 
   const containerCallbacks = {
     onMouseOver: useCallback(() => setFocused(true), [setFocused]),
@@ -295,8 +301,8 @@ export const BlockComponent: React.FC<{
   const [observerRef, inView] = useInView({ threshold: 0 });
   const { updateInViewState } = useInViewBrickState();
   useEffect(() => {
-    updateInViewState(brickId, inView);
-  }, [brickId, inView, updateInViewState]);
+    updateInViewState(id, inView);
+  }, [id, inView, updateInViewState]);
 
   return (
     <BlockContainer ref={observerRef} {...containerCallbacks}>
@@ -317,15 +323,7 @@ export const BlockComponent: React.FC<{
                 }}
               >
                 <BlockToolBar>
-                  <BlockTypeSelect
-                    value={
-                      noteType === 'script'
-                        ? 'script'
-                        : language === 'markdown'
-                        ? 'note'
-                        : 'snippet'
-                    }
-                  />
+                  <BlockTypeSelect value={brick.type} />
                   <LanguageCompletionForm
                     language={language}
                     onUpdate={handleSubmitLanguage}
@@ -354,7 +352,7 @@ export const BlockComponent: React.FC<{
           className={cx(isActive && visibilityHidden)}
           onClick={setActive}
         >
-          {noteType === 'script' && (
+          {brick.type === 'script' && (
             <ScriptPreviewContainer>
               <pre>
                 <ScriptPreviewCode>
@@ -363,7 +361,7 @@ export const BlockComponent: React.FC<{
               </pre>
             </ScriptPreviewContainer>
           )}
-          {language === 'markdown' && (
+          {brick.type === 'note' && (
             <MarkdownPreviewContainer>
               <MarkdownPreview md={brick.text} />
               {!brick.text.trim() && (
@@ -375,16 +373,16 @@ export const BlockComponent: React.FC<{
           )}
         </PreviewPart>
         <LivePreviewStickyArea>
-          {brick.noteType === 'content' && brick.mira?.isLived && (
+          {brick.type === 'snippet' && brick.mira?.isLived && (
             <LivePreviewPart>
               <LivePreviewContainer>
                 <React.Suspense fallback={null}>
-                  <EvalPresentation brickId={brickId} />
+                  <EvalPresentation brickId={id} />
                 </React.Suspense>
               </LivePreviewContainer>
             </LivePreviewPart>
           )}
-          {noteType === 'script' && importError && (
+          {brick.type === 'script' && importError && (
             <LivePreviewPart>
               <LivePreviewContainer>
                 <ErrorPreText>{String(importError)}</ErrorPreText>
@@ -396,7 +394,7 @@ export const BlockComponent: React.FC<{
           <EditorPart
             style={{ height: editorHeight }}
             className={cx(
-              (language === 'markdown' || noteType === 'script') &&
+              (brick.type === 'note' || brick.type === 'script') &&
                 !isActive &&
                 visibilityHidden
             )}
@@ -429,28 +427,5 @@ export const BlockComponent: React.FC<{
         </FlexCenter>
       </BottomToolPart>
     </BlockContainer>
-  );
-};
-
-export const Block: React.VFC<
-  Pick<Brick, 'brickId'> & {
-    transpilerConfig?: ServiceOptions;
-    editorLoaderConfig?: EditorLoaderConfig;
-  }
-> = ({ brickId, transpilerConfig, editorLoaderConfig }) => {
-  const { brick } = useBrick(brickId);
-
-  if (brick.noteType === 'script') {
-    return <BlockComponent {...brick} language="jsx" />;
-  }
-  return (
-    <BlockComponent
-      {...{
-        brickId,
-        language: brick.language,
-        noteType: brick.noteType,
-        editorLoaderConfig,
-      }}
-    />
   );
 };

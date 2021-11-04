@@ -43,7 +43,7 @@ export const miraImportMappingState = atom<
   default: {},
 });
 
-export const miraImportErrorDictState = atom<Record<Brick['brickId'], Error>>({
+export const miraImportErrorDictState = atom<Record<Brick['id'], Error>>({
   key: 'miraImportErrorDictState',
   default: {},
 });

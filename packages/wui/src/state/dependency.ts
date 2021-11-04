@@ -90,7 +90,7 @@ export const useDependency = ({
             } catch (error) {
               set(miraImportErrorDictState, (val) => ({
                 ...val,
-                [brick.brickId]: error,
+                [brick.id]: error,
               }));
               return [];
             }
@@ -135,14 +135,14 @@ export const useDependency = ({
         } catch (error) {
           set(miraImportErrorDictState, (val) => ({
             ...val,
-            [brick.brickId]: error,
+            [brick.id]: error,
           }));
         }
       }
       set(miraImportMappingState, mapping);
       set(miraImportErrorDictState, (val) =>
         importSucceedBricks.reduce((acc, brick) => {
-          delete acc[brick.brickId];
+          delete acc[brick.id];
           return acc;
         }, val)
       );

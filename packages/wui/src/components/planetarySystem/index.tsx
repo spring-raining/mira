@@ -79,7 +79,7 @@ const useScrollAdjustSystem = () => {
 
   const displayPos = useMemo(() => {
     const inViewIndex = inViewBrickIds
-      .map((id) => bricks.findIndex((brick) => id === brick.brickId))
+      .map((id) => bricks.findIndex((brick) => id === brick.id))
       .filter((index) => index >= 0);
     const first = Math.min(...inViewIndex);
     const last = bricks.length - Math.max(...inViewIndex) - 1;
@@ -198,8 +198,12 @@ const PlanetaryListItem: React.FC<{
 };
 
 export const PlanetarySystem: React.VFC = () => {
-  const { bricks, selectedBrickIds, updateBrickOrder, setSelectedBrickIds } =
-    useBricks();
+  const {
+    bricks,
+    selectedBrickIds,
+    updateBrickOrder,
+    setSelectedBrickIds,
+  } = useBricks();
   const onClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
@@ -215,7 +219,7 @@ export const PlanetarySystem: React.VFC = () => {
       if (index === null) {
         return;
       }
-      const brickOrder = bricks.map((b) => b.brickId);
+      const brickOrder = bricks.map((b) => b.id);
       const draggingBrickIds =
         selectedBrickIds.length > 0
           ? brickOrder.filter((id) => selectedBrickIds.includes(id))
@@ -245,11 +249,11 @@ export const PlanetarySystem: React.VFC = () => {
   );
   const onRangeSelect = useCallback(
     (brickId: string) => {
-      const a = bricks.findIndex((b) => b.brickId === lastSelectId);
-      const b = bricks.findIndex((b) => b.brickId === brickId);
+      const a = bricks.findIndex((b) => b.id === lastSelectId);
+      const b = bricks.findIndex((b) => b.id === brickId);
       const selectedIds = bricks
         .slice(Math.min(a, b), Math.max(a, b) + 1)
-        .map((b) => b.brickId);
+        .map((b) => b.id);
       setSelectedBrickIds(selectedIds);
     },
     [bricks, lastSelectId, setSelectedBrickIds]
@@ -270,13 +274,11 @@ export const PlanetarySystem: React.VFC = () => {
       <PlanetarySystemContainer {...{ ref, onClick }} style={{ marginTop }}>
         {bricks.map((brick, i) => (
           <PlanetaryListItem
-            key={brick.brickId}
-            brickId={brick.brickId}
+            key={brick.id}
+            brickId={brick.id}
             index={i}
             hasInsertGutter={i === hoverTargetIndex}
-            isLarge={
-              !!(brick.noteType === 'content' && brick.language !== 'markdown')
-            }
+            isLarge={!!(brick.type === 'snippet')}
             {...{
               onHoverDragItem,
               onDropItem,
@@ -286,9 +288,7 @@ export const PlanetarySystem: React.VFC = () => {
               onMultipleSelect,
             }}
           >
-            {brick.noteType === 'content' &&
-              brick.language === 'markdown' &&
-              getMarkdownSubject(brick.children ?? [])}
+            {brick.type === 'note' && getMarkdownSubject(brick.children ?? [])}
           </PlanetaryListItem>
         ))}
       </PlanetarySystemContainer>
