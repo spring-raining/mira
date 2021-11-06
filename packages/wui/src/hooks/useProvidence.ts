@@ -1,8 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { useRecoilValue, useRecoilCallback } from 'recoil';
 import { setupProvidence, Providence } from '../live/providence';
-import { brickDictState, miraEvaluatedDataDictState } from '../state/atoms';
-import { Brick, SnippetBrick, Mira, EvaluatedResult } from '../types';
+import {
+  brickDictState,
+  brickModuleImportErrorState,
+  miraEvaluatedDataDictState,
+} from '../state/atoms';
+import {
+  Brick,
+  SnippetBrick,
+  Mira,
+  EvaluatedResult,
+  ModuleImportState,
+} from '../types';
 import { useProvidenceRef } from './providence/context';
 
 const usePrevState = <T>(state: T): [T, T | undefined] => {
@@ -13,7 +23,15 @@ const usePrevState = <T>(state: T): [T, T | undefined] => {
   return [state, ref.current];
 };
 
-export const ProvidenceObserver = () => {
+export const ProvidenceObserver = ({
+  mdxPath,
+  depsRootPath,
+  moduleLoader,
+}: {
+  mdxPath: string;
+  depsRootPath: string;
+  moduleLoader: (specifier: string) => Promise<unknown>;
+}) => {
   const providenceRef = useProvidenceRef();
   const brickDict = useRecoilValue(brickDictState);
   const brickDictWithPrev = usePrevState(brickDict);
@@ -30,14 +48,32 @@ export const ProvidenceObserver = () => {
     []
   );
 
+  const onModuleUpdate = useRecoilCallback(
+    ({ set }) => (module: ModuleImportState) => {
+      set(brickModuleImportErrorState, module.importError);
+    },
+    []
+  );
+
   useEffect(() => {
     const p = setupProvidence({
       store: providenceRef.current,
+      mdxPath,
+      depsRootPath,
+      moduleLoader,
       onEvaluatorUpdate,
+      onModuleUpdate,
     });
     providence.current = p;
     return p.teardown;
-  }, [providenceRef, onEvaluatorUpdate]);
+  }, [
+    mdxPath,
+    depsRootPath,
+    moduleLoader,
+    providenceRef,
+    onEvaluatorUpdate,
+    onModuleUpdate,
+  ]);
 
   useEffect(() => {
     const [nextBrickDict, prevBrickDict = {}] = brickDictWithPrev;
@@ -48,22 +84,43 @@ export const ProvidenceObserver = () => {
     const livedCode = Object.values(nextBrickDict)
       .filter(isLivedBrick)
       .map((brick) => ({
-        brickId: brick.id,
+        id: brick.id,
         code: brick.text,
         mira: brick.mira,
       }));
     const deadCode = Object.values(prevBrickDict)
       .filter((brick) => isLivedBrick(brick) && !(brick.id in nextBrickDict))
       .map((brick) => ({
-        brickId: brick.id,
+        id: brick.id,
         code: undefined,
         mira: undefined,
       }));
+    const nextScripts = Object.values(nextBrickDict).filter(
+      ({ type }) => type === 'script'
+    );
+    const prevScripts = Object.values(prevBrickDict).filter(
+      ({ type }) => type === 'script'
+    );
+    const livedScript = nextScripts
+      .filter((n) =>
+        prevScripts.every((p) => p.id !== n.id || p.text !== n.text)
+      )
+      .map((brick) => ({
+        id: brick.id,
+        scriptNode: brick.children ?? undefined,
+      }));
+    const deadScript = prevScripts
+      .filter((p) => nextScripts.every((n) => p.id !== n.id))
+      .map((brick) => ({ id: brick.id, scriptNode: undefined }));
 
+    // Dispatch script updates earlier than code updates to wait for module imports
+    [...livedScript, ...deadScript].forEach((changed) => {
+      providence.current?.dispatchScriptUpdates(changed);
+    });
     [...livedCode, ...deadCode]
       .filter(({ mira }) => !mira || !miraId.current.includes(mira.id))
       .forEach((changed) => {
-        providence.current?.dispatch(changed);
+        providence.current?.dispatchCodeUpdates(changed);
       });
     miraId.current = livedCode.map(({ mira }) => mira.id);
   }, [providence, brickDictWithPrev]);

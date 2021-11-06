@@ -1,6 +1,8 @@
 import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 import { EventTarget, Event } from 'event-target-shim';
+import { collectEsmImports, loadModule, mapModuleValues } from '../mdx/imports';
+import { ASTNode, ModuleImportState } from '../types';
 import { transpileCode } from './transpileCode';
 
 const intersection = <T extends string | number>(
@@ -32,6 +34,7 @@ class CustomEvent<T extends string, S> extends Event<T> {
 type DependencyUpdatePayload = {
   id: string;
   exportVal: Record<string, unknown>;
+  moduleVal: Record<string, unknown>;
   dependencyError: Error | undefined;
 };
 export type DependencyUpdateEvent = CustomEvent<
@@ -39,21 +42,58 @@ export type DependencyUpdateEvent = CustomEvent<
   DependencyUpdatePayload
 >;
 
+export type ModuleUpdateEvent = CustomEvent<'moduleUpdate', ModuleImportState>;
+
 export class DependencyManager extends EventTarget<{
   dependencyUpdate: DependencyUpdateEvent;
+  moduleUpdate: ModuleUpdateEvent;
 }> {
+  private mdxPath: string;
+  private depsRootPath: string;
+  private moduleLoader: (specifier: string) => Promise<unknown>;
   private miraBrickImportDef: Record<string, readonly ImportDefinition[]> = {};
   private miraBrickExportDef: Record<string, readonly string[]> = {};
   private miraBrickDependencyError: Record<string, Error> = {};
+  private miraBrickModuleImportDef: Record<string, readonly string[]> = {};
+  private miraBrickModuleImportError: Record<string, Error> = {};
   private miraExportVal: Record<string, unknown> = {};
   private miraValDependency: Record<string, Set<string>> = {};
   private miraDefinedValues: Set<string> = new Set();
+  private moduleCache: Map<string, Record<string, unknown>> = new Map();
+  private moduleVal: Record<string, unknown> = {};
+  private moduleImportMapping: Record<
+    string,
+    {
+      specifier: string;
+      name: string | null;
+    }
+  > = {};
   private blockingEvaluateSemaphore = 0;
   private blockingUpdateEvent: DependencyUpdateEvent[] = [];
 
-  private safeDispatch(payload: DependencyUpdatePayload) {
+  constructor({
+    mdxPath,
+    depsRootPath,
+    moduleLoader,
+  }: {
+    mdxPath: string;
+    depsRootPath: string;
+    moduleLoader: (specifier: string) => Promise<unknown>;
+  }) {
+    super();
+    this.mdxPath = mdxPath;
+    this.depsRootPath = depsRootPath;
+    this.moduleLoader = moduleLoader;
+  }
+
+  private refreshDependency(id: string) {
     const event = new CustomEvent('dependencyUpdate', {
-      detail: payload,
+      detail: {
+        id,
+        exportVal: this.miraExportVal,
+        moduleVal: this.moduleVal,
+        dependencyError: this.miraBrickDependencyError[id],
+      },
     });
     if (this.blockingEvaluateSemaphore > 0) {
       this.blockingUpdateEvent.push(event);
@@ -62,7 +102,36 @@ export class DependencyManager extends EventTarget<{
     }
   }
 
-  async batchUpdate(fn: () => Promise<void>) {
+  private refreshModuleVal() {
+    const newModuleVal = Object.entries(this.moduleImportMapping).reduce(
+      (acc, [name, mapping]) => {
+        const mod = this.moduleCache.get(mapping.specifier);
+        if (!mod) {
+          return acc;
+        }
+        return {
+          ...acc,
+          [name]: mapping.name ? mod[mapping.name] : mod,
+        };
+      },
+      {}
+    );
+    this.moduleVal = newModuleVal;
+    this.dispatchEvent(
+      new CustomEvent('moduleUpdate', {
+        detail: {
+          mappedVal: { ...newModuleVal },
+          importDef: { ...this.miraBrickModuleImportDef },
+          importError: { ...this.miraBrickModuleImportError },
+        },
+      })
+    );
+    Object.keys(this.miraBrickImportDef).forEach((id) => {
+      this.refreshDependency(id);
+    });
+  }
+
+  async deferUpdateEvent(fn: () => Promise<void>) {
     this.blockingEvaluateSemaphore += 1;
     try {
       await fn();
@@ -151,19 +220,11 @@ export class DependencyManager extends EventTarget<{
     this.miraBrickImportDef[id] = nextImports;
     this.miraBrickExportDef[id] = nextExports;
 
-    this.safeDispatch({
-      id,
-      exportVal: this.miraExportVal,
-      dependencyError: this.miraBrickDependencyError[id],
-    });
+    this.refreshDependency(id);
     if (removedVal.length > 0) {
       Object.entries(this.miraBrickImportDef).forEach(([id_, imports]) => {
         if (imports.some((def) => checkImportDeps(def, removedVal))) {
-          this.safeDispatch({
-            id: id_,
-            exportVal: this.miraExportVal,
-            dependencyError: this.miraBrickDependencyError[id_],
-          });
+          this.refreshDependency(id_);
         }
       });
     }
@@ -184,11 +245,7 @@ export class DependencyManager extends EventTarget<{
 
     Object.entries(this.miraBrickImportDef).forEach(([id_, imports]) => {
       if (imports.some((def) => checkImportDeps(def, exports))) {
-        this.safeDispatch({
-          id: id_,
-          exportVal: this.miraExportVal,
-          dependencyError: this.miraBrickDependencyError[id_],
-        });
+        this.refreshDependency(id_);
       }
     });
   }
@@ -203,12 +260,87 @@ export class DependencyManager extends EventTarget<{
     this.miraExportVal = newExportVal;
     Object.entries(this.miraBrickImportDef).forEach(([id, maps]) => {
       if (maps.some((def) => checkImportDeps(def, changedVal))) {
-        this.safeDispatch({
-          id,
-          exportVal: newExportVal,
-          dependencyError: this.miraBrickDependencyError[id],
-        });
+        this.refreshDependency(id);
       }
+    });
+  }
+
+  upsertScript(id: string, scriptNode: ASTNode[]) {
+    this.deferUpdateEvent(async () => {
+      let mapping: ReturnType<typeof mapModuleValues> = {};
+      try {
+        const esmImports = await collectEsmImports({
+          node: scriptNode,
+          path: this.mdxPath,
+        });
+        const importResults = await Promise.all(
+          esmImports.map(async (definition) => {
+            const mod = this.moduleCache.get(definition.specifier);
+            return {
+              definition,
+              mod:
+                mod ||
+                (await loadModule({
+                  definition,
+                  moduleLoader: this.moduleLoader,
+                  depsRootPath: this.depsRootPath,
+                })),
+            };
+          })
+        );
+        importResults.forEach(({ definition, mod }) => {
+          this.moduleCache.set(definition.specifier, mod);
+        });
+        mapping = importResults.reduce(
+          (acc, m) => ({
+            ...acc,
+            ...mapModuleValues(m),
+          }),
+          mapping
+        );
+        delete this.miraBrickModuleImportError[id];
+      } catch (error) {
+        if (error instanceof Error) {
+          this.miraBrickModuleImportError[id] = error;
+        }
+      }
+      const prevModuleImportDef = this.miraBrickModuleImportDef[id] ?? [];
+      this.miraBrickModuleImportDef[id] = Object.keys(mapping);
+      if (
+        // Checking changes of moduleVal
+        Object.entries(mapping).some(
+          ([name, mapping]) =>
+            !(name in this.moduleImportMapping) ||
+            mapping.name !== this.moduleImportMapping[name].name ||
+            mapping.specifier !== this.moduleImportMapping[name].specifier
+        ) ||
+        prevModuleImportDef.some((name) => !(name in mapping))
+      ) {
+        const prevImportMapping = { ...this.moduleImportMapping };
+        prevModuleImportDef.forEach((name) => {
+          delete prevImportMapping[name];
+        });
+        this.moduleImportMapping = {
+          ...prevImportMapping,
+          ...mapping,
+        };
+        this.refreshModuleVal();
+      }
+    });
+  }
+
+  deleteScript(id: string) {
+    this.deferUpdateEvent(async () => {
+      const moduleDef = this.miraBrickModuleImportDef[id] ?? [];
+      if (moduleDef.every((name) => !(name in this.moduleImportMapping))) {
+        return;
+      }
+      const newImportMapping = { ...this.moduleImportMapping };
+      moduleDef.forEach((name) => {
+        delete newImportMapping[name];
+      });
+      this.moduleImportMapping = newImportMapping;
+      this.refreshModuleVal();
     });
   }
 }

@@ -1,7 +1,8 @@
 import type { editor } from 'monaco-editor';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useRecoilCallback } from 'recoil';
 import { activeBrickIdState, brickOrderState } from './atoms';
+import { brickStateFamily, useBrick } from './brick';
 
 // Setting to recoil atoms seems to occur errors
 export const editorRefs: Record<string, editor.IStandaloneCodeEditor> = {};
@@ -17,6 +18,9 @@ const hasIntersect = (
 };
 
 export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
+  const { updateBrick } = useBrick(brickId);
+  const [editorTextCache, setEditorTextCache] = useState<string>();
+
   const onEditorUpdate = useCallback(
     (editor: editor.IStandaloneCodeEditor) => {
       editorRefs[brickId] = editor;
@@ -72,14 +76,39 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
     }
   );
 
+  const onChange = useRecoilCallback(
+    ({ snapshot }) => async (code: string) => {
+      setEditorTextCache(code);
+      const brick = await snapshot.getPromise(brickStateFamily(brickId));
+      if (brick.type !== 'script') {
+        updateBrick(code);
+        return;
+      }
+    },
+    [brickId, updateBrick, setEditorTextCache]
+  );
+
   const onFocus = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
   });
+
+  const onBlur = useRecoilCallback(
+    ({ snapshot }) => async () => {
+      const brick = await snapshot.getPromise(brickStateFamily(brickId));
+      if (brick.type === 'script' && typeof editorTextCache === 'string') {
+        updateBrick(editorTextCache);
+      }
+      setEditorTextCache(undefined);
+    },
+    [updateBrick, editorTextCache, setEditorTextCache]
+  );
 
   return {
     onEditorUpdate,
     onMoveForwardCommand,
     onMoveBackwardCommand,
+    onChange,
     onFocus,
+    onBlur,
   };
 };

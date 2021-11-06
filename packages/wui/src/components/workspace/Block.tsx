@@ -148,13 +148,17 @@ const PreviewPart = styled.div`
 const ScriptPreviewContainer = styled.div`
   width: 100%;
   margin: 0 1rem;
-  padding-left: 1.5rem;
+  /* Align with Editor size */
+  padding-left: 26px;
+  pre {
+    margin: 16px 0;
+  }
 `;
 const ScriptPreviewCode = styled.code`
   * {
     font-family: ${cssVar('fonts.mono')};
     font-size: 12px;
-    line-height: 1;
+    line-height: 18px;
   }
   div {
     height: 18px;
@@ -169,7 +173,7 @@ const MarkdownPreviewContainer = styled.div`
   flex-direction: column;
   box-sizing: border-box;
 `;
-const MarkdownPreviewNoContentParagraph = styled.p`
+const NoContentParagraph = styled.p`
   color: ${cssVar('colors.gray.400')};
 `;
 const BottomToolPart = styled.div`
@@ -228,13 +232,13 @@ export const Block: React.FC<{
 }> = ({ id, editorLoaderConfig }) => {
   const {
     brick,
+    syntaxError,
+    moduleImportError,
     isActive,
     isFocused,
-    updateBrick,
     updateLanguage,
     setActive,
     setFocused,
-    importError,
   } = useBrick(id);
   const { insertBrick, cleanup } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId: id });
@@ -303,6 +307,7 @@ export const Block: React.FC<{
   useEffect(() => {
     updateInViewState(id, inView);
   }, [id, inView, updateInViewState]);
+  const displayingError = syntaxError?.error || moduleImportError;
 
   return (
     <BlockContainer ref={observerRef} {...containerCallbacks}>
@@ -354,20 +359,32 @@ export const Block: React.FC<{
         >
           {brick.type === 'script' && (
             <ScriptPreviewContainer>
-              <pre>
-                <ScriptPreviewCode>
-                  <CodePreview code={brick.text} language="jsx" />
-                </ScriptPreviewCode>
-              </pre>
+              {brick.text.trim() ? (
+                <pre>
+                  <ScriptPreviewCode>
+                    <CodePreview
+                      code={syntaxError?.parsedText || brick.text}
+                      language="jsx"
+                    />
+                  </ScriptPreviewCode>
+                </pre>
+              ) : (
+                <NoContentParagraph>No content</NoContentParagraph>
+              )}
             </ScriptPreviewContainer>
           )}
           {brick.type === 'note' && (
             <MarkdownPreviewContainer>
-              <MarkdownPreview md={brick.text} />
-              {!brick.text.trim() && (
-                <MarkdownPreviewNoContentParagraph>
-                  No content
-                </MarkdownPreviewNoContentParagraph>
+              {syntaxError?.parsedText ? (
+                <pre>
+                  <ScriptPreviewCode>
+                    {syntaxError.parsedText}
+                  </ScriptPreviewCode>
+                </pre>
+              ) : brick.text.trim() ? (
+                <MarkdownPreview md={brick.text} />
+              ) : (
+                <NoContentParagraph>No content</NoContentParagraph>
               )}
             </MarkdownPreviewContainer>
           )}
@@ -382,10 +399,10 @@ export const Block: React.FC<{
               </LivePreviewContainer>
             </LivePreviewPart>
           )}
-          {brick.type === 'script' && importError && (
+          {displayingError && (
             <LivePreviewPart>
               <LivePreviewContainer>
-                <ErrorPreText>{String(importError)}</ErrorPreText>
+                <ErrorPreText>{String(displayingError)}</ErrorPreText>
               </LivePreviewContainer>
             </LivePreviewPart>
           )}
@@ -402,7 +419,6 @@ export const Block: React.FC<{
             <EditorContainer active={isActive}>
               <Editor
                 language={editorLanguage}
-                onChange={updateBrick}
                 padding={{ top: 16, bottom: 16 }}
                 code={brick.text}
                 {...{ editorLoaderConfig, onContentHeightChange }}

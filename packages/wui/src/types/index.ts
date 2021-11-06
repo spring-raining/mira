@@ -73,3 +73,9 @@ export interface EvaluatedResult {
   errorMarkers?: MarkerMessage[];
   warnMarkers?: MarkerMessage[];
 }
+
+export interface ModuleImportState {
+  mappedVal: Record<string, unknown>;
+  importDef: Record<string, readonly string[]>;
+  importError: Record<string, Error>;
+}

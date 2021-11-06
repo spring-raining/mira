@@ -125,6 +125,7 @@ export interface EditorProps {
   onMoveForwardCommand?: () => void;
   onMoveBackwardCommand?: () => void;
   onFocus?: () => void;
+  onBlur?: () => void;
   onContentHeightChange?: (height: number) => void;
 }
 
@@ -148,6 +149,7 @@ export const Editor: React.FC<EditorProps> = ({
   onMoveForwardCommand = () => {},
   onMoveBackwardCommand = () => {},
   onFocus = () => {},
+  onBlur = () => {},
   onContentHeightChange = () => {},
 }) => {
   const [initialCode] = useState(() => code);
@@ -161,6 +163,7 @@ export const Editor: React.FC<EditorProps> = ({
   const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
   const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
   const focusHandler = useAsyncEvent(onFocus);
+  const blurHandler = useAsyncEvent(onBlur);
 
   // 1. get Monaco instance
   const beforeEditorMount: BeforeEditorMount = (monaco) => {
@@ -205,6 +208,7 @@ export const Editor: React.FC<EditorProps> = ({
       moveForwardCommandHandler
     );
     editor.onDidFocusEditorText(focusHandler);
+    editor.onDidBlurEditorText(blurHandler);
     editorContentManager.setup(editor);
   };
 

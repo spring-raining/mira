@@ -7,7 +7,10 @@ const liveLanguage = ['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'];
 export const updateBrickByText = (
   brick: Brick,
   newText: string
-): Brick | Brick[] => {
+): {
+  newBrick: Brick | Brick[];
+  syntaxError?: Error | undefined;
+} => {
   let mdx = newText;
   if (brick.type === 'snippet') {
     const meta: string = brick.mira?.isLived ? 'mira' : '';
@@ -15,30 +18,45 @@ export const updateBrickByText = (
 
     mdx = `\`\`\`${brick.language} ${meta}\n${textEscaped}\n\`\`\``;
   }
-  const bricks = hydrateMdx(mdx);
+  let bricks: Brick[] = [brick];
+  try {
+    bricks = hydrateMdx(mdx);
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        newBrick: brick,
+        syntaxError: error,
+      };
+    }
+  }
   if (bricks.length === 0) {
     // Preserve brick by empty brick
     return {
-      ...brick,
-      text: '',
-      children: [],
+      newBrick: {
+        ...brick,
+        text: '',
+        children: [],
+      },
     };
   }
   if (bricks.length > 1) {
     // there's possibility of divide to multiple bricks
-    return bricks;
+    return { newBrick: bricks };
   } else {
     bricks[0].id = brick.id;
-    return bricks[0];
+    return { newBrick: bricks[0] };
   }
 };
 
 export const updateBrickLanguage = (
   brick: Brick,
   newLanguage: string
-): Brick | Brick[] => {
+): {
+  newBrick: Brick | Brick[];
+  syntaxError?: Error | undefined;
+} => {
   if (brick.type !== 'snippet') {
-    return brick;
+    return { newBrick: brick };
   }
   const newBrick = { ...brick };
   if (liveLanguage.includes(newLanguage.toLowerCase())) {

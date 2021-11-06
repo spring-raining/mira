@@ -1,5 +1,5 @@
 import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
-import { Brick, ParsedImportStatement } from '../types';
+import { Brick, ParsedImportStatement, ASTNode } from '../types';
 
 const getExtname = (path: string): string => {
   const sp = path.split('.');
@@ -74,8 +74,27 @@ export const collectImports = async ({
   return rewrited;
 };
 
-export const moduleLoader = async (specifier: string): Promise<any> => {
-  return await import(specifier);
+export const collectEsmImports = async ({
+  node,
+  path,
+}: {
+  node: ASTNode[];
+  path: string;
+}): Promise<ParsedImportStatement[]> => {
+  const parseAll = node
+    .filter((node) => node.type === 'mdxjsEsm')
+    .map(async (node) =>
+      (await scanModuleSpecifier(node.value))[0]
+        .map((imp) => {
+          const def = parseImportStatement(node.value, imp);
+          return def && { ...def, statement: node.value.trim() };
+        })
+        .filter((_): _ is ParsedImportStatement => !!_)
+    );
+  const importDefs = await (await Promise.all(parseAll)).flat();
+
+  const rewrited = importDefs.map((def) => rewriteEsmImport(def, { path }));
+  return rewrited;
 };
 
 export const loadModule = async ({

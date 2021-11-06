@@ -31,20 +31,15 @@ export const selectedBrickIdsState = atom<string[]>({
   default: [],
 });
 
-export const importedModulesRefDictState = atom<Record<string, string>>({
-  key: 'importedModulesDictState',
-  default: {},
-});
-
-export const miraImportMappingState = atom<
-  Record<string, { specifier: string; name: string | null }>
+export const brickSyntaxErrorState = atom<
+  Record<Brick['id'], { error: Error; parsedText: string }>
 >({
-  key: 'miraImportMappingState',
+  key: 'brickSyntaxErrorState',
   default: {},
 });
 
-export const miraImportErrorDictState = atom<Record<Brick['id'], Error>>({
-  key: 'miraImportErrorDictState',
+export const brickModuleImportErrorState = atom<Record<Brick['id'], Error>>({
+  key: 'brickModuleImportErrorState',
   default: {},
 });
 

@@ -6,12 +6,10 @@ import { useUniverseContext, RefreshModuleEvent } from './context';
 import { useHistory, HistoryObserver } from './hooks/useHistory';
 import { ProvidenceObserver } from './hooks/useProvidence';
 import { useBricks } from './state/brick';
-import { useDependency } from './state/dependency';
 import { EditorLoaderConfig } from './components/Editor';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
 import { hydrateMdx } from './mdx/io';
-import { moduleLoader as defaultModuleLoader } from './mdx/dependency';
 
 export interface UniverseProps {
   mdx?: string;
@@ -47,9 +45,9 @@ const MainSticky = styled.div`
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
-  path = '/',
-  depsRootPath = '/_mira',
-  moduleLoader = defaultModuleLoader,
+  // path = '/',
+  // depsRootPath = '/_mira',
+  // moduleLoader = async () => {},
   onUpdate = () => {},
   transpilerConfig,
   editorLoaderConfig,
@@ -57,11 +55,11 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
-  const { loadDependency, refreshDependency } = useDependency({
-    path,
-    depsRootPath,
-    moduleLoader,
-  });
+  // const { loadDependency, refreshDependency } = useDependency({
+  //   path,
+  //   depsRootPath,
+  //   moduleLoader,
+  // });
   const {
     addRefreshModuleListener,
     removeRefreshModuleListener,
@@ -71,14 +69,14 @@ const UniverseView: React.VFC<UniverseProps> = ({
 
   useEffect(() => {
     const refreshModule = (event: RefreshModuleEvent) => {
-      refreshDependency(event);
+      // refreshDependency(event);
     };
 
     (async () => {
       if (initialMdx) {
         const initialBricks = hydrateMdx(initialMdx);
         console.log(initialBricks);
-        await loadDependency(initialBricks);
+        // await loadDependency(initialBricks);
         importBricks(initialBricks);
         addRefreshModuleListener(refreshModule);
       }
@@ -118,12 +116,20 @@ const UniverseView: React.VFC<UniverseProps> = ({
   );
 };
 
-export const Universe: React.VFC<UniverseProps> = (props) => {
+export const Universe: React.VFC<UniverseProps> = ({
+  path = '/',
+  depsRootPath = '/_mira',
+  moduleLoader = async () => {},
+  ...other
+}) => {
   return (
     <RecoilRoot>
       <HistoryObserver />
-      <ProvidenceObserver />
-      <UniverseView {...props} />
+      <ProvidenceObserver
+        {...{ mdxPath: path, depsRootPath, moduleLoader }}
+        {...other}
+      />
+      <UniverseView {...{ path, depsRootPath, moduleLoader }} {...other} />
     </RecoilRoot>
   );
 };

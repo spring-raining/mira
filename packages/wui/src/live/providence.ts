@@ -1,44 +1,72 @@
 import { ProvidenceStore } from '../hooks/providence/context';
-import { Mira, EvaluatedResult, RuntimeEnvironment } from '../types';
+import {
+  Mira,
+  EvaluatedResult,
+  RuntimeEnvironment,
+  ASTNode,
+  ModuleImportState,
+} from '../types';
 import { asyncEval } from './asyncEval';
-import { DependencyUpdateEvent } from './dependency';
+import {
+  DependencyManager,
+  DependencyUpdateEvent,
+  ModuleUpdateEvent,
+} from './dependency';
 import { setupRuntimeEnvironment } from './runtimeScope';
 import { transpileCode } from './transpileCode';
 
 export interface Providence {
-  dispatch: ({
-    brickId,
+  dispatchCodeUpdates: ({
+    id,
     code,
     mira,
   }: {
-    brickId: string;
+    id: string;
     code: string | undefined;
     mira: Mira | undefined;
+  }) => void;
+  dispatchScriptUpdates: ({
+    id,
+    scriptNode,
+  }: {
+    id: string;
+    scriptNode: ASTNode[] | undefined;
   }) => void;
   teardown: () => void;
 }
 
 export const setupProvidence = ({
   store,
+  mdxPath,
+  depsRootPath,
+  moduleLoader,
   onEvaluatorUpdate,
+  onModuleUpdate,
 }: {
   store: ProvidenceStore;
+  mdxPath: string;
+  depsRootPath: string;
+  moduleLoader: (specifier: string) => Promise<unknown>;
   onEvaluatorUpdate: (e: EvaluatedResult) => void;
+  onModuleUpdate: (e: ModuleImportState) => void;
 }): Providence => {
   const run = async ({
     id,
     code,
     environment,
     exportVal,
+    moduleVal,
   }: {
     id: string;
     code: string;
     environment: RuntimeEnvironment;
     exportVal: Record<string, unknown>;
+    moduleVal: Record<string, unknown>;
   }): Promise<EvaluatedResult> => {
+    const scopeVal = { ...moduleVal, ...exportVal };
     const transpiledData = await transpileCode({
       code,
-      declaredValues: Object.keys(exportVal),
+      declaredValues: Object.keys(scopeVal),
     });
     if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
       return {
@@ -50,8 +78,8 @@ export const setupProvidence = ({
       };
     }
     try {
-      await asyncEval(transpiledData.text, exportVal, environment);
-      store.dependency.updateExports(environment.exportVal);
+      await asyncEval(transpiledData.text, scopeVal, environment);
+      store.dependency?.updateExports(environment.exportVal);
       return {
         id,
         environment,
@@ -73,7 +101,6 @@ export const setupProvidence = ({
   };
 
   const handleDependencyUpdate = ({ detail }: DependencyUpdateEvent) => {
-    console.log('dependencyUpdate', detail);
     if (detail.id in store.runTasks) {
       window.cancelAnimationFrame(store.runTasks[detail.id]);
       delete store.runTasks[detail.id];
@@ -90,6 +117,7 @@ export const setupProvidence = ({
         code: runTarget.code,
         environment,
         exportVal: detail.exportVal,
+        moduleVal: detail.moduleVal,
       });
       if (store.runTasks[detail.id] === runId) {
         onEvaluatorUpdate(ret);
@@ -98,36 +126,64 @@ export const setupProvidence = ({
     runId = window.requestAnimationFrame(cb);
     store.runTasks[detail.id] = runId;
   };
-  store.dependency.addEventListener('dependencyUpdate', handleDependencyUpdate);
 
-  const dispatch = ({
-    brickId,
+  const handleModuleUpdate = ({ detail }: ModuleUpdateEvent) => {
+    onModuleUpdate(detail);
+  };
+
+  const dispatchCodeUpdates = ({
+    id,
     code,
     mira,
   }: {
-    brickId: string;
+    id: string;
     code: string | undefined;
     mira: Mira | undefined;
   }) => {
     if (typeof code === 'string' && mira) {
-      store.runTarget[brickId] = { code, mira };
+      store.runTarget[id] = { code, mira };
     } else {
-      delete store.runTarget[brickId];
+      delete store.runTarget[id];
     }
     if (typeof code === 'string') {
-      store.dependency.upsertCode(brickId, code);
+      store.dependency?.upsertCode(id, code);
     } else {
-      store.dependency.deleteCode(brickId);
+      store.dependency?.deleteCode(id);
     }
   };
 
+  const dispatchScriptUpdates = ({
+    id,
+    scriptNode,
+  }: {
+    id: string;
+    scriptNode: ASTNode[] | undefined;
+  }) => {
+    if (scriptNode) {
+      store.dependency?.upsertScript(id, scriptNode);
+    } else {
+      store.dependency?.deleteScript(id);
+    }
+  };
+
+  store.dependency = new DependencyManager({
+    mdxPath,
+    depsRootPath,
+    moduleLoader,
+  });
+  store.dependency.addEventListener('dependencyUpdate', handleDependencyUpdate);
+  store.dependency.addEventListener('moduleUpdate', handleModuleUpdate);
+
   return {
-    dispatch,
+    dispatchCodeUpdates,
+    dispatchScriptUpdates,
     teardown: () => {
-      store.dependency.removeEventListener(
+      store.dependency?.removeEventListener(
         'dependencyUpdate',
         handleDependencyUpdate
       );
+      store.dependency?.removeEventListener('moduleUpdate', handleModuleUpdate);
+      store.dependency = undefined;
     },
   };
 };

@@ -11,20 +11,22 @@ import {
 import { dehydrateBrick } from '../mdx/io';
 import { updateBrickByText, updateBrickLanguage } from '../mdx/update';
 import { Brick } from '../types';
+import { cancellable, debounce } from '../util';
 import {
   activeBrickIdState,
   focusedBrickIdState,
   inViewBrickIdsState,
   selectedBrickIdsState,
-  miraImportErrorDictState,
   brickDictState,
   brickOrderState,
+  brickSyntaxErrorState,
+  brickModuleImportErrorState,
 } from './atoms';
 import { editorRefs } from './editor';
 
 const transpiledMdxCache = new WeakMap<Brick, string>();
 
-const brickStateFamily = selectorFamily<Brick, string>({
+export const brickStateFamily = selectorFamily<Brick, string>({
   key: 'brickStateFamily',
   get: (brickId) => ({ get }) => get(brickDictState)[brickId],
   set: (brickId) => ({ set }, newValue) => {
@@ -37,6 +39,35 @@ const brickStateFamily = selectorFamily<Brick, string>({
   },
 });
 
+const brickSyntaxErrorStateFamily = selectorFamily<
+  { error: Error; parsedText: string } | undefined,
+  string
+>({
+  key: 'brickSyntaxErrorStateFamily',
+  get: (brickId) => ({ get }) => get(brickSyntaxErrorState)[brickId],
+  set: (brickId) => ({ set }, newValue) => {
+    if (!(newValue instanceof DefaultValue)) {
+      set(brickSyntaxErrorState, (prevState) => {
+        const state = { ...prevState };
+        if (newValue) {
+          state[brickId] = newValue;
+        } else {
+          delete state[brickId];
+        }
+        return state;
+      });
+    }
+  },
+});
+
+const brickModuleImportErrorStateFamily = selectorFamily<
+  Error | undefined,
+  string
+>({
+  key: 'brickModuleImportErrorStateFamily',
+  get: (brickId) => ({ get }) => get(brickModuleImportErrorState)[brickId],
+});
+
 const bricksState = selector({
   key: 'bricksState',
   get: ({ get }) =>
@@ -44,34 +75,6 @@ const bricksState = selector({
       .map((brickId) => get(brickDictState)[brickId])
       .filter((brick) => !!brick),
 });
-
-const miraImportErrorStateFamily = selectorFamily<Error | null, Brick['id']>({
-  key: 'miraImportErrorStateFamily',
-  get: (brickId) => ({ get }) => get(miraImportErrorDictState)[brickId] ?? null,
-});
-
-const cancellable = (fn: () => void, ms = 100) => {
-  const timer = setTimeout(fn, ms);
-  return () => {
-    clearTimeout(timer);
-  };
-};
-const debounce = <T extends unknown[]>(
-  fn: (timer: { hasCancelled: () => boolean }) => (...args: T) => void,
-  ms = 100
-) => {
-  let cancel: () => void;
-  return (...args: T) => {
-    let cancelled = false;
-    const hasCancelled = () => cancelled;
-    cancel?.();
-    const cancelFn = cancellable(() => fn({ hasCancelled })(...args), ms);
-    cancel = () => {
-      cancelled = true;
-      cancelFn();
-    };
-  };
-};
 
 export const useBricks = ({
   onUpdateMdx = () => {},
@@ -146,10 +149,13 @@ export const useBricks = ({
 
 export const useBrick = (brickId: string) => {
   const brick = useRecoilValue(brickStateFamily(brickId));
+  const brickSyntaxError = useRecoilValue(brickSyntaxErrorStateFamily(brickId));
+  const brickModuleImportError = useRecoilValue(
+    brickModuleImportErrorStateFamily(brickId)
+  );
   const activeBrickId = useRecoilValue(activeBrickIdState);
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
-  const importError = useRecoilValue(miraImportErrorStateFamily(brickId));
   const setActive = useRecoilCallback(({ set }) => () => {
     set(activeBrickIdState, brickId);
   });
@@ -162,9 +168,17 @@ export const useBrick = (brickId: string) => {
     ({ set, snapshot }) =>
       debounce(({ hasCancelled }) => async (text: string) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
-        const newBrick = updateBrickByText(brick, text);
+        const { newBrick, syntaxError } = updateBrickByText(brick, text);
         if (hasCancelled()) {
           return;
+        }
+        if (syntaxError) {
+          set(brickSyntaxErrorStateFamily(brickId), {
+            error: syntaxError,
+            parsedText: text,
+          });
+        } else {
+          set(brickSyntaxErrorStateFamily(brickId), undefined);
         }
         if (Array.isArray(newBrick)) {
           set(brickDictState, (prevState) => ({
@@ -199,9 +213,17 @@ export const useBrick = (brickId: string) => {
         if (brick.type !== 'snippet') {
           return;
         }
-        const newBrick = updateBrickLanguage(brick, language);
+        const { newBrick, syntaxError } = updateBrickLanguage(brick, language);
         if (hasCancelled()) {
           return;
+        }
+        if (syntaxError) {
+          set(brickSyntaxErrorStateFamily(brickId), {
+            error: syntaxError,
+            parsedText: brick.text,
+          });
+        } else {
+          set(brickSyntaxErrorStateFamily(brickId), undefined);
         }
         if (Array.isArray(newBrick)) {
           set(brickDictState, (prevState) => ({
@@ -232,6 +254,8 @@ export const useBrick = (brickId: string) => {
 
   return {
     brick,
+    syntaxError: brickSyntaxError,
+    moduleImportError: brickModuleImportError,
     updateBrick,
     updateLanguage,
     isActive: brickId === activeBrickId,
@@ -239,7 +263,6 @@ export const useBrick = (brickId: string) => {
     isSelected: selectedBrickIds.includes(brickId),
     setActive,
     setFocused,
-    importError,
   };
 };
 

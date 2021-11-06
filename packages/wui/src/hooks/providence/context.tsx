@@ -6,14 +6,13 @@ export interface ProvidenceStore {
   queue: (() => void)[];
   runTasks: Record<string, number>;
   runTarget: Record<string, { code: string; mira: Mira }>;
-  dependency: DependencyManager;
+  dependency?: DependencyManager | undefined;
 }
 
 const defaultProvidenceStore: ProvidenceStore = {
   queue: [],
   runTasks: {},
   runTarget: {},
-  dependency: new DependencyManager(),
 };
 
 const ProvidenceContext = createContext<
