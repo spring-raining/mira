@@ -2,7 +2,6 @@ import { styled } from '@linaria/react';
 import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
-import { useUniverseContext, RefreshModuleEvent } from './context';
 import { useHistory, HistoryObserver } from './hooks/useHistory';
 import { ProvidenceObserver } from './hooks/useProvidence';
 import { useBricks } from './state/brick';
@@ -45,9 +44,6 @@ const MainSticky = styled.div`
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
-  // path = '/',
-  // depsRootPath = '/_mira',
-  // moduleLoader = async () => {},
   onUpdate = () => {},
   transpilerConfig,
   editorLoaderConfig,
@@ -55,35 +51,17 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
-  // const { loadDependency, refreshDependency } = useDependency({
-  //   path,
-  //   depsRootPath,
-  //   moduleLoader,
-  // });
-  const {
-    addRefreshModuleListener,
-    removeRefreshModuleListener,
-  } = useUniverseContext();
 
   const history = useHistory();
 
   useEffect(() => {
-    const refreshModule = (event: RefreshModuleEvent) => {
-      // refreshDependency(event);
-    };
-
     (async () => {
       if (initialMdx) {
         const initialBricks = hydrateMdx(initialMdx);
         console.log(initialBricks);
-        // await loadDependency(initialBricks);
         importBricks(initialBricks);
-        addRefreshModuleListener(refreshModule);
       }
     })();
-    return () => {
-      removeRefreshModuleListener(refreshModule);
-    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

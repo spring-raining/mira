@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRecoilValue, useRecoilCallback } from 'recoil';
+import { useUniverseContext } from '../context';
 import { setupProvidence, Providence } from '../live/providence';
 import {
   brickDictState,
@@ -12,6 +13,7 @@ import {
   Mira,
   EvaluatedResult,
   ModuleImportState,
+  RefreshModuleEvent,
 } from '../types';
 import { useProvidenceRef } from './providence/context';
 
@@ -37,6 +39,10 @@ export const ProvidenceObserver = ({
   const brickDictWithPrev = usePrevState(brickDict);
   const providence = useRef<Providence>();
   const miraId = useRef<string[]>([]);
+  const {
+    addRefreshModuleListener,
+    removeRefreshModuleListener,
+  } = useUniverseContext();
 
   const onEvaluatorUpdate = useRecoilCallback(
     ({ set }) => (evaluated: EvaluatedResult) => {
@@ -74,6 +80,14 @@ export const ProvidenceObserver = ({
     onEvaluatorUpdate,
     onModuleUpdate,
   ]);
+
+  useEffect(() => {
+    const onUpdate = (event: RefreshModuleEvent) => {
+      providence.current?.refreshModule(event);
+    };
+    addRefreshModuleListener(onUpdate);
+    return () => removeRefreshModuleListener(onUpdate);
+  }, [providenceRef, addRefreshModuleListener, removeRefreshModuleListener]);
 
   useEffect(() => {
     const [nextBrickDict, prevBrickDict = {}] = brickDictWithPrev;

@@ -5,6 +5,7 @@ import {
   RuntimeEnvironment,
   ASTNode,
   ModuleImportState,
+  RefreshModuleEvent,
 } from '../types';
 import { asyncEval } from './asyncEval';
 import {
@@ -32,6 +33,7 @@ export interface Providence {
     id: string;
     scriptNode: ASTNode[] | undefined;
   }) => void;
+  refreshModule: (event: RefreshModuleEvent) => void;
   teardown: () => void;
 }
 
@@ -166,6 +168,10 @@ export const setupProvidence = ({
     }
   };
 
+  const refreshModule = (event: RefreshModuleEvent) => {
+    store.dependency?.refreshModule(event);
+  };
+
   store.dependency = new DependencyManager({
     mdxPath,
     depsRootPath,
@@ -177,6 +183,7 @@ export const setupProvidence = ({
   return {
     dispatchCodeUpdates,
     dispatchScriptUpdates,
+    refreshModule,
     teardown: () => {
       store.dependency?.removeEventListener(
         'dependencyUpdate',

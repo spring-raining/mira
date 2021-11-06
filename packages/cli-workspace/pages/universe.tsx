@@ -9,7 +9,7 @@ import { ThemeProvider, toCSSVar } from '@chakra-ui/react';
 import { Global, css } from '@emotion/react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { container } from 'tsyringe';
 import {
   workspaceServiceToken,
@@ -23,7 +23,7 @@ interface PageProps {
   constants: WorkspaceRepository['constants'];
 }
 
-const UniverseView: React.VFC<PageProps> = ({
+const Mira: React.VFC<PageProps> = ({
   file,
   constants: { hmrUpdateEventName },
 }) => {
@@ -39,7 +39,7 @@ const UniverseView: React.VFC<PageProps> = ({
     window.addEventListener(hmrUpdateEventName, fn as EventListener);
     return () =>
       window.removeEventListener(hmrUpdateEventName, fn as EventListener);
-  }, []);
+  }, [refreshModule]);
 
   return (
     <MiraWui
@@ -95,7 +95,7 @@ export default function Home({ file, constants }: PageProps) {
             }
           `}
         />
-        <UniverseView {...{ file, constants }} />
+        <Mira {...{ file, constants }} />
       </UniverseProvider>
     </ThemeProvider>
   );

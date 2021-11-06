@@ -79,3 +79,9 @@ export interface ModuleImportState {
   importDef: Record<string, readonly string[]>;
   importError: Record<string, Error>;
 }
+
+export interface RefreshModuleEvent {
+  module: unknown;
+  url: string;
+  bubbled: boolean;
+}
