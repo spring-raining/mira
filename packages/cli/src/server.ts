@@ -20,7 +20,7 @@ export async function startServer(args: CliArgs) {
       // nodeResolvePlugin(coreConfig.rootDir),
       // esbuildPlugin(),
       // hmrPlugin() as any, // FIXME
-      webSocketPlugin(),
+      webSocketPlugin({ config }),
       watcherPlugin({ config, snowpackConfig }),
       snowpackPlugin,
     ];

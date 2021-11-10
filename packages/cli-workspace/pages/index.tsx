@@ -2,7 +2,7 @@ import { theme } from '@mirajs/wui';
 import { ChakraProvider, Flex } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { container } from 'tsyringe';
 import { FileTreeView } from '../components/FileTreeView';
 import { UniverseView } from '../components/UniverseView';
@@ -12,7 +12,12 @@ import {
   WorkspaceService,
   WorkspaceRepository,
 } from '../services/workspace';
-import { MiraMdxFileItem, DevServerEvent } from '../types/workspace';
+import {
+  MiraMdxFileItem,
+  DevServerEvent,
+  DevServerWatcher,
+  FSDirectoryHandlerObject,
+} from '../types/workspace';
 
 interface PageProps {
   mira: MiraMdxFileItem<number>[];
@@ -42,6 +47,7 @@ export default function Home({ mira, constants }: PageProps) {
 
   useEffect(() => {
     const fn = (event: CustomEvent<DevServerEvent>) => {
+      console.log(event.detail);
       if (event.detail.type === 'watcher') {
         // TODO
       }
@@ -55,6 +61,28 @@ export default function Home({ mira, constants }: PageProps) {
         constants.devServerWatcherUpdateEventName,
         fn as EventListener
       );
+  }, []);
+
+  const test = useCallback(async () => {
+    const { sendMessageWaitForResponse } = (await import(
+      /* webpackIgnore:true */ constants.devServerWatcherImportPath
+    )) as DevServerWatcher;
+    const msg = await sendMessageWaitForResponse<FSDirectoryHandlerObject>({
+      type: 'mira:fs:getDirectoryHandle',
+      data: {
+        path: [],
+      },
+    });
+    console.log('>>>>', msg);
+  }, [constants]);
+
+  const fileAccess = useCallback(async () => {
+    const handler = await window.showDirectoryPicker();
+    for await (let key of handler) {
+      console.log(key);
+    }
+    const pkg = await handler.getFileHandle('package.json');
+    console.log(pkg);
   }, []);
 
   return (
@@ -74,6 +102,8 @@ export default function Home({ mira, constants }: PageProps) {
           flexDir="column"
           alignItems="stretch"
         >
+          <button onClick={test}>Test</button>
+          <button onClick={fileAccess}>fileAccess</button>
           <FileTreeView />
         </Flex>
         <Flex

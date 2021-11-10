@@ -59,8 +59,9 @@ export declare global {
     new (): FileSystemFileHandle;
   }
 
-  interface FileSystemDirectoryHandle extends FileSystemHandle {
-    [Symbol.iterator](): FileSystemHandle;
+  interface FileSystemDirectoryHandle
+    extends FileSystemHandle,
+      Iterable<FileSystemHandle> {
     getFileHandle(
       name: string,
       options?: { create?: boolean }

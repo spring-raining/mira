@@ -13,9 +13,24 @@ import type {
   MiraMdxFileItem,
   FileStat,
   DevServerEvent,
+  FSFileObject,
+  FSFileHandlerObject,
+  FSDirectoryHandlerObject,
+  DevServerMessage,
+  DevServerWatcher,
 } from '../types/workspace';
 
-export type { WorkspaceRepository, MiraMdxFileItem, FileStat, DevServerEvent };
+export type {
+  WorkspaceRepository,
+  MiraMdxFileItem,
+  FileStat,
+  DevServerEvent,
+  FSFileObject,
+  FSFileHandlerObject,
+  FSDirectoryHandlerObject,
+  DevServerMessage,
+  DevServerWatcher,
+};
 
 export default (
   { workspaceRepository }: { workspaceRepository: WorkspaceRepository },
