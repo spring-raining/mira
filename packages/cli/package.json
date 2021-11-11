@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@mirajs/cli-workspace": "1.0.0",
+    "@msgpack/msgpack": "2.7.1",
     "@web/dev-server": "^0.1.14",
     "@web/dev-server-hmr": "^0.1.9",
     "es-module-lexer": "^0.4.1",

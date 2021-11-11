@@ -3,7 +3,10 @@ export const devServerWatcherUpdateEventName = '__MIRA_WDS_UPDATE__';
 
 // Refers to @web/dev-server-core
 // https://github.com/modernweb-dev/web/blob/292c567517d846411f6bcdfd1d60b3f50e20a783/packages/dev-server-core/src/web-sockets/webSocketsPlugin.ts
-export const devServerWatcherPreambleCode = `export let webSocket;
+export const devServerWatcherPreambleCode = `
+import { decode, decodeAsync } from '/_mira/-/node_modules/@msgpack/msgpack/dist.es5+esm/index.mjs';
+
+export let webSocket;
 export let webSocketOpened;
 export let sendMessage;
 export let sendMessageWaitForResponse;
@@ -61,9 +64,15 @@ function setupWebSocket() {
     return new Promise(async (resolve, reject) => {
       const id = getNextMessageId();
 
-      function onResponse(e) {
-        const message = JSON.parse(e.data);
-        if (message.type === 'message-response' && message.id === id) {
+      async function onResponse(e) {
+        const message = e.data instanceof Blob
+          ? await decodeAsync(e.data.stream())
+          : e.data instanceof ArrayBuffer
+          ? decode(e.data)
+          : typeof e.data === 'string'
+          ? JSON.parse(e.data)
+          : null;
+        if (message && message.type === 'message-response' && message.id === id) {
           webSocket.removeEventListener('message', onResponse);
           if (message.error) {
             reject(new Error(message.error));
@@ -91,6 +100,9 @@ function setupWebSocket() {
   if (webSocket) {
     webSocket.addEventListener('message', async (e) => {
       try {
+        if (typeof e.data !== 'string') {
+          return;
+        }
         const msg = JSON.parse(e.data);
         const ev = new CustomEvent('${devServerWatcherUpdateEventName}', {
           detail: msg,

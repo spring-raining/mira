@@ -13,9 +13,7 @@ import { refreshPluginFactory } from './snowpack/refreshPlugin';
 
 const require = createRequire(import.meta.url);
 
-export function snowpackPluginFactory(
-  coreConfig: DevServerCoreConfig
-): {
+export function snowpackPluginFactory(coreConfig: DevServerCoreConfig): {
   snowpackPlugin: Plugin;
   snowpackConfig: SnowpackConfig;
 } {
@@ -28,16 +26,17 @@ export function snowpackPluginFactory(
       [coreConfig.rootDir]: {
         url: MIDDLEWARE_PATH_PREFIX,
       },
-      [path.dirname(require.resolve('esbuild-wasm/package.json'))]: {
-        url: `${MIDDLEWARE_PATH_PREFIX}/-/node_modules/esbuild-wasm`,
-        static: true,
-        resolve: false,
-      },
-      [path.dirname(require.resolve('monaco-editor/package.json'))]: {
-        url: `${MIDDLEWARE_PATH_PREFIX}/-/node_modules/monaco-editor`,
-        static: true,
-        resolve: false,
-      },
+      ...['esbuild-wasm', 'monaco-editor', '@msgpack/msgpack'].reduce(
+        (acc, pkg) => ({
+          ...acc,
+          [path.dirname(require.resolve(`${pkg}/package.json`))]: {
+            url: `${MIDDLEWARE_PATH_PREFIX}/-/node_modules/${pkg}`,
+            static: true,
+            resolve: false,
+          },
+        }),
+        {}
+      ),
     },
     alias: {},
     plugins: [],
