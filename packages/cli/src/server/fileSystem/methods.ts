@@ -1,17 +1,17 @@
 import * as fs from 'fs/promises';
-import { join } from 'path';
 import {
   FSFileObject,
   FSFileHandlerObject,
   FSDirectoryHandlerObject,
 } from '@mirajs/cli-workspace';
 import { ProjectConfig } from '../../config';
+import { resolveProjectPath } from '../../file';
 
 export const getFile = async (
   { path }: { path: string[] },
   config: ProjectConfig
 ): Promise<FSFileObject> => {
-  return await fs.readFile(join(config.mira.workspace, ...path));
+  return await fs.readFile(resolveProjectPath({ pathname: path, config }));
 };
 
 export const getFileHandle = async (
@@ -24,7 +24,7 @@ export const getFileHandle = async (
   },
   config: ProjectConfig
 ): Promise<FSFileHandlerObject> => {
-  const stat = await fs.lstat(join(config.mira.workspace, ...path));
+  const stat = await fs.lstat(resolveProjectPath({ pathname: path, config }));
   if (!stat.isFile()) {
     throw new Error(`file ${path.join('/')} does not exist`);
   }
@@ -44,9 +44,12 @@ export const getDirectoryHandle = async (
   },
   config: ProjectConfig
 ): Promise<FSDirectoryHandlerObject> => {
-  const children = await fs.readdir(join(config.mira.workspace, ...path), {
-    withFileTypes: true,
-  });
+  const children = await fs.readdir(
+    resolveProjectPath({ pathname: path, config }),
+    {
+      withFileTypes: true,
+    }
+  );
   return {
     kind: 'directory',
     name: path[path.length - 1] ?? '.',
@@ -63,4 +66,17 @@ export const getDirectoryHandle = async (
       }
     }),
   };
+};
+
+export const writeFile = async (
+  {
+    path,
+    data,
+  }: {
+    path: string[];
+    data: Uint8Array | string;
+  },
+  config: ProjectConfig
+) => {
+  await fs.writeFile(resolveProjectPath({ pathname: path, config }), data);
 };

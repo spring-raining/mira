@@ -5,6 +5,22 @@ import picomatch from 'picomatch';
 import { ProjectConfig } from './config';
 import { MIDDLEWARE_PATH_PREFIX } from './constants';
 
+export const resolveProjectPath = ({
+  pathname,
+  config,
+}: {
+  pathname: string | string[];
+  config: ProjectConfig;
+}): string => {
+  const jointPath = Array.isArray(pathname) ? path.join(...pathname) : pathname;
+  const { workspace } = config.mira;
+  const relPath = path.relative(workspace, jointPath);
+  if (relPath.includes('..')) {
+    throw new Error('Trying to access a file outside of workspace');
+  }
+  return path.resolve(workspace, jointPath);
+};
+
 export const readProjectFileObject = async ({
   pathname,
   config,
@@ -14,10 +30,7 @@ export const readProjectFileObject = async ({
 }): Promise<MiraMdxFileItem<number> | FileStat<number>> => {
   const { workspace, mdx } = config.mira;
   const relPath = path.relative(workspace, pathname);
-  const absPath = path.resolve(workspace, pathname);
-  if (relPath.includes('..')) {
-    throw new Error('Trying to access a file outside of workspace');
-  }
+  const absPath = resolveProjectPath({ pathname, config });
 
   const { size, mtime, birthtime } = await fs.stat(absPath);
   const fileStat = {

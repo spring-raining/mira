@@ -52,10 +52,18 @@ type FSGetDirectoryHandleMessage = {
     options?: { create?: boolean };
   };
 };
+type FSWriteFileMessage = {
+  type: 'mira:fs:writeFile';
+  data: {
+    path: string[];
+    data: Uint8Array | string;
+  };
+};
 export type DevServerMessage =
   | FSGetFileMessage
   | FSGetFileHandleMessage
-  | FSGetDirectoryHandleMessage;
+  | FSGetDirectoryHandleMessage
+  | FSWriteFileMessage;
 
 export interface DevServerWatcher {
   sendMessage: (message: DevServerMessage) => Promise<void>;

@@ -42,6 +42,10 @@ export async function startServer(args: CliArgs) {
       },
       logger
     );
+    const { webSocketServer } = server.webSockets;
+    webSocketServer.listeners('connection').forEach((fn: any) => {
+      webSocketServer.off('connection', fn);
+    });
 
     process.on('uncaughtException', (error) => {
       console.error(error);
