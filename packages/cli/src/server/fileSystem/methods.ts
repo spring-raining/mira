@@ -11,7 +11,9 @@ export const getFile = async (
   { path }: { path: string[] },
   config: ProjectConfig
 ): Promise<FSFileObject> => {
-  return await fs.readFile(resolveProjectPath({ pathname: path, config }));
+  return {
+    buf: await fs.readFile(resolveProjectPath({ pathname: path, config })),
+  };
 };
 
 export const getFileHandle = async (

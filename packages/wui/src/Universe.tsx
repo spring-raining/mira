@@ -21,6 +21,7 @@ export interface UniverseProps {
 }
 
 const UniverseContainer = styled.div`
+  width: 100%;
   display: flex;
 `;
 const PlanetarySystemPane = styled.div`

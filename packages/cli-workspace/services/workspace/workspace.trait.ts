@@ -1,6 +1,5 @@
 import { injectable } from 'tsyringe';
-import 'reflect-metadata';
-import { MiraMdxFileItem } from '../types/workspace';
+import { MiraMdxFileItem } from '../../types/workspace';
 
 export const workspaceServiceToken = 'WorkspaceService';
 

@@ -34,7 +34,7 @@ export const readProjectFileObject = async ({
 
   const { size, mtime, birthtime } = await fs.stat(absPath);
   const fileStat = {
-    path: path.posix.join('/', path.posix.relative(workspace, pathname)),
+    path: path.posix.relative(workspace, pathname),
     size,
     mtime: mtime.getTime(),
     birthtime: birthtime.getTime(),

@@ -11,8 +11,7 @@ export const setupWebSocketHandler = (config: ProjectConfig) => async (
   data: DevServerMessage
 ) => {
   if (data.type === 'mira:fs:getFile') {
-    const buf = await getFile(data.data, config);
-    return { buf };
+    return await getFile(data.data, config);
   }
   if (data.type === 'mira:fs:getFileHandle') {
     return await getFileHandle(data.data, config);

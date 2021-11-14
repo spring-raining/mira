@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import next from 'next';
@@ -8,17 +9,18 @@ import {
   workspaceServiceToken,
   WorkspaceRepository,
   WorkspaceService,
-} from '../services/workspace';
+} from '../services/workspace/workspace.trait';
 import type {
-  MiraMdxFileItem,
-  FileStat,
   DevServerEvent,
+  DevServerMessage,
+  DevServerWatcher,
+} from '../types/devServer';
+import type {
   FSFileObject,
   FSFileHandlerObject,
   FSDirectoryHandlerObject,
-  DevServerMessage,
-  DevServerWatcher,
-} from '../types/workspace';
+} from '../types/fileSystem';
+import type { MiraMdxFileItem, FileStat } from '../types/workspace';
 
 export type {
   WorkspaceRepository,
