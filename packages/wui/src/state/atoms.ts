@@ -21,11 +21,6 @@ export const focusedBrickIdState = atom<string | null>({
   default: null,
 });
 
-export const inViewBrickIdsState = atom<string[]>({
-  key: 'inViewBrickIdsState',
-  default: [],
-});
-
 export const selectedBrickIdsState = atom<string[]>({
   key: 'selectedBrickIdsState',
   default: [],

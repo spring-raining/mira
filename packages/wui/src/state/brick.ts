@@ -15,7 +15,6 @@ import { cancellable, debounce } from '../util';
 import {
   activeBrickIdState,
   focusedBrickIdState,
-  inViewBrickIdsState,
   selectedBrickIdsState,
   brickDictState,
   brickOrderState,
@@ -82,41 +81,62 @@ export const useBricks = ({
   onUpdateMdx?: (mdx: string) => void;
 } = {}) => {
   const bricks = useRecoilValue(bricksState);
+  const brickOrder = useRecoilValue(brickOrderState);
   const [selectedBrickIds, setSelectedBrickIds] = useRecoilState(
     selectedBrickIdsState
   );
-  const pushBrick = useRecoilCallback(({ set }) => async (newBrick: Brick) => {
-    set(brickDictState, (brickDict) => ({
-      ...brickDict,
-      [newBrick.id]: newBrick,
-    }));
-    set(brickOrderState, (brickOrder) => [...brickOrder, newBrick.id]);
-  });
-  const flushAll = useRecoilCallback(({ reset }) => () => {
-    reset(activeBrickIdState);
-    reset(focusedBrickIdState);
-    reset(inViewBrickIdsState);
-    reset(selectedBrickIdsState);
-    reset(brickOrderState);
-    reset(brickDictState);
-  });
-  const importBricks = useRecoilCallback(
-    () => async (bricks: Brick[]) => {
-      flushAll();
-      for (let brick of bricks) {
-        await pushBrick(brick);
-      }
+  const pushBrick = useRecoilCallback(
+    ({ set }) => async (newBrick: Brick) => {
+      set(brickDictState, (brickDict) => ({
+        ...brickDict,
+        [newBrick.id]: newBrick,
+      }));
+      set(brickOrderState, (brickOrder) => [...brickOrder, newBrick.id]);
     },
-    [flushAll, pushBrick]
+    []
   );
-  const resetActiveBrick = useRecoilCallback(({ reset }) => () => {
-    reset(activeBrickIdState);
-    reset(selectedBrickIdsState);
-  });
+  const flushAll = useRecoilCallback(
+    ({ reset }) => () => {
+      reset(activeBrickIdState);
+      reset(focusedBrickIdState);
+      reset(selectedBrickIdsState);
+      reset(brickOrderState);
+      reset(brickDictState);
+    },
+    []
+  );
+  const importBricks = useRecoilCallback(
+    ({ set }) => async (bricks: Brick[]) => {
+      flushAll();
+      set(
+        brickDictState,
+        bricks.reduce(
+          (acc, brick) => ({
+            ...acc,
+            [brick.id]: brick,
+          }),
+          {}
+        )
+      );
+      set(
+        brickOrderState,
+        bricks.map(({ id }) => id)
+      );
+    },
+    [flushAll]
+  );
+  const resetActiveBrick = useRecoilCallback(
+    ({ reset }) => () => {
+      reset(activeBrickIdState);
+      reset(selectedBrickIdsState);
+    },
+    []
+  );
   const updateBrickOrder = useRecoilCallback(
     ({ set }) => (newBrickOrder: string[]) => {
       set(brickOrderState, newBrickOrder);
-    }
+    },
+    []
   );
 
   useEffect(
@@ -137,6 +157,7 @@ export const useBricks = ({
 
   return {
     bricks,
+    brickOrder,
     selectedBrickIds,
     pushBrick,
     flushAll,
@@ -156,14 +177,20 @@ export const useBrick = (brickId: string) => {
   const activeBrickId = useRecoilValue(activeBrickIdState);
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
-  const setActive = useRecoilCallback(({ set }) => () => {
-    set(activeBrickIdState, brickId);
-  });
-  const setFocused = useRecoilCallback(({ set }) => (isFocused: boolean) => {
-    set(focusedBrickIdState, (current) =>
-      isFocused ? brickId : current === brickId ? null : current
-    );
-  });
+  const setActive = useRecoilCallback(
+    ({ set }) => () => {
+      set(activeBrickIdState, brickId);
+    },
+    [brickId]
+  );
+  const setFocused = useRecoilCallback(
+    ({ set }) => (isFocused: boolean) => {
+      set(focusedBrickIdState, (current) =>
+        isFocused ? brickId : current === brickId ? null : current
+      );
+    },
+    [brickId]
+  );
   const updateBrick = useRecoilCallback(
     ({ set, snapshot }) =>
       debounce(({ hasCancelled }) => async (text: string) => {
@@ -290,7 +317,8 @@ export const useBrickManipulator = () => {
       );
       set(brickDictState, brickDict);
       set(brickOrderState, brickOrder);
-    }
+    },
+    []
   );
 
   const cleanup = useRecoilCallback(
@@ -310,32 +338,11 @@ export const useBrickManipulator = () => {
       );
       set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
       delete editorRefs[brickId];
-    }
+    },
+    []
   );
 
   return { insertBrick, cleanup };
-};
-
-export const useInViewBrickState = () => {
-  const inViewBrickIds = useRecoilValue(inViewBrickIdsState);
-  const updateInViewState = useRecoilCallback(
-    ({ set }) => (brickId: string, inView: boolean) => {
-      // console.log(brickId, inView);
-      set(inViewBrickIdsState, (ids) => {
-        const includes = ids.includes(brickId);
-        return inView && !includes
-          ? [...ids, brickId]
-          : !inView && includes
-          ? ids.filter((id) => id !== brickId)
-          : ids;
-      });
-    }
-  );
-
-  return {
-    inViewBrickIds,
-    updateInViewState,
-  };
 };
 
 export const createNewBrick = ({

@@ -1,18 +1,16 @@
 import { css, cx } from '@linaria/core';
 import { styled } from '@linaria/react';
-import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { useInViewBrickState } from '../../hooks/useInViewState';
 import {
   useBrick,
   useBrickManipulator,
-  useInViewBrickState,
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
 import { useRenderedData } from '../../state/evaluator';
 import { cssVar } from '../../theme';
-import { Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
 import { PlusIcon, TrashIcon } from '../icon';
@@ -168,7 +166,6 @@ const MarkdownPreviewContainer = styled.div`
   width: 100%;
   margin: -0.5rem 2.5rem;
   min-height: 4rem;
-  padding-right: 2rem;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -310,7 +307,7 @@ export const Block: React.FC<{
   const displayingError = syntaxError?.error || moduleImportError;
 
   return (
-    <BlockContainer ref={observerRef} {...containerCallbacks}>
+    <BlockContainer {...containerCallbacks}>
       <TopToolPart className={cx(!isFocused && !isActive && visibilityHidden)}>
         <FlexCenter>
           <AddIconButton aria-label="Prepend" onClick={prependBrick}>
@@ -350,6 +347,7 @@ export const Block: React.FC<{
         </FlexCenter>
       </TopToolPart>
       <MiddleToolContainer
+        ref={observerRef}
         active={isFocused || isActive}
         style={{ minHeight: editorHeight }}
       >

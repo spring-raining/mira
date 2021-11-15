@@ -28,25 +28,28 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
     [brickId]
   );
 
-  const onMoveForwardCommand = useRecoilCallback(({ snapshot }) => async () => {
-    const brickOrder = await snapshot.getPromise(brickOrderState);
-    const idx = brickOrder.findIndex((id) => id === brickId);
-    if (idx < 0 && brickId.length - 1 <= idx) {
-      return;
-    }
-    const nextBrickId = brickOrder
-      .slice(idx + 1)
-      .find((id) => !!editorRefs[id]);
-    if (!nextBrickId) {
-      return;
-    }
-    editorRefs[nextBrickId].focus();
-    editorRefs[nextBrickId].setPosition({ lineNumber: 1, column: 0 });
-    const containerDom = editorRefs[nextBrickId].getContainerDomNode();
-    if (containerDom && !hasIntersect(containerDom)) {
-      containerDom.scrollIntoView(false);
-    }
-  });
+  const onMoveForwardCommand = useRecoilCallback(
+    ({ snapshot }) => async () => {
+      const brickOrder = await snapshot.getPromise(brickOrderState);
+      const idx = brickOrder.findIndex((id) => id === brickId);
+      if (idx < 0 && brickId.length - 1 <= idx) {
+        return;
+      }
+      const nextBrickId = brickOrder
+        .slice(idx + 1)
+        .find((id) => !!editorRefs[id]);
+      if (!nextBrickId) {
+        return;
+      }
+      editorRefs[nextBrickId].focus();
+      editorRefs[nextBrickId].setPosition({ lineNumber: 1, column: 0 });
+      const containerDom = editorRefs[nextBrickId].getContainerDomNode();
+      if (containerDom && !hasIntersect(containerDom)) {
+        containerDom.scrollIntoView(false);
+      }
+    },
+    [brickId]
+  );
 
   const onMoveBackwardCommand = useRecoilCallback(
     ({ snapshot }) => async () => {
@@ -73,7 +76,8 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
         // scroll downward by header height
         window.scrollBy(0, -100);
       }
-    }
+    },
+    [brickId]
   );
 
   const onChange = useRecoilCallback(
@@ -88,9 +92,12 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
     [brickId, updateBrick, setEditorTextCache]
   );
 
-  const onFocus = useRecoilCallback(({ set }) => () => {
-    set(activeBrickIdState, brickId);
-  });
+  const onFocus = useRecoilCallback(
+    ({ set }) => () => {
+      set(activeBrickIdState, brickId);
+    },
+    [brickId]
+  );
 
   const onBlur = useRecoilCallback(
     ({ snapshot }) => async () => {
@@ -100,7 +107,7 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
       }
       setEditorTextCache(undefined);
     },
-    [updateBrick, editorTextCache, setEditorTextCache]
+    [brickId, updateBrick, editorTextCache, setEditorTextCache]
   );
 
   return {

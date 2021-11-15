@@ -8,8 +8,9 @@ import React, {
 } from 'react';
 import { useDrag, useDrop, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useUniverseContext } from '../../context';
 import { getMarkdownSubject } from '../../mdx/util';
-import { useBricks, useBrick, useInViewBrickState } from '../../state/brick';
+import { useBricks, useBrick } from '../../state/brick';
 import { cssVar } from '../../theme';
 
 const PlanetarySystemContainer = styled.div`
@@ -72,26 +73,34 @@ const ItemRowInsertGutter = styled.div`
 `;
 
 const useScrollAdjustSystem = () => {
-  const { bricks } = useBricks();
-  const { inViewBrickIds } = useInViewBrickState();
+  const { __cache } = useUniverseContext();
+  const { brickOrder } = useBricks();
   const ref = useRef<HTMLDivElement>(null);
   const [marginTop, setMarginTop] = useState(0);
 
-  const displayPos = useMemo(() => {
-    const inViewIndex = inViewBrickIds
-      .map((id) => bricks.findIndex((brick) => id === brick.id))
-      .filter((index) => index >= 0);
-    const first = Math.min(...inViewIndex);
-    const last = bricks.length - Math.max(...inViewIndex) - 1;
-    return first / (first + last);
-  }, [bricks, inViewBrickIds]);
+  const [displayPos, setDisplayPos] = useState(0);
+  useEffect(() => {
+    const fn = () => {
+      const inViewIndex = [...__cache.current.inViewState]
+        .map((id) => brickOrder.findIndex((i) => id === i))
+        .filter((index) => index >= 0);
+      const first = Math.min(...inViewIndex);
+      const last = brickOrder.length - Math.max(...inViewIndex) - 1;
+      setDisplayPos(first / (first + last));
+    };
+    window.addEventListener('wheel', fn, { passive: true });
+    return () => window.removeEventListener('wheel', fn);
+  }, [brickOrder, __cache]);
+
   useEffect(() => {
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) {
       return;
     }
     const adjustSize = (rect.height - window.innerHeight + 140) * displayPos;
-    setMarginTop(Math.min(0, -adjustSize));
+    if (Number.isFinite(adjustSize)) {
+      setMarginTop(Math.min(0, -adjustSize));
+    }
   }, [displayPos]);
 
   return { ref, marginTop };
