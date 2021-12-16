@@ -18,8 +18,7 @@ const hasIntersect = (
 };
 
 export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
-  const { updateBrick } = useBrick(brickId);
-  const [editorTextCache, setEditorTextCache] = useState<string>();
+  const { setSwap, applySwap } = useBrick(brickId);
 
   const onEditorUpdate = useCallback(
     (editor: editor.IStandaloneCodeEditor) => {
@@ -81,15 +80,10 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
   );
 
   const onChange = useRecoilCallback(
-    ({ snapshot }) => async (code: string) => {
-      setEditorTextCache(code);
-      const brick = await snapshot.getPromise(brickStateFamily(brickId));
-      if (brick.type !== 'script') {
-        updateBrick(code);
-        return;
-      }
+    () => async (code: string) => {
+      setSwap(code);
     },
-    [brickId, updateBrick, setEditorTextCache]
+    [setSwap]
   );
 
   const onFocus = useRecoilCallback(
@@ -100,14 +94,10 @@ export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
   );
 
   const onBlur = useRecoilCallback(
-    ({ snapshot }) => async () => {
-      const brick = await snapshot.getPromise(brickStateFamily(brickId));
-      if (brick.type === 'script' && typeof editorTextCache === 'string') {
-        updateBrick(editorTextCache);
-      }
-      setEditorTextCache(undefined);
+    () => async () => {
+      applySwap();
     },
-    [brickId, updateBrick, editorTextCache, setEditorTextCache]
+    [applySwap]
   );
 
   return {

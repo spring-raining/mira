@@ -5,8 +5,6 @@ import {
   useRecoilCallback,
   useRecoilState,
   selector,
-  selectorFamily,
-  DefaultValue,
 } from 'recoil';
 import { dehydrateBrick } from '../mdx/io';
 import { updateBrickByText, updateBrickLanguage } from '../mdx/update';
@@ -20,51 +18,31 @@ import {
   brickOrderState,
   brickSyntaxErrorState,
   brickModuleImportErrorState,
+  brickTextSwapState,
 } from './atoms';
 import { editorRefs } from './editor';
+import { getDictItemSelector } from './helper';
 
 const transpiledMdxCache = new WeakMap<Brick, string>();
 
-export const brickStateFamily = selectorFamily<Brick, string>({
+export const brickStateFamily = getDictItemSelector({
   key: 'brickStateFamily',
-  get: (brickId) => ({ get }) => get(brickDictState)[brickId],
-  set: (brickId) => ({ set }, newValue) => {
-    if (!(newValue instanceof DefaultValue)) {
-      set(brickDictState, (prevState) => ({
-        ...prevState,
-        [brickId]: newValue,
-      }));
-    }
-  },
+  state: brickDictState,
 });
 
-const brickSyntaxErrorStateFamily = selectorFamily<
-  { error: Error; parsedText: string } | undefined,
-  string
->({
+const brickSyntaxErrorStateFamily = getDictItemSelector({
   key: 'brickSyntaxErrorStateFamily',
-  get: (brickId) => ({ get }) => get(brickSyntaxErrorState)[brickId],
-  set: (brickId) => ({ set }, newValue) => {
-    if (!(newValue instanceof DefaultValue)) {
-      set(brickSyntaxErrorState, (prevState) => {
-        const state = { ...prevState };
-        if (newValue) {
-          state[brickId] = newValue;
-        } else {
-          delete state[brickId];
-        }
-        return state;
-      });
-    }
-  },
+  state: brickSyntaxErrorState,
 });
 
-const brickModuleImportErrorStateFamily = selectorFamily<
-  Error | undefined,
-  string
->({
+const brickModuleImportErrorStateFamily = getDictItemSelector({
   key: 'brickModuleImportErrorStateFamily',
-  get: (brickId) => ({ get }) => get(brickModuleImportErrorState)[brickId],
+  state: brickModuleImportErrorState,
+});
+
+const brickTextSwapStateFamily = getDictItemSelector({
+  key: 'brickTextSwapStateFamily',
+  state: brickTextSwapState,
 });
 
 const bricksState = selector({
@@ -102,6 +80,7 @@ export const useBricks = ({
       reset(selectedBrickIdsState);
       reset(brickOrderState);
       reset(brickDictState);
+      reset(brickTextSwapState);
     },
     []
   );
@@ -177,6 +156,7 @@ export const useBrick = (brickId: string) => {
   const activeBrickId = useRecoilValue(activeBrickIdState);
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
+  const swap = useRecoilValue(brickTextSwapStateFamily(brickId));
   const setActive = useRecoilCallback(
     ({ set }) => () => {
       set(activeBrickIdState, brickId);
@@ -195,6 +175,9 @@ export const useBrick = (brickId: string) => {
     ({ set, snapshot }) =>
       debounce(({ hasCancelled }) => async (text: string) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
+        if (!brick) {
+          return;
+        }
         const { newBrick, syntaxError } = updateBrickByText(brick, text);
         if (hasCancelled()) {
           return;
@@ -237,7 +220,7 @@ export const useBrick = (brickId: string) => {
     ({ set, snapshot }) =>
       debounce(({ hasCancelled }) => async (language: string) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
-        if (brick.type !== 'snippet') {
+        if (!brick || brick.type !== 'snippet') {
           return;
         }
         const { newBrick, syntaxError } = updateBrickLanguage(brick, language);
@@ -278,11 +261,46 @@ export const useBrick = (brickId: string) => {
       }),
     [brickId]
   );
+  const setSwap = useRecoilCallback(
+    ({ snapshot, set }) => async (text: string | undefined) => {
+      const brick = await snapshot.getPromise(brickStateFamily(brickId));
+      const mira = brick?.type === 'snippet' && brick.mira;
+      set(brickTextSwapState, (state) => ({
+        ...state,
+        [brickId]:
+          typeof text === 'string'
+            ? {
+                text,
+                mira: mira
+                  ? {
+                      ...mira,
+                      id: nanoid(),
+                    }
+                  : undefined,
+              }
+            : undefined,
+      }));
+    },
+    [brickId]
+  );
+  const applySwap = useRecoilCallback(
+    ({ snapshot, set }) => async () => {
+      const brick = await snapshot.getPromise(brickStateFamily(brickId));
+      const swap = await snapshot.getPromise(brickTextSwapStateFamily(brickId));
+      set(brickTextSwapStateFamily(brickId), undefined);
+      if (!brick || !swap || brick.text === swap.text) {
+        return;
+      }
+      updateBrick(swap.text);
+    },
+    [brickId, updateBrick]
+  );
 
   return {
-    brick,
+    brick: brick!,
     syntaxError: brickSyntaxError,
     moduleImportError: brickModuleImportError,
+    swap,
     updateBrick,
     updateLanguage,
     isActive: brickId === activeBrickId,
@@ -290,6 +308,8 @@ export const useBrick = (brickId: string) => {
     isSelected: selectedBrickIds.includes(brickId),
     setActive,
     setFocused,
+    setSwap,
+    applySwap,
   };
 };
 
@@ -323,20 +343,14 @@ export const useBrickManipulator = () => {
 
   const cleanup = useRecoilCallback(
     ({ snapshot, set }) => async (brickId: string) => {
-      const brickDict = await snapshot.getPromise(brickDictState);
-      const filterDict = <T>(dict: Record<string, T>, excludeKey: string[]) =>
-        Object.entries(dict).reduce<Record<string, T>>(
-          (prev, [k, v]) =>
-            excludeKey.includes(k) ? prev : { ...prev, [k]: v },
-          {}
-        );
       set(brickOrderState, (brickOrder) =>
         brickOrder.filter((id) => id !== brickId)
       );
       set(activeBrickIdState, (activeBrickId) =>
         activeBrickId === brickId ? null : activeBrickId
       );
-      set(brickDictState, (brickDict) => filterDict(brickDict, [brickId]));
+      set(brickStateFamily(brickId), undefined);
+      set(brickTextSwapStateFamily(brickId), undefined);
       delete editorRefs[brickId];
     },
     []

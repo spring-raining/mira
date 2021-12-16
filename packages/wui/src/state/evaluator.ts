@@ -1,12 +1,12 @@
-import { useEffect, useRef } from 'react';
 import { useRecoilValue, selectorFamily } from 'recoil';
-import { MarkerMessage, EvaluatedResult } from '../types';
+import { MarkerMessage } from '../types';
 import { renderLiveElement } from '../live/renderLiveElement';
-import { brickDictState, miraEvaluatedDataDictState } from './atoms';
+import { miraEvaluatedDataDictState } from './atoms';
+import { getDictItemSelector } from './helper';
 
-const miraEvaluatedDataFamily = selectorFamily<EvaluatedResult, string>({
+const miraEvaluatedDataFamily = getDictItemSelector({
   key: 'miraEvaluatedDataFamily',
-  get: (miraId: string) => ({ get }) => get(miraEvaluatedDataDictState)[miraId],
+  state: miraEvaluatedDataDictState,
 });
 
 const miraOutputFamily = selectorFamily({
@@ -60,40 +60,10 @@ const miraOutputFamily = selectorFamily({
   },
 });
 
-const miraRenderedDataFamily = selectorFamily<
-  | {
-      element?: React.ReactNode;
-      error?: Error;
-      errorMarkers?: MarkerMessage[];
-      warnMarkers?: MarkerMessage[];
-    }
-  | undefined,
-  string
->({
-  key: 'miraRenderedDataFamily',
-  get: (brickId: string) => ({ get }) => {
-    const brick = get(brickDictState)[brickId];
-    if (brick?.type !== 'snippet' || !brick.mira?.id) {
-      return undefined;
-    }
-    return get(miraOutputFamily(brick.mira.id));
-  },
-});
+export const useRenderedData = (miraId: string) => {
+  const output = useRecoilValue(miraOutputFamily(miraId));
 
-export const useRenderedData = (brickId: string) => {
-  const settledOutput = useRef<{
-    element?: React.ReactNode;
-    error?: Error;
-    errorMarkers?: MarkerMessage[];
-    warnMarkers?: MarkerMessage[];
-  }>();
-  const output = useRecoilValue(miraRenderedDataFamily(brickId));
-
-  useEffect(() => {
-    settledOutput.current = output;
-  }, [output]);
   return {
-    // Show previous output to avoid a FOIC
-    output: output ?? settledOutput.current,
+    output: output,
   };
 };

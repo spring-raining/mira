@@ -159,11 +159,11 @@ export const Editor: React.FC<EditorProps> = ({
     null
   );
   const editorContentManager = useEditorContentManager({ code, onChange });
-  // const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
-  // const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
-  // const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
-  // const focusHandler = useAsyncEvent(onFocus);
-  // const blurHandler = useAsyncEvent(onBlur);
+  const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
+  const moveForwardCommandHandler = useAsyncEvent(onMoveForwardCommand);
+  const moveBackwardCommandHandler = useAsyncEvent(onMoveBackwardCommand);
+  const focusHandler = useAsyncEvent(onFocus);
+  const blurHandler = useAsyncEvent(onBlur);
 
   // 1. get Monaco instance
   const beforeEditorMount: BeforeEditorMount = (monaco) => {
@@ -195,20 +195,20 @@ export const Editor: React.FC<EditorProps> = ({
     }
     setEditor(editor);
     onEditorUpdate(editor, monaco);
-    // editor.addCommand(
-    //   monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-    //   createNewBlockCommandHandler
-    // );
-    // editor.addCommand(
-    //   monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow,
-    //   moveBackwardCommandHandler
-    // );
-    // editor.addCommand(
-    //   monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow,
-    //   moveForwardCommandHandler
-    // );
-    // editor.onDidFocusEditorText(focusHandler);
-    // editor.onDidBlurEditorText(blurHandler);
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+      createNewBlockCommandHandler
+    );
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow,
+      moveBackwardCommandHandler
+    );
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow,
+      moveForwardCommandHandler
+    );
+    editor.onDidFocusEditorText(focusHandler);
+    editor.onDidBlurEditorText(blurHandler);
     editorContentManager.setup(editor);
   };
 

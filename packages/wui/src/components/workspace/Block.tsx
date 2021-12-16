@@ -1,6 +1,12 @@
 import { css, cx } from '@linaria/core';
 import { styled } from '@linaria/react';
-import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import React, {
+  useCallback,
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+} from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useInViewBrickState } from '../../hooks/useInViewState';
 import {
@@ -11,6 +17,7 @@ import {
 import { useEditorCallbacks } from '../../state/editor';
 import { useRenderedData } from '../../state/evaluator';
 import { cssVar } from '../../theme';
+import { Mira } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
 import { PlusIcon, TrashIcon } from '../icon';
@@ -208,16 +215,31 @@ const BlockToolBar = styled.div`
   pointer-events: auto;
 `;
 
-const EvalPresentation: React.VFC<{ brickId: string }> = ({ brickId }) => {
-  const { output } = useRenderedData(brickId);
+const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
+  brickId,
+  mira,
+}) => {
+  const settledOutput = useRef<ReturnType<typeof useRenderedData>['output']>();
+  const { output } = useRenderedData(mira.id);
+
+  useEffect(() => {
+    if (output) {
+      settledOutput.current = output;
+    }
+  }, [output]);
+  useEffect(() => {
+    settledOutput.current = undefined;
+  }, [brickId]);
+  // Show previous output to avoid a FOIC
+  const currentOutput = output ?? settledOutput.current;
   return (
     <>
-      {output?.error ? (
+      {currentOutput?.error ? (
         <div>
-          <ErrorPreText>{output.error.toString()}</ErrorPreText>
+          <ErrorPreText>{currentOutput.error.toString()}</ErrorPreText>
         </div>
       ) : (
-        output?.element
+        currentOutput?.element
       )}
     </>
   );
@@ -231,6 +253,7 @@ export const Block: React.FC<{
     brick,
     syntaxError,
     moduleImportError,
+    swap,
     isActive,
     isFocused,
     updateLanguage,
@@ -392,7 +415,10 @@ export const Block: React.FC<{
             <LivePreviewPart>
               <LivePreviewContainer>
                 <React.Suspense fallback={null}>
-                  <EvalPresentation brickId={id} />
+                  <EvalPresentation
+                    brickId={id}
+                    mira={swap?.mira || brick.mira}
+                  />
                 </React.Suspense>
               </LivePreviewContainer>
             </LivePreviewPart>

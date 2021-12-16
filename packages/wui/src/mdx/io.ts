@@ -2,7 +2,7 @@ import { createCompiler } from '@mirajs/core';
 import mdxMarkdownExt from 'mdast-util-mdx/to-markdown';
 import toMarkdown from 'mdast-util-to-markdown';
 import { nanoid } from 'nanoid/non-secure';
-import type { Parent } from 'unist';
+import type { Parent, Node } from 'unist';
 import { ASTNode, Brick, NoteBrick, SnippetBrick, ScriptBrick } from '../types';
 
 const scriptTypes = [
@@ -20,6 +20,14 @@ type SnippetChunk = Omit<SnippetBrick, 'text'> & { children: ASTNode[] };
 type ScriptChunk = Omit<ScriptBrick, 'text'> & { children: ASTNode[] };
 type Chunk = NoteChunk | SnippetChunk | ScriptChunk;
 
+export const parseMdx = (mdxString: string): Node[] => {
+  const compiler = createCompiler();
+  const parsed = compiler.parse(mdxString) as Parent;
+  return parsed.children.filter(
+    (node) => node.type !== 'yaml' // Skip config block
+  );
+};
+
 export const hydrateMdx = (mdxString: string): Brick[] => {
   const compiler = createCompiler();
   const parsed = compiler.parse(mdxString);
@@ -30,11 +38,6 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       id: nanoid(),
       ..._node,
     };
-
-    // Skip config block
-    if (node.type === 'yaml') {
-      return acc;
-    }
 
     const head = acc.slice(0, acc.length - 1);
     const tail = acc[acc.length - 1];

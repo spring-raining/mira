@@ -3,14 +3,11 @@ import { useRecoilValue, useRecoilCallback } from 'recoil';
 import { useUniverseContext } from '../context';
 import { setupProvidence, Providence } from '../live/providence';
 import {
-  brickDictState,
   brickModuleImportErrorState,
   miraEvaluatedDataDictState,
 } from '../state/atoms';
+import { codeFragmentsState, scriptFragmentsState } from '../state/code';
 import {
-  Brick,
-  SnippetBrick,
-  Mira,
   EvaluatedResult,
   ModuleImportState,
   RefreshModuleEvent,
@@ -35,8 +32,10 @@ export const ProvidenceObserver = ({
   moduleLoader: (specifier: string) => Promise<unknown>;
 }) => {
   const providenceRef = useProvidenceRef();
-  const brickDict = useRecoilValue(brickDictState);
-  const brickDictWithPrev = usePrevState(brickDict);
+  const codeFragments = useRecoilValue(codeFragmentsState);
+  const scriptFragments = useRecoilValue(scriptFragmentsState);
+  const codeFragmentsWithPrev = usePrevState(codeFragments);
+  const scriptFragmentsWithPrev = usePrevState(scriptFragments);
   const providence = useRef<Providence>();
   const miraId = useRef<string[]>([]);
   const {
@@ -90,54 +89,47 @@ export const ProvidenceObserver = ({
   }, [providenceRef, addRefreshModuleListener, removeRefreshModuleListener]);
 
   useEffect(() => {
-    const [nextBrickDict, prevBrickDict = {}] = brickDictWithPrev;
-    const isLivedBrick = (
-      brick: Brick
-    ): brick is SnippetBrick & { mira: Mira } =>
-      brick.type === 'snippet' && !!brick.mira?.isLived;
-    const livedCode = Object.values(nextBrickDict)
-      .filter(isLivedBrick)
-      .map((brick) => ({
-        id: brick.id,
-        code: brick.text,
-        mira: brick.mira,
-      }));
-    const deadCode = Object.values(prevBrickDict)
-      .filter((brick) => isLivedBrick(brick) && !(brick.id in nextBrickDict))
+    const [nextCodeFragments, prevCodeFragments = []] = codeFragmentsWithPrev;
+    const livedCode = nextCodeFragments.map((brick) => ({
+      id: brick.id,
+      code: brick.text,
+      mira: brick.mira,
+    }));
+    const deadCode = prevCodeFragments
+      .filter((p) => nextCodeFragments.every((n) => p.id !== n.id))
       .map((brick) => ({
         id: brick.id,
         code: undefined,
         mira: undefined,
       }));
-    const nextScripts = Object.values(nextBrickDict).filter(
-      ({ type }) => type === 'script'
-    );
-    const prevScripts = Object.values(prevBrickDict).filter(
-      ({ type }) => type === 'script'
-    );
-    const livedScript = nextScripts
-      .filter((n) =>
-        prevScripts.every((p) => p.id !== n.id || p.text !== n.text)
-      )
-      .map((brick) => ({
-        id: brick.id,
-        scriptNode: brick.children ?? undefined,
-      }));
-    const deadScript = prevScripts
-      .filter((p) => nextScripts.every((n) => p.id !== n.id))
-      .map((brick) => ({ id: brick.id, scriptNode: undefined }));
-
-    // Dispatch script updates earlier than code updates to wait for module imports
-    [...livedScript, ...deadScript].forEach((changed) => {
-      providence.current?.dispatchScriptUpdates(changed);
-    });
     [...livedCode, ...deadCode]
       .filter(({ mira }) => !mira || !miraId.current.includes(mira.id))
       .forEach((changed) => {
         providence.current?.dispatchCodeUpdates(changed);
       });
     miraId.current = livedCode.map(({ mira }) => mira.id);
-  }, [providence, brickDictWithPrev]);
+  }, [providence, codeFragmentsWithPrev]);
+
+  useEffect(() => {
+    const [
+      nextScriptFragments,
+      prevScriptFragments = [],
+    ] = scriptFragmentsWithPrev;
+    const livedScript = nextScriptFragments
+      .filter((n) =>
+        prevScriptFragments.every((p) => p.id !== n.id || p.text !== n.text)
+      )
+      .map((brick) => ({
+        id: brick.id,
+        scriptNode: brick.children ?? undefined,
+      }));
+    const deadScript = prevScriptFragments
+      .filter((p) => nextScriptFragments.every((n) => p.id !== n.id))
+      .map((brick) => ({ id: brick.id, scriptNode: undefined }));
+    [...livedScript, ...deadScript].forEach((changed) => {
+      providence.current?.dispatchScriptUpdates(changed);
+    });
+  }, [providence, scriptFragmentsWithPrev]);
 
   return null;
 };

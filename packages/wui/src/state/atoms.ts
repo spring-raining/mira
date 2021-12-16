@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import { Brick, MiraId, EvaluatedResult } from '../types';
+import { Brick, Mira, EvaluatedResult } from '../types';
 
 export const brickDictState = atom<Record<string, Brick>>({
   key: 'brickDictState',
@@ -35,6 +35,13 @@ export const brickSyntaxErrorState = atom<
 
 export const brickModuleImportErrorState = atom<Record<Brick['id'], Error>>({
   key: 'brickModuleImportErrorState',
+  default: {},
+});
+
+export const brickTextSwapState = atom<
+  Record<Brick['id'], { text: string; mira?: Mira } | undefined>
+>({
+  key: 'brickTextSwapState',
   default: {},
 });
 
