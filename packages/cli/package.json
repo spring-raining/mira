@@ -20,7 +20,7 @@
     "predev": "shx rm -rf lib",
     "dev": "run-p dev:*",
     "dev:cli": "rollup -c -w --no-watch.clearScreen",
-    "dev:wui": "yarn workspace @mirajs/wui dev:module"
+    "dev:wui": "yarn workspace @mirajs/wui vite build -w"
   },
   "publishConfig": {
     "access": "public"

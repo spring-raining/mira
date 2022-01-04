@@ -15,7 +15,7 @@ export interface Mira {
   isLived: boolean;
 }
 
-interface BrickState {
+export interface BrickState {
   id: string;
   text: string;
   children?: ASTNode[] | null;
