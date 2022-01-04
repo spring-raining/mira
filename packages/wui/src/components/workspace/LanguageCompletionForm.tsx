@@ -42,11 +42,13 @@ const FormDisplayingCode = styled.code<{ active?: boolean }>`
 export const LanguageCompletionForm: React.VFC<
   {
     language: string;
-    onUpdate?: (lang: string) => void;
-  } & React.HTMLAttributes<HTMLInputElement>
+    onChange?: (lang: string) => void;
+    onSubmit?: (lang: string) => void;
+  } & Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange' | 'onSubmit'>
 > = ({
   language,
-  onUpdate = () => {},
+  onChange = () => {},
+  onSubmit = () => {},
   onFocus: handleFocus = () => {},
   onBlur: handleBlur = () => {},
   ...other
@@ -56,8 +58,9 @@ export const LanguageCompletionForm: React.VFC<
   const handleChangeText = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setText(e.target.value);
+      onChange(e.target.value);
     },
-    []
+    [onChange]
   );
   const [editorActive, setEditorActive] = useState(false);
 
@@ -76,11 +79,12 @@ export const LanguageCompletionForm: React.VFC<
     (e: React.FocusEvent<HTMLInputElement>) => {
       const lang = text.trim().split(/\s/)[0] ?? '';
       setText(lang);
-      onUpdate(lang);
+      onChange(lang);
+      onSubmit(lang);
       setEditorActive(false);
       handleBlur(e);
     },
-    [onUpdate, text, handleBlur]
+    [onChange, onSubmit, text, handleBlur]
   );
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -115,7 +119,7 @@ export const LanguageCompletionForm: React.VFC<
         active={editorActive}
         {...{ onFocus, onBlur, onKeyDown }}
       />
-      <FormDisplayingCode active={!editorActive}>{language}</FormDisplayingCode>
+      <FormDisplayingCode active={!editorActive}>{text}</FormDisplayingCode>
     </FormContainer>
   );
 };

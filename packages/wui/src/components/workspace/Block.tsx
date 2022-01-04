@@ -17,7 +17,7 @@ import {
 import { useEditorCallbacks } from '../../state/editor';
 import { useRenderedData } from '../../state/evaluator';
 import { cssVar } from '../../theme';
-import { Mira } from '../../types';
+import { Mira, Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
 import { PlusIcon, TrashIcon } from '../icon';
@@ -198,11 +198,11 @@ const MiddleToolHandle = styled.div`
   width: 2rem;
   pointer-events: auto;
 `;
-const BlockToolBarHolder = styled.div`
+const ToolbarHolder = styled.div`
   position: relative;
   top: -1.75rem;
 `;
-const BlockToolBar = styled.div`
+const Toolbar = styled.div`
   width: 18rem;
   height: 2.25rem;
   padding: 0 0.75rem 0 0.25rem;
@@ -245,6 +245,58 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
   );
 };
 
+const BlockToolbar: React.VFC<{
+  id: string;
+}> = ({ id }) => {
+  const { brick, updateTrait, setActive } = useBrick(id);
+  const { cleanup } = useBrickManipulator();
+  const [brickType, setBrickType] = useState(() => brick.type);
+  const deleteBrick = useCallback(() => {
+    cleanup(id);
+  }, [cleanup, id]);
+  const handleChangeBlockType = useCallback(
+    (type: Brick['type']) => {
+      updateTrait({ type });
+    },
+    [updateTrait]
+  );
+  const handleChangeEditingLanguage = useCallback(
+    (lang: string) => {
+      setBrickType(
+        lang.trim() ? 'snippet' : brick.type === 'script' ? 'script' : 'note'
+      );
+    },
+    [brick.type]
+  );
+  const handleChangeLanguage = useCallback(
+    (language: string) => {
+      updateTrait({ language, type: brickType });
+    },
+    [brickType, updateTrait]
+  );
+
+  return (
+    <Toolbar>
+      <BlockTypeSelect value={brickType} onChange={handleChangeBlockType} />
+      <LanguageCompletionForm
+        language={brick.type === 'snippet' ? brick.language : ''}
+        onChange={handleChangeEditingLanguage}
+        onSubmit={handleChangeLanguage}
+        onFocus={setActive}
+      />
+      <FlexCenter>
+        <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
+          <TrashIcon
+            className={css`
+              height: 1.5rem;
+            `}
+          />
+        </RemoveIconButton>
+      </FlexCenter>
+    </Toolbar>
+  );
+};
+
 export const Block: React.FC<{
   id: string;
   editorLoaderConfig?: EditorLoaderConfig;
@@ -256,33 +308,23 @@ export const Block: React.FC<{
     swap,
     isActive,
     isFocused,
-    updateLanguage,
     setActive,
     setFocused,
   } = useBrick(id);
-  const { insertBrick, cleanup } = useBrickManipulator();
+  const { insertBrick } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId: id });
 
-  const [language, setLanguage] = useState(() =>
-    brick.type === 'snippet'
-      ? brick.language
-      : brick.type === 'note'
-      ? 'markdown'
-      : brick.type === 'script'
-      ? 'jsx'
-      : ''
-  );
-  const handleSubmitLanguage = useCallback(
-    (lang: string) => {
-      setLanguage(lang);
-      updateLanguage(lang);
-    },
-    [updateLanguage]
-  );
-  const editorLanguage = useMemo(
-    () => language.toLowerCase().split(/[^\w-]/)[0],
-    [language]
-  );
+  const editorLanguage = useMemo(() => {
+    const language =
+      brick.type === 'snippet'
+        ? brick.language
+        : brick.type === 'note'
+        ? 'markdown'
+        : brick.type === 'script'
+        ? 'jsx'
+        : '';
+    return language.toLowerCase().split(/[^\w-]/)[0];
+  }, [brick]);
   const prependBrick = useCallback(() => {
     insertBrick({
       newBrick: createNewBrick({
@@ -305,9 +347,6 @@ export const Block: React.FC<{
       offset: 1,
     });
   }, [insertBrick, id]);
-  const deleteBrick = useCallback(() => {
-    cleanup(id);
-  }, [cleanup, id]);
 
   const containerCallbacks = {
     onMouseOver: useCallback(() => setFocused(true), [setFocused]),
@@ -341,31 +380,15 @@ export const Block: React.FC<{
             />
           </AddIconButton>
           {isActive && (
-            <BlockToolBarHolder>
+            <ToolbarHolder>
               <PopperPortal
                 popperOptions={{
                   placement: 'bottom-start',
                 }}
               >
-                <BlockToolBar>
-                  <BlockTypeSelect value={brick.type} />
-                  <LanguageCompletionForm
-                    language={language}
-                    onUpdate={handleSubmitLanguage}
-                    onFocus={setActive}
-                  />
-                  <FlexCenter>
-                    <RemoveIconButton aria-label="Delete" onClick={deleteBrick}>
-                      <TrashIcon
-                        className={css`
-                          height: 1.5rem;
-                        `}
-                      />
-                    </RemoveIconButton>
-                  </FlexCenter>
-                </BlockToolBar>
+                <BlockToolbar id={id} />
               </PopperPortal>
-            </BlockToolBarHolder>
+            </ToolbarHolder>
           )}
         </FlexCenter>
       </TopToolPart>

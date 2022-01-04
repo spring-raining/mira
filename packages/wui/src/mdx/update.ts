@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid/non-secure';
-import { Brick } from '../types';
+import { Brick, Mira } from '../types';
 import { hydrateMdx } from './io';
 
 const liveLanguage = ['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'];
@@ -48,22 +48,54 @@ export const updateBrickByText = (
   }
 };
 
-export const updateBrickLanguage = (
+export const updateBrickTrait = (
   brick: Brick,
-  newLanguage: string
+  {
+    type: newBrickType,
+    language: newLanguage,
+  }: { type?: Brick['type']; language?: string }
 ): {
   newBrick: Brick | Brick[];
   syntaxError?: Error | undefined;
 } => {
-  if (brick.type !== 'snippet') {
-    return { newBrick: brick };
+  if (newBrickType && brick.type !== newBrickType) {
+    if (newBrickType === 'snippet') {
+      const newBrick = {
+        ...brick,
+        type: newBrickType,
+        language: newLanguage ?? ('language' in brick ? brick.language : ''),
+      };
+      if (liveLanguage.includes(newBrick.language.toLowerCase())) {
+        (newBrick as { mira?: Mira }).mira = { id: nanoid(), isLived: true };
+      } else {
+        delete (newBrick as { mira?: Mira }).mira;
+      }
+      return updateBrickByText(newBrick, newBrick.text);
+    } else {
+      const newBrick = {
+        ...brick,
+        type: newBrickType,
+      };
+      delete (newBrick as { language?: string }).language;
+      delete (newBrick as { mira?: Mira }).mira;
+      return updateBrickByText(newBrick, newBrick.text);
+    }
+  } else if (
+    typeof newLanguage === 'string' &&
+    brick.type === 'snippet' &&
+    brick.language !== newLanguage
+  ) {
+    const newBrick = {
+      ...brick,
+      language: newLanguage,
+    };
+    if (liveLanguage.includes(newBrick.language.toLowerCase())) {
+      newBrick.mira = { id: nanoid(), isLived: true };
+    } else {
+      delete newBrick.mira;
+    }
+    return updateBrickByText(newBrick, newBrick.text);
   }
-  const newBrick = { ...brick };
-  if (liveLanguage.includes(newLanguage.toLowerCase())) {
-    newBrick.mira = { id: nanoid(), isLived: true };
-  } else {
-    delete newBrick.mira;
-  }
-  newBrick.language = newLanguage;
-  return updateBrickByText(newBrick, newBrick.text);
+
+  return updateBrickByText(brick, brick.text);
 };
