@@ -345,8 +345,8 @@ export class DependencyManager extends EventTarget<{
           ...prevImportMapping,
           ...mapping,
         };
-        this.effectModuleVal();
       }
+      this.effectModuleVal();
     });
   }
 
