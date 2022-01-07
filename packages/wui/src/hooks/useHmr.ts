@@ -13,13 +13,13 @@ export const useHmr = () => {
     (fn: (message: RefreshModuleEvent) => void) => {
       hmrCallbacks.current.push(fn);
     },
-    []
+    [],
   );
   const removeRefreshModuleListener = useCallback(
     (fn: (message: RefreshModuleEvent) => void) => {
       hmrCallbacks.current = hmrCallbacks.current.filter((f) => f !== fn);
     },
-    []
+    [],
   );
 
   return {

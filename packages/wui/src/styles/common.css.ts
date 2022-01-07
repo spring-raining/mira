@@ -6,11 +6,11 @@ export const errorPreText = style(
     fontSize: 'xs',
     color: 'red.500',
     whiteSpace: 'pre-wrap',
-  })
+  }),
 );
 
 export const iconSvg = style(
   css({
     height: 6,
-  })
+  }),
 );

@@ -9,7 +9,7 @@ import {
 import { dehydrateBrick } from '../mdx/io';
 import { updateBrickByText, updateBrickTrait } from '../mdx/update';
 import { Brick } from '../types';
-import { cancellable, debounce } from '../util';
+import { cancellable, debounce, noop } from '../util';
 import {
   activeBrickIdState,
   focusedBrickIdState,
@@ -20,8 +20,6 @@ import {
   brickModuleImportErrorState,
   brickTextSwapState,
 } from './atoms';
-import { editorRefs } from './editor';
-import { getDictItemSelector } from './helper';
 
 const transpiledMdxCache = new WeakMap<Brick, string>();
 
@@ -53,15 +51,18 @@ const bricksState = selector({
       .filter((brick) => !!brick),
 });
 
+import { editorRefs } from './editor';
+import { getDictItemSelector } from './helper';
+
 export const useBricks = ({
-  onUpdateMdx = () => {},
+  onUpdateMdx = noop,
 }: {
   onUpdateMdx?: (mdx: string) => void;
 } = {}) => {
   const bricks = useRecoilValue(bricksState);
   const brickOrder = useRecoilValue(brickOrderState);
   const [selectedBrickIds, setSelectedBrickIds] = useRecoilState(
-    selectedBrickIdsState
+    selectedBrickIdsState,
   );
   const pushBrick = useRecoilCallback(
     ({ set }) =>
@@ -72,7 +73,7 @@ export const useBricks = ({
         }));
         set(brickOrderState, (brickOrder) => [...brickOrder, newBrick.id]);
       },
-    []
+    [],
   );
   const flushAll = useRecoilCallback(
     ({ reset }) =>
@@ -84,7 +85,7 @@ export const useBricks = ({
         reset(brickDictState);
         reset(brickTextSwapState);
       },
-    []
+    [],
   );
   const importBricks = useRecoilCallback(
     ({ set }) =>
@@ -97,15 +98,15 @@ export const useBricks = ({
               ...acc,
               [brick.id]: brick,
             }),
-            {}
-          )
+            {},
+          ),
         );
         set(
           brickOrderState,
-          bricks.map(({ id }) => id)
+          bricks.map(({ id }) => id),
         );
       },
-    [flushAll]
+    [flushAll],
   );
   const resetActiveBrick = useRecoilCallback(
     ({ reset }) =>
@@ -113,14 +114,14 @@ export const useBricks = ({
         reset(activeBrickIdState);
         reset(selectedBrickIdsState);
       },
-    []
+    [],
   );
   const updateBrickOrder = useRecoilCallback(
     ({ set }) =>
       (newBrickOrder: string[]) => {
         set(brickOrderState, newBrickOrder);
       },
-    []
+    [],
   );
 
   useEffect(
@@ -136,7 +137,7 @@ export const useBricks = ({
           .join('\n');
         onUpdateMdx(mdx);
       }),
-    [bricks, onUpdateMdx]
+    [bricks, onUpdateMdx],
   );
 
   return {
@@ -156,7 +157,7 @@ export const useBrick = (brickId: string) => {
   const brick = useRecoilValue(brickStateFamily(brickId));
   const brickSyntaxError = useRecoilValue(brickSyntaxErrorStateFamily(brickId));
   const brickModuleImportError = useRecoilValue(
-    brickModuleImportErrorStateFamily(brickId)
+    brickModuleImportErrorStateFamily(brickId),
   );
   const activeBrickId = useRecoilValue(activeBrickIdState);
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
@@ -167,16 +168,16 @@ export const useBrick = (brickId: string) => {
       () => {
         set(activeBrickIdState, brickId);
       },
-    [brickId]
+    [brickId],
   );
   const setFocused = useRecoilCallback(
     ({ set }) =>
       (isFocused: boolean) => {
         set(focusedBrickIdState, (current) =>
-          isFocused ? brickId : current === brickId ? null : current
+          isFocused ? brickId : current === brickId ? null : current,
         );
       },
-    [brickId]
+    [brickId],
   );
   const updateText = useRecoilCallback(
     ({ set, snapshot }) =>
@@ -205,7 +206,7 @@ export const useBrick = (brickId: string) => {
                 ...acc,
                 [brick.id]: brick,
               }),
-              {}
+              {},
             ),
           }));
           set(brickOrderState, (prevState) => {
@@ -213,7 +214,7 @@ export const useBrick = (brickId: string) => {
             arr.splice(
               prevState.indexOf(brick.id),
               1,
-              ...newBrick.map(({ id }) => id)
+              ...newBrick.map(({ id }) => id),
             );
             return arr;
           });
@@ -221,7 +222,7 @@ export const useBrick = (brickId: string) => {
           set(brickStateFamily(brickId), newBrick);
         }
       }),
-    [brickId]
+    [brickId],
   );
   const updateTrait = useRecoilCallback(
     ({ set, snapshot }) =>
@@ -252,7 +253,7 @@ export const useBrick = (brickId: string) => {
                     ...acc,
                     [brick.id]: brick,
                   }),
-                  {}
+                  {},
                 ),
               }));
               set(brickOrderState, (prevState) => {
@@ -260,16 +261,16 @@ export const useBrick = (brickId: string) => {
                 arr.splice(
                   prevState.indexOf(brick.id),
                   1,
-                  ...newBrick.map(({ id }) => id)
+                  ...newBrick.map(({ id }) => id),
                 );
                 return arr;
               });
             } else {
               set(brickStateFamily(brickId), newBrick);
             }
-          }
+          },
       ),
-    [brickId]
+    [brickId],
   );
   const setSwap = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -292,14 +293,14 @@ export const useBrick = (brickId: string) => {
               : undefined,
         }));
       },
-    [brickId]
+    [brickId],
   );
   const applySwap = useRecoilCallback(
     ({ snapshot, set }) =>
       async () => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
         const swap = await snapshot.getPromise(
-          brickTextSwapStateFamily(brickId)
+          brickTextSwapStateFamily(brickId),
         );
         set(brickTextSwapStateFamily(brickId), undefined);
         if (!brick || !swap || brick.text === swap.text) {
@@ -307,7 +308,7 @@ export const useBrick = (brickId: string) => {
         }
         updateText(swap.text);
       },
-    [brickId, updateText]
+    [brickId, updateText],
   );
 
   return {
@@ -348,28 +349,28 @@ export const useBrickManipulator = () => {
         brickOrder.splice(
           (targetBrickId ? brickOrder.indexOf(targetBrickId) : 0) + offset,
           0,
-          newBrick.id
+          newBrick.id,
         );
         set(brickDictState, brickDict);
         set(brickOrderState, brickOrder);
       },
-    []
+    [],
   );
 
   const cleanup = useRecoilCallback(
-    ({ snapshot, set }) =>
+    ({ set }) =>
       async (brickId: string) => {
         set(brickOrderState, (brickOrder) =>
-          brickOrder.filter((id) => id !== brickId)
+          brickOrder.filter((id) => id !== brickId),
         );
         set(activeBrickIdState, (activeBrickId) =>
-          activeBrickId === brickId ? null : activeBrickId
+          activeBrickId === brickId ? null : activeBrickId,
         );
         set(brickStateFamily(brickId), undefined);
         set(brickTextSwapStateFamily(brickId), undefined);
         delete editorRefs[brickId];
       },
-    []
+    [],
   );
 
   return { insertBrick, cleanup };

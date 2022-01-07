@@ -33,7 +33,7 @@ export function watcherPlugin({
       [...DEFAULT_IGNORE, ...snowpackConfig.exclude],
       {
         dot: true,
-      }
+      },
     );
     const isIgnored = await gitignore();
     const gitignorePaths = await globFiles({
@@ -52,7 +52,7 @@ export function watcherPlugin({
     }, 200);
     const handleEvent = async (
       event: 'add' | 'unlink' | 'change',
-      pathname: string
+      pathname: string,
     ) => {
       const relPath = path.relative(config.mira.workspace, pathname);
       if (relPath.includes('..')) {
@@ -92,7 +92,7 @@ export function watcherPlugin({
   return {
     name: 'watcher',
     injectWebSocket: true,
-    async serverStart({ webSockets, logger }) {
+    async serverStart({ webSockets }) {
       if (!webSockets) {
         throw new Error('webSockets is not enabled');
       }

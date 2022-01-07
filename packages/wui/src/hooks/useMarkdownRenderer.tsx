@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { createCompiler } from '@mirajs/core';
 import { MDXProvider, mdx } from '@mdx-js/react';
-import toHast from 'mdast-util-to-hast';
+import { createCompiler } from '@mirajs/core';
 import toH from 'hast-to-hyperscript';
+import toHast from 'mdast-util-to-hast';
+import React, { useState, useEffect } from 'react';
 import type { Node } from 'unist';
 import visit from 'unist-util-visit';
 
@@ -70,7 +70,7 @@ export const markdownCompiler = createCompiler({
                 // if (attr.type === 'mdxJsxExpressionAttribute') {}
                 return acc;
               },
-              {}
+              {},
             );
             return h(node, node.name as string, props, node.children as Node[]);
           }

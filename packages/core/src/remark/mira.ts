@@ -66,13 +66,13 @@ export const insertMiraComponent: Plugin = () =>
         node: Node & {
           value: string;
           miraId?: string;
-        }
+        },
       ) => {
         const { value, miraId } = node;
         if (miraId) {
           codeBlocks.push({ value, miraId });
         }
-      }
+      },
     );
     // Insert component codes
     const children = [

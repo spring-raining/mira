@@ -1,5 +1,5 @@
-import { ComponentType } from 'react';
 import { RuntimeScope } from '@mirajs/core';
+import { ComponentType } from 'react';
 
 export const getRuntimeScope = ({
   resultCallback,

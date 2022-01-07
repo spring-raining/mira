@@ -1,5 +1,5 @@
 declare module 'mdast-util-mdx/to-markdown' {
-  var toMarkdown: any;
+  const toMarkdown: any;
   export default toMarkdown;
 }
 

@@ -1,12 +1,12 @@
 import { WorkspaceRepository } from '@mirajs/cli-workspace';
 import { devServerWatcherUpdateEventName } from './clientCode/devServer';
 import { hmrUpdateEventName } from './clientCode/hmr';
-import { readProjectFileObject } from './file';
 import { ProjectConfig } from './config';
 import {
   HMR_PREAMBLE_IMPORT_PATH,
   DEV_SERVER_WATCHER_PREAMBLE_IMPORT_PATH,
 } from './constants';
+import { readProjectFileObject } from './file';
 import { globFiles } from './util';
 
 export const getWorkspaceRepository = ({
@@ -30,7 +30,7 @@ export const getWorkspaceRepository = ({
             return 'supports' in file && file.supports === 'miraMdx'
               ? [file]
               : [];
-          })
+          }),
         )
       ).flat();
     },

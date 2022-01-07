@@ -38,26 +38,26 @@ export const ProvidenceObserver = ({
   const scriptFragmentsWithPrev = usePrevState(scriptFragments);
   const providence = useRef<Providence>();
   const miraId = useRef<string[]>([]);
-  const {
-    addRefreshModuleListener,
-    removeRefreshModuleListener,
-  } = useUniverseContext();
+  const { addRefreshModuleListener, removeRefreshModuleListener } =
+    useUniverseContext();
 
   const onEvaluatorUpdate = useRecoilCallback(
-    ({ set }) => (evaluated: EvaluatedResult) => {
-      set(miraEvaluatedDataDictState, (prev) => ({
-        ...prev,
-        [evaluated.id]: evaluated,
-      }));
-    },
-    []
+    ({ set }) =>
+      (evaluated: EvaluatedResult) => {
+        set(miraEvaluatedDataDictState, (prev) => ({
+          ...prev,
+          [evaluated.id]: evaluated,
+        }));
+      },
+    [],
   );
 
   const onModuleUpdate = useRecoilCallback(
-    ({ set }) => (module: ModuleImportState) => {
-      set(brickModuleImportErrorState, module.importError);
-    },
-    []
+    ({ set }) =>
+      (module: ModuleImportState) => {
+        set(brickModuleImportErrorState, module.importError);
+      },
+    [],
   );
 
   useEffect(() => {
@@ -111,13 +111,11 @@ export const ProvidenceObserver = ({
   }, [providence, codeFragmentsWithPrev]);
 
   useEffect(() => {
-    const [
-      nextScriptFragments,
-      prevScriptFragments = [],
-    ] = scriptFragmentsWithPrev;
+    const [nextScriptFragments, prevScriptFragments = []] =
+      scriptFragmentsWithPrev;
     const livedScript = nextScriptFragments
       .filter((n) =>
-        prevScriptFragments.every((p) => p.id !== n.id || p.text !== n.text)
+        prevScriptFragments.every((p) => p.id !== n.id || p.text !== n.text),
       )
       .map((brick) => ({
         id: brick.id,

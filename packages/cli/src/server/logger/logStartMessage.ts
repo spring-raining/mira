@@ -1,25 +1,25 @@
 import { Logger, DevServerCoreConfig } from '@web/dev-server-core';
-import ip from 'ip';
 import chalk from 'chalk';
+import ip from 'ip';
 
 const createAddress = (
   config: DevServerCoreConfig,
   host: string,
-  path: string
+  path: string,
 ) => `http${config.http2 ? 's' : ''}://${host}:${config.port}${path}`;
 
 function logNetworkAddress(
   config: DevServerCoreConfig,
   logger: Logger,
-  openPath: string
+  openPath: string,
 ) {
   try {
     const address = ip.address();
     if (typeof address === 'string') {
       logger.log(
         `${chalk.white('Network:')}  ${chalk.cyanBright(
-          createAddress(config, address, openPath)
-        )}`
+          createAddress(config, address, openPath),
+        )}`,
       );
     }
   } catch {
@@ -41,8 +41,8 @@ export function logStartMessage(config: DevServerCoreConfig, logger: Logger) {
   logger.log(`${chalk.white('Root dir:')} ${chalk.cyanBright(config.rootDir)}`);
   logger.log(
     `${chalk.white('Local:')}    ${chalk.cyanBright(
-      createAddress(config, prettyHost, openPath)
-    )}`
+      createAddress(config, prettyHost, openPath),
+    )}`,
   );
   logNetworkAddress(config, logger, openPath);
   logger.groupEnd();

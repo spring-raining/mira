@@ -1,11 +1,11 @@
+import camelCase from 'camelcase';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
-import camelCase from 'camelcase';
 
 export interface CliArgs {
   port: number;
   rootDir: string;
-};
+}
 
 const options = [
   {
@@ -27,14 +27,19 @@ const options = [
   },
 ];
 
-export function parseArgs({ argv = process.argv }: { argv?: string[] } = {}): CliArgs {
+export function parseArgs({ argv = process.argv }: { argv?: string[] } = {}):
+  | CliArgs
+  | undefined {
   const args = commandLineArgs(options, { argv, partial: true });
   if ('help' in args) {
     console.log(commandLineUsage({ header: 'Options', optionList: options }));
-    process.exit(0);
+    return;
   }
-  return Object.entries(args).reduce((prev, [k, v]) => ({
-    ...prev,
-    [camelCase(k)]: v,
-  }), {}) as CliArgs;
+  return Object.entries(args).reduce(
+    (prev, [k, v]) => ({
+      ...prev,
+      [camelCase(k)]: v,
+    }),
+    {},
+  ) as CliArgs;
 }

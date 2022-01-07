@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { noop } from '../../util';
 import { CodeIcon, FunctionIcon, MenuAlt2Icon } from '../icon';
 
 // const SelectContainer = styled.div`
@@ -65,9 +66,9 @@ export const BlockTypeSelect: React.VFC<{
   value: BlockType;
   // placeCenterFor?: BlockType;
   onChange?: (value: BlockType) => void;
-}> = ({ value, onChange = () => {} }) => {
-  const [placeCenterFor, setPlaceCenterFor] = useState(() => value);
-  const [isMouseEntered, setIsMouseEntered] = useState(false);
+}> = ({ value, onChange = noop }) => {
+  const [, setPlaceCenterFor] = useState(() => value);
+  const [, setIsMouseEntered] = useState(false);
   const selectContainerCallbacks = {
     onMouseEnter: useCallback(() => setIsMouseEntered(true), []),
     onMouseLeave: useCallback(() => {

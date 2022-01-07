@@ -24,7 +24,7 @@ const pathJoin = (...args: string[]): string => {
 const resolveLocalPath = (specifier: string, basePath: string): string => {
   const targetUrl = new URL(
     specifier[0] === '/' ? specifier : pathJoin(basePath, specifier),
-    window.location.origin
+    window.location.origin,
   );
   return targetUrl.pathname;
 };
@@ -89,7 +89,7 @@ export const collectEsmImports = async ({
           const def = parseImportStatement(node.value, imp);
           return def && { ...def, statement: node.value.trim() };
         })
-        .filter((_): _ is ParsedImportStatement => !!_)
+        .filter((_): _ is ParsedImportStatement => !!_),
     );
   const importDefs = await (await Promise.all(parseAll)).flat();
 
@@ -125,13 +125,13 @@ export const mapModuleValues = ({
     (acc, [name, binding]) => {
       if (!(name in mod)) {
         throw new ReferenceError(
-          `Module '${definition.specifier}' has no exported member '${name}'`
+          `Module '${definition.specifier}' has no exported member '${name}'`,
         );
       }
       acc[binding] = { specifier, name };
       return acc;
     },
-    {} as Record<string, { specifier: string; name: string | null }>
+    {} as Record<string, { specifier: string; name: string | null }>,
   );
   if (definition.namespaceImport) {
     importValues[definition.namespaceImport] = { specifier, name: null };
@@ -145,7 +145,7 @@ const rewriteEsmImport = (
     path,
   }: {
     path: string;
-  }
+  },
 ): ParsedImportStatement => {
   if (isRemoteUrl(def.specifier)) {
     return def;

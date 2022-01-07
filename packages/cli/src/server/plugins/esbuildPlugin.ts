@@ -4,7 +4,6 @@
 import path from 'path';
 import {
   getRequestFilePath,
-  Context,
   Plugin,
   PluginSyntaxError,
   ServerStartParams,
@@ -49,7 +48,7 @@ export function esbuildPlugin(): Plugin {
     code: string,
     filePath: string,
     loader: Loader,
-    target: string | string[]
+    target: string | string[],
   ) => {
     try {
       const { code: transformedCode, warnings } = await esbuildTransform({
@@ -65,7 +64,7 @@ export function esbuildPlugin(): Plugin {
 
         for (const warning of warnings) {
           serverStartParams!.logger.warn(
-            `Warning while transforming ${relativePath}: ${warning.text}`
+            `Warning while transforming ${relativePath}: ${warning.text}`,
           );
         }
       }
@@ -80,7 +79,7 @@ export function esbuildPlugin(): Plugin {
             filePath,
             code,
             msg.location.line,
-            msg.location.column
+            msg.location.column,
           );
         }
         throw new Error(msg.text);
@@ -94,7 +93,7 @@ export function esbuildPlugin(): Plugin {
     serverStart: (params) => {
       serverStartParams = params;
     },
-    resolveImport: async ({ source, context }) => {
+    resolveImport: async ({ source }) => {
       source;
     },
     resolveMimeType: (context) => {
@@ -123,7 +122,7 @@ export function esbuildPlugin(): Plugin {
 
       const filePath = getRequestFilePath(
         context.url,
-        serverStartParams!.config.rootDir
+        serverStartParams!.config.rootDir,
       );
       return transformCode(context.body as string, filePath, loader, target);
     },

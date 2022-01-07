@@ -23,14 +23,18 @@ export interface ImportDefinition {
 }
 
 // http://www.ecma-international.org/ecma-262/6.0/#sec-imports
+/* eslint-disable no-useless-escape */
 const importRe = /^import(?:(.+)from)?\s*('[^']+'|"[^"]+")[\s;]*$/;
 const namedImportsRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\{([^\}]+)\}$/;
-const namespaceImportRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\*\s+as\s+([A-Za-z_$][^\s\{\}]*)$/;
+const namespaceImportRe =
+  /^(?:([A-Za-z_$][^\s\{\}]*)\s*,)?\s*\*\s+as\s+([A-Za-z_$][^\s\{\}]*)$/;
 const defaultBindingRe = /^\s*([A-Za-z_$][^\s\{\}]*)\s*$/;
-const importSpecifierRe = /^(?:([A-Za-z_$][^\s\{\}]*)\s+as\s+)?([A-Za-z_$][^\s\{\}]*)$/;
+const importSpecifierRe =
+  /^(?:([A-Za-z_$][^\s\{\}]*)\s+as\s+)?([A-Za-z_$][^\s\{\}]*)$/;
+/* eslint-enable no-useless-escape */
 
 export const parseImportClause = (
-  importClause: string
+  importClause: string,
 ): Omit<ImportDefinition, 'specifier' | 'all'> | null => {
   const importBinding: { [key: string]: string } = {};
   const named: string[] = [];
@@ -86,7 +90,7 @@ export const parseImportClause = (
 // https://github.com/snowpackjs/snowpack/blob/main/snowpack/src/scan-imports.ts
 export const parseImportStatement = (
   source: string,
-  imp: ImportSpecifier
+  imp: ImportSpecifier,
 ): ImportDefinition | null => {
   if (
     imp.d === -2 || // import.meta
@@ -129,7 +133,7 @@ export const parseImportStatement = (
 };
 
 export const scanModuleSpecifier = async (
-  source: string
+  source: string,
 ): Promise<[readonly ImportSpecifier[], readonly string[]]> => {
   await initEsModuleLexer;
   const [imports, exports] = await parse(source);
@@ -137,11 +141,11 @@ export const scanModuleSpecifier = async (
 };
 
 export const importModules = async (
-  definitions: ImportDefinition[]
+  definitions: ImportDefinition[],
 ): Promise<Record<string, any>> => {
   const loadCache: Record<string, any> = {};
   let modules: Record<string, any> = {};
-  for (let definition of definitions) {
+  for (const definition of definitions) {
     const { specifier, importBinding, namespaceImport } = definition;
     if (!(specifier in loadCache)) {
       loadCache[specifier] = await import(specifier);
@@ -152,7 +156,7 @@ export const importModules = async (
     }>((acc, [name, binding]) => {
       if (!(name in mod)) {
         throw new ReferenceError(
-          `Module '${specifier}' has no exported member '${name}'`
+          `Module '${specifier}' has no exported member '${name}'`,
         );
       }
       acc[binding] = mod[name];

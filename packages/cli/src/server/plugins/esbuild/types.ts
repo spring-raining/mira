@@ -1,4 +1,4 @@
-import { transform, Loader } from 'esbuild';
+import { Loader } from 'esbuild';
 
 export interface EsbuildConfig {
   loaders: Record<string, Loader>;

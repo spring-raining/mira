@@ -13,9 +13,8 @@ const activeMiraFileState = selector({
 
 export const useMiraFiles = () => {
   const [miraFiles, setMiraFiles] = useRecoilState(miraFilesState);
-  const [activeFilePath, setActiveFilePath] = useRecoilState(
-    activeFilePathState
-  );
+  const [activeFilePath, setActiveFilePath] =
+    useRecoilState(activeFilePathState);
   return { miraFiles, setMiraFiles, activeFilePath, setActiveFilePath };
 };
 

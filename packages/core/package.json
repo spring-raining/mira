@@ -11,7 +11,9 @@
     "build": "run-p build:*",
     "build:rollup": "rollup -c",
     "build:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
-    "test": "npm run build && jest"
+    "test": "npm run build && jest",
+    "lint": "eslint . --ext .ts,tsx",
+    "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
   "publishConfig": {
     "access": "public"

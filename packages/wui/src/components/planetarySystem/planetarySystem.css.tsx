@@ -6,7 +6,7 @@ export const planetarySystemContainer = style(
     transitionProperty: 'margin-top',
     transitionTimingFunction: 'ease-in-out',
     transitionDuration: 'normal',
-  })
+  }),
 );
 
 export const itemRow = recipe({
@@ -52,7 +52,7 @@ export const itemPinContainer = style(
     d: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-  })
+  }),
 );
 
 export const itemPin = recipe({
@@ -92,13 +92,13 @@ export const itemRowText = style(
     textOverflow: 'ellipsis',
     overflow: 'hidden',
     whiteSpace: 'nowrap',
-  })
+  }),
 );
 
 export const itemRowContainer = style(
   css({
     pos: 'relative',
-  })
+  }),
 );
 
 export const itemRowInsertGutter = style(
@@ -109,5 +109,5 @@ export const itemRowInsertGutter = style(
     w: 'full',
     borderTop: '1px',
     borderColor: 'blue.700',
-  })
+  }),
 );

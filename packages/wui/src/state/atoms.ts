@@ -49,5 +49,5 @@ export const miraEvaluatedDataDictState = atom<Record<string, EvaluatedResult>>(
   {
     key: 'miraEvaluatedDataDictState',
     default: {},
-  }
+  },
 );

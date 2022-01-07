@@ -12,7 +12,7 @@ export async function workspaceMiddleware({
     },
     {
       dev: process.env.NODE_ENV === 'development',
-    }
+    },
   );
   const handle = app.getRequestHandler();
   await app.prepare();

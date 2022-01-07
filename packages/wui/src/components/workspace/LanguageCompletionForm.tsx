@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { noop } from '../../util';
 
 // const FormContainer = styled.div`
 //   display: flex;
@@ -45,10 +46,10 @@ export const LanguageCompletionForm: React.VFC<
   } & Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange' | 'onSubmit'>
 > = ({
   language,
-  onChange = () => {},
-  onSubmit = () => {},
-  onFocus: handleFocus = () => {},
-  onBlur: handleBlur = () => {},
+  onChange = noop,
+  onSubmit = noop,
+  onFocus: handleFocus = noop,
+  onBlur: handleBlur = noop,
   ...other
 }) => {
   const [text, setText] = useState(language);
@@ -58,7 +59,7 @@ export const LanguageCompletionForm: React.VFC<
       setText(e.target.value);
       onChange(e.target.value);
     },
-    [onChange]
+    [onChange],
   );
   const [editorActive, setEditorActive] = useState(false);
 
@@ -71,7 +72,7 @@ export const LanguageCompletionForm: React.VFC<
       setEditorActive(true);
       handleFocus(e);
     },
-    [handleFocus]
+    [handleFocus],
   );
   const onBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
@@ -82,7 +83,7 @@ export const LanguageCompletionForm: React.VFC<
       setEditorActive(false);
       handleBlur(e);
     },
-    [onChange, onSubmit, text, handleBlur]
+    [onChange, onSubmit, text, handleBlur],
   );
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

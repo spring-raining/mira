@@ -12,7 +12,7 @@ import { Mira } from './Mira';
 
 const useDebouncedCallback = <T extends unknown[]>(
   fn: (...args: T) => void,
-  ms: number
+  ms: number,
 ) => {
   const timer = useRef<number>();
   useEffect(() => {
@@ -41,7 +41,7 @@ export const UniverseView: React.VFC<{
         data: updated,
       });
     },
-    [file, mdx]
+    [file, mdx],
   );
   const onUpdate = useDebouncedCallback(writeFile, 3000);
 

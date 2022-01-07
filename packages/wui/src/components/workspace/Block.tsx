@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, {
   useCallback,
   useState,
@@ -6,7 +7,6 @@ import React, {
   useRef,
 } from 'react';
 import { useInView } from 'react-intersection-observer';
-import clsx from 'clsx';
 import { useInViewBrickState } from '../../hooks/useInViewState';
 import {
   useBrick,
@@ -15,17 +15,17 @@ import {
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
 import { useRenderedData } from '../../state/evaluator';
+import { errorPreText, iconSvg } from '../../styles/common.css';
+import { sprinkles } from '../../styles/sprinkles.css';
 import { Mira, Brick } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
-import { PlusIcon, TrashIcon } from '../icon';
 import { PopperPortal } from '../PopperPortal';
+import { PlusIcon, TrashIcon } from '../icon';
+import * as style from './Block.css';
 import { BlockTypeSelect } from './BlockTypeSelect';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
 import { MarkdownPreview } from './MarkdownProvider';
-import { errorPreText, iconSvg } from '../../styles/common.css';
-import { sprinkles } from '../../styles/sprinkles.css';
-import * as style from './Block.css';
 
 const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
   brickId,
@@ -70,21 +70,21 @@ const BlockToolbar: React.VFC<{
     (type: Brick['type']) => {
       updateTrait({ type });
     },
-    [updateTrait]
+    [updateTrait],
   );
   const handleChangeEditingLanguage = useCallback(
     (lang: string) => {
       setBrickType(
-        lang.trim() ? 'snippet' : brick.type === 'script' ? 'script' : 'note'
+        lang.trim() ? 'snippet' : brick.type === 'script' ? 'script' : 'note',
       );
     },
-    [brick.type]
+    [brick.type],
   );
   const handleChangeLanguage = useCallback(
     (language: string) => {
       updateTrait({ language, type: brickType });
     },
-    [brickType, updateTrait]
+    [brickType, updateTrait],
   );
 
   return (
@@ -185,7 +185,7 @@ export const Block: React.FC<{
       <div
         className={clsx(
           style.topToolPart,
-          !isFocused && !isActive && sprinkles({ visibility: 'hidden' })
+          !isFocused && !isActive && sprinkles({ visibility: 'hidden' }),
         )}
       >
         <div className={sprinkles({ display: 'flex', alignItems: 'center' })}>
@@ -219,7 +219,7 @@ export const Block: React.FC<{
         <div
           className={clsx(
             style.previewPart,
-            isActive && sprinkles({ visibility: 'hidden' })
+            isActive && sprinkles({ visibility: 'hidden' }),
           )}
           onClick={setActive}
         >
@@ -282,7 +282,7 @@ export const Block: React.FC<{
               style.editorPart,
               (brick.type === 'note' || brick.type === 'script') &&
                 !isActive &&
-                sprinkles({ visibility: 'hidden' })
+                sprinkles({ visibility: 'hidden' }),
             )}
             style={{ height: editorHeight }}
           >
@@ -306,7 +306,7 @@ export const Block: React.FC<{
             !isActive &&
             sprinkles({
               visibility: 'hidden',
-            })
+            }),
         )}
       >
         <div className={sprinkles({ display: 'flex', alignItems: 'center' })}>

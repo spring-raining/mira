@@ -4,12 +4,10 @@
     "target": "ES5",
     "module": "CommonJS",
     "noEmit": false,
-    "outDir": "./dist",
+    "outDir": "./dist/cjs",
     "sourceMap": true,
     "declaration": true,
     "jsx": "react"
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

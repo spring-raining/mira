@@ -6,7 +6,7 @@ const liveLanguage = ['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'];
 
 export const updateBrickByText = (
   brick: Brick,
-  newText: string
+  newText: string,
 ): {
   newBrick: Brick | Brick[];
   syntaxError?: Error | undefined;
@@ -53,7 +53,7 @@ export const updateBrickTrait = (
   {
     type: newBrickType,
     language: newLanguage,
-  }: { type?: Brick['type']; language?: string }
+  }: { type?: Brick['type']; language?: string },
 ): {
   newBrick: Brick | Brick[];
   syntaxError?: Error | undefined;

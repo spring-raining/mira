@@ -12,6 +12,9 @@
     "mira": "bin/mira.js"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=12.22.0"
+  },
   "scripts": {
     "prebuild": "shx rm -rf lib",
     "build": "run-p build:*",
@@ -20,7 +23,9 @@
     "predev": "shx rm -rf lib",
     "dev": "run-p dev:*",
     "dev:cli": "rollup -c -w --no-watch.clearScreen",
-    "dev:wui": "yarn workspace @mirajs/wui vite build -w"
+    "dev:wui": "yarn workspace @mirajs/wui vite build -w",
+    "lint": "eslint . --ext .ts,tsx",
+    "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
   "publishConfig": {
     "access": "public"

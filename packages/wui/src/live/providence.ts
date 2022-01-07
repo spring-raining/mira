@@ -112,6 +112,8 @@ export const setupProvidence = ({
       return;
     }
     const environment = setupRuntimeEnvironment();
+    // false positive?
+    // eslint-disable-next-line prefer-const
     let runId: number;
     const cb = async () => {
       const ret = await run({
@@ -187,7 +189,7 @@ export const setupProvidence = ({
     teardown: () => {
       store.dependency?.removeEventListener(
         'dependencyUpdate',
-        handleDependencyUpdate
+        handleDependencyUpdate,
       );
       store.dependency?.removeEventListener('moduleUpdate', handleModuleUpdate);
       store.dependency = undefined;

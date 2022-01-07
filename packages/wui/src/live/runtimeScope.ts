@@ -16,7 +16,7 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
           target[String(prop)] = value;
           return true;
         },
-      }
+      },
     ),
     referenceVal: {},
     getRuntimeScope: ({
@@ -25,7 +25,7 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
       scope: Record<string, unknown>;
     }): RuntimeScope => {
       const registerVal = (vals: Record<string, any>) => {
-        for (let [k, v] of Object.entries(vals)) {
+        for (const [k, v] of Object.entries(vals)) {
           if (k === 'default') {
             // ignore default exports
             continue;
@@ -53,7 +53,7 @@ export const setupRuntimeEnvironment = (): RuntimeEnvironment => {
             throw new Error('Invalid $val usage');
           }
           const duplicated = Object.keys(val).find(
-            (v) => v in environment.exportVal
+            (v) => v in environment.exportVal,
           );
           if (duplicated) {
             throw new Error(`'${duplicated}' is already defined`);

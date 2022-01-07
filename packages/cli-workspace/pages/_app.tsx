@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { miraTheme } from '@mirajs/wui';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { miraTheme } from '@mirajs/wui';
 import App from 'next/app';
-import type { AppProps, AppInitialProps, AppContext } from 'next/app';
-import { useEffect } from 'react';
+import type { AppProps, AppContext } from 'next/app';
+import React, { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
 import { container } from 'tsyringe';
 import { getFileSystemRepository } from '../services/filesystem/fileSystem.impl.devSever';

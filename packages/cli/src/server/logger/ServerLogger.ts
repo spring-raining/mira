@@ -1,6 +1,6 @@
-import { Logger, PluginSyntaxError } from '@web/dev-server-core';
-import { codeFrameColumns } from '@babel/code-frame';
 import path from 'path';
+import { codeFrameColumns } from '@babel/code-frame';
+import { Logger, PluginSyntaxError } from '@web/dev-server-core';
 import chalk from 'chalk';
 
 export class ServerLogger implements Logger {
@@ -45,17 +45,26 @@ export class ServerLogger implements Logger {
       { start: { line, column } },
       { highlightCode: true },
     );
-    const result = codeFrameColumns(code, { start: { line, column } }, { highlightCode: false });
+    const result = codeFrameColumns(
+      code,
+      { start: { line, column } },
+      { highlightCode: false },
+    );
 
     const relativePath = path.relative(process.cwd(), filePath);
     console.error(
-      chalk.red(`Error while transforming ${chalk.cyanBright(relativePath)}: ${message}\n`),
+      chalk.red(
+        `Error while transforming ${chalk.cyanBright(
+          relativePath,
+        )}: ${message}\n`,
+      ),
     );
     console.error(highlightedResult);
     console.error('');
 
     this.onSyntaxError(
-      `Error while transforming ${relativePath}: ${message}` + `\n\n${result}\n\n`,
+      `Error while transforming ${relativePath}: ${message}` +
+        `\n\n${result}\n\n`,
     );
   }
 }

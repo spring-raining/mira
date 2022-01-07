@@ -2,7 +2,8 @@ import { Plugin } from '@web/dev-server-core';
 import { ServerLogger } from './ServerLogger';
 import { logStartMessage } from './logStartMessage';
 
-const CLEAR_COMMAND = process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[H';
+const CLEAR_COMMAND =
+  process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[H';
 
 export interface LoggerArgs {
   debugLogging: boolean;
@@ -10,10 +11,15 @@ export interface LoggerArgs {
   logStartMessage: boolean;
 }
 
-export function createLogger(args: LoggerArgs): { logger: ServerLogger; loggerPlugin: Plugin } {
+export function createLogger(args: LoggerArgs): {
+  logger: ServerLogger;
+  loggerPlugin: Plugin;
+} {
   let onSyntaxError: (msg: string) => void;
 
-  const logger = new ServerLogger(args.debugLogging, msg => onSyntaxError?.(msg));
+  const logger = new ServerLogger(args.debugLogging, (msg) =>
+    onSyntaxError?.(msg),
+  );
 
   return {
     logger,

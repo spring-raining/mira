@@ -7,7 +7,7 @@ export const cancellable = (fn: () => void, ms = 100) => {
 
 export const debounce = <T extends unknown[]>(
   fn: (timer: { hasCancelled: () => boolean }) => (...args: T) => void,
-  ms = 100
+  ms = 100,
 ) => {
   let cancel: () => void;
   return (...args: T) => {
@@ -21,3 +21,9 @@ export const debounce = <T extends unknown[]>(
     };
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export const noop = () => {};
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export const noopAsync = async () => {};

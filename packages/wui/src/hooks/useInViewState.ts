@@ -11,7 +11,7 @@ export const useInViewBrickState = () => {
         __cache.current.inViewState.delete(brickId);
       }
     },
-    [__cache]
+    [__cache],
   );
 
   return {

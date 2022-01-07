@@ -15,34 +15,37 @@ import {
 } from '../../constants';
 import { setupWebSocketHandler as setupFileSystemHandler } from '../fileSystem/webSocket';
 
-const proxyWdsCommunication = ({ logger }: { logger: Logger }) => (
-  handler: (data: DevServerMessage) => Promise<any>
-): Parameters<WebSocketsManager['on']>[1] => async ({ data, webSocket }) => {
-  const { id, type } = data;
-  let response: unknown;
-  let error: unknown;
-  if (typeof type !== 'string' || !type.startsWith('mira:')) {
-    return;
-  }
-  try {
-    response = await handler(data as DevServerMessage);
-  } catch (error) {
-    logger.error(error);
-    error = error;
-  }
-  if (typeof id !== 'number') {
-    return;
-  }
-  webSocket.send(
-    encode({
-      type: 'message-response',
-      id,
-      ...(response ? { response } : {}),
-      ...(error ? { error } : {}),
-    }),
-    { binary: true }
-  );
-};
+const proxyWdsCommunication =
+  ({ logger }: { logger: Logger }) =>
+  (
+    handler: (data: DevServerMessage) => Promise<any>,
+  ): Parameters<WebSocketsManager['on']>[1] =>
+  async ({ data, webSocket }) => {
+    const { id, type } = data;
+    let response: unknown;
+    let error: unknown;
+    if (typeof type !== 'string' || !type.startsWith('mira:')) {
+      return;
+    }
+    try {
+      response = await handler(data as DevServerMessage);
+    } catch (err) {
+      logger.error(err);
+      error = err;
+    }
+    if (typeof id !== 'number') {
+      return;
+    }
+    webSocket.send(
+      encode({
+        type: 'message-response',
+        id,
+        ...(response ? { response } : {}),
+        ...(error ? { error } : {}),
+      }),
+      { binary: true },
+    );
+  };
 
 const overrideWebSocketsHandler = (webSockets: WebSocketsManager) => {
   // Remove existing listener
@@ -72,7 +75,7 @@ const overrideWebSocketsHandler = (webSockets: WebSocketsManager) => {
         webSockets.emit('message', { webSocket, data });
       } catch (error) {
         console.error(
-          'Failed to parse websocket event received from the browser'
+          'Failed to parse websocket event received from the browser',
         );
         console.error(error);
       }
@@ -100,7 +103,7 @@ export function webSocketPlugin({ config }: { config: ProjectConfig }): Plugin {
       const fileSystemHandler = setupFileSystemHandler(config);
       webSockets.on(
         'message',
-        proxyWdsCommunication({ logger })(fileSystemHandler)
+        proxyWdsCommunication({ logger })(fileSystemHandler),
       );
     },
     async serve(ctx) {

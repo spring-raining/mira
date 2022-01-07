@@ -3,12 +3,13 @@ import { useHistoryContext } from './hooks/history/context';
 import { useProvidenceContext } from './hooks/providence/context';
 import { useHmr } from './hooks/useHmr';
 import { RefreshModuleEvent } from './types';
+import { noop } from './util';
 
 export interface UniverseContext {
   refreshModule: (message: RefreshModuleEvent) => void;
   addRefreshModuleListener: (fn: (message: RefreshModuleEvent) => void) => void;
   removeRefreshModuleListener: (
-    fn: (message: RefreshModuleEvent) => void
+    fn: (message: RefreshModuleEvent) => void,
   ) => void;
   __cache: React.MutableRefObject<{
     inViewState: Set<string>;
@@ -16,9 +17,9 @@ export interface UniverseContext {
 }
 
 const universeContext = createContext<UniverseContext>({
-  refreshModule: () => {},
-  addRefreshModuleListener: () => {},
-  removeRefreshModuleListener: () => {},
+  refreshModule: noop,
+  addRefreshModuleListener: noop,
+  removeRefreshModuleListener: noop,
   __cache: {
     current: {
       inViewState: new Set(),

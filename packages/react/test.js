@@ -71,14 +71,14 @@ export const Asteroid_2009QW189 = $asteroid.component(
       group.rotation.z = rz;
       renderer.render(scene, camera);
     }
-  }
+  },
 );
 const makeShortcode = (name) =>
   function MDXDefaultShortcode(props) {
     console.warn(
       'Component ' +
         name +
-        ' was not imported, exported, or provided by MDXProvider as global scope'
+        ' was not imported, exported, or provided by MDXProvider as global scope',
     );
     return <div {...props} />;
   };
@@ -124,8 +124,7 @@ The library also provides Canvas 2D, SVG and CSS3D renderers in the examples.`}<
         <a
           parentName="p"
           {...{
-            href:
-              'https://github.com/mrdoob/three.js/blob/master/examples/webgl_geometry_hierarchy.html',
+            href: 'https://github.com/mrdoob/three.js/blob/master/examples/webgl_geometry_hierarchy.html',
           }}
         >{`https://github.com/mrdoob/three.js/blob/master/examples/webgl_geometry_hierarchy.html`}</a>
       </p>

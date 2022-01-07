@@ -22,7 +22,7 @@ export declare global {
             size?: number;
             position?: number;
             data?: BufferSource | Blob | string;
-          }
+          },
     ): Promise<void>;
     seek(position: number): Promise<void>;
     truncate(size: number): Promise<void>;
@@ -37,10 +37,10 @@ export declare global {
     readonly name: string;
     isSameEntry(other: FileSystemHandle): Promise<boolean>;
     queryPermission(
-      descriptor?: FileSystemHandlePermissionDescriptor
+      descriptor?: FileSystemHandlePermissionDescriptor,
     ): Promise<PermissionState>;
     requestPermission(
-      descriptor?: FileSystemHandlePermissionDescriptor
+      descriptor?: FileSystemHandlePermissionDescriptor,
     ): Promise<PermissionState>;
   }
 
@@ -64,15 +64,15 @@ export declare global {
       Iterable<FileSystemHandle> {
     getFileHandle(
       name: string,
-      options?: { create?: boolean }
+      options?: { create?: boolean },
     ): Promise<FileSystemFileHandle>;
     getDirectoryHandle(
       name: string,
-      options?: { create?: boolean }
+      options?: { create?: boolean },
     ): Promise<FileSystemDirectoryHandle>;
     removeEntry(name: string, options?: { recursive?: boolean }): Promise<void>;
     resolve(
-      possibleDescendant: FileSystemHandle
+      possibleDescendant: FileSystemHandle,
     ): Promise<string[] | undefined>;
   }
 
@@ -84,17 +84,17 @@ export declare global {
     showOpenFilePicker(
       options: FilePickerOptions & {
         multiple?: false;
-      }
+      },
     ): Promise<[FileSystemFileHandle]>;
     showOpenFilePicker(
       options: FilePickerOptions & {
         multiple: true;
-      }
+      },
     ): Promise<FileSystemFileHandle[]>;
     showSaveFilePicker(
       options: FilePickerOptions & {
         suggestedName?: string;
-      }
+      },
     ): Promise<FileSystemFileHandle>;
     showDirectoryPicker(): Promise<FileSystemDirectoryHandle>;
     FileSystemHandle: FileSystemHandleConstructor;

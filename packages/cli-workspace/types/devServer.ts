@@ -23,6 +23,6 @@ export type DevServerMessage =
 export interface DevServerWatcher {
   sendMessage: (message: DevServerMessage) => Promise<void>;
   sendMessageWaitForResponse: <T = unknown>(
-    message: DevServerMessage
+    message: DevServerMessage,
   ) => Promise<T>;
 }

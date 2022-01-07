@@ -46,7 +46,7 @@ export const blockContainer = style(
     pos: 'relative',
     my: 8,
     pointerEvents: 'none',
-  })
+  }),
 );
 
 export const topToolPart = style(
@@ -60,7 +60,7 @@ export const topToolPart = style(
     alignItems: 'center',
     justifyContent: 'center',
     pointerEvents: 'auto',
-  })
+  }),
 );
 
 export const middleToolContainer = recipe({
@@ -88,7 +88,7 @@ export const editorStickyArea = style(
     d: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-  })
+  }),
 );
 
 export const editorPart = style(
@@ -97,7 +97,7 @@ export const editorPart = style(
     pos: 'sticky',
     top: 0,
     pointerEvents: 'auto',
-  })
+  }),
 );
 
 export const editorContainer = recipe({
@@ -129,14 +129,14 @@ export const livePreviewStickyArea = style(
     justifyContent: 'flex-end',
     alignItems: 'flex-start',
     bgColor: 'gray.50',
-  })
+  }),
 );
 
 export const livePreviewPart = style(
   css({
     w: 'full',
     ps: 6,
-  })
+  }),
 );
 
 export const livePreviewContainer = style(
@@ -148,7 +148,7 @@ export const livePreviewContainer = style(
     borderRadius: 'base',
     boxSizing: 'border-box',
     bgColor: 'white',
-  })
+  }),
 );
 
 export const previewPart = style(
@@ -160,7 +160,7 @@ export const previewPart = style(
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     pointerEvents: 'auto',
-  })
+  }),
 );
 
 export const scriptPreviewContainer = style([
@@ -175,7 +175,7 @@ globalStyle(
   `${scriptPreviewContainer} pre`,
   css({
     my: '16px',
-  })
+  }),
 );
 
 export const scriptPreviewCode = style({});
@@ -185,13 +185,13 @@ globalStyle(
     fontFamily: 'mono',
     fontSize: 'sm',
     lineHeight: 'base',
-  })
+  }),
 );
 globalStyle(
   `${scriptPreviewCode} div`,
   css({
     height: '18px',
-  })
+  }),
 );
 
 export const markdownPreviewContainer = style(
@@ -203,13 +203,13 @@ export const markdownPreviewContainer = style(
     d: 'flex',
     flexDir: 'column',
     boxSizing: 'borderjbox',
-  })
+  }),
 );
 
 export const noContentParagraph = style(
   css({
     color: 'gray.400',
-  })
+  }),
 );
 
 export const bottomToolPart = style(
@@ -222,7 +222,7 @@ export const bottomToolPart = style(
     d: 'flex',
     alignItems: 'center',
     pointerEvents: 'auto',
-  })
+  }),
 );
 
 export const middleToolHandler = style(
@@ -232,14 +232,14 @@ export const middleToolHandler = style(
     left: '-1.125rem',
     w: 8,
     pointerEvents: 'auto',
-  })
+  }),
 );
 
 export const toolbarHolder = style(
   css({
     pos: 'relative',
     top: -7,
-  })
+  }),
 );
 
 export const toolbar = style(
@@ -255,5 +255,5 @@ export const toolbar = style(
     bgColor: 'white',
     boxShadow: 'md',
     pointerEvents: 'auto',
-  })
+  }),
 );

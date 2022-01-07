@@ -1,6 +1,5 @@
-import path from 'path';
 import { createRequire } from 'module';
-import WebSocket from 'ws';
+import path from 'path';
 import { Plugin, DevServerCoreConfig } from '@web/dev-server-core';
 import {
   createConfiguration,
@@ -8,6 +7,7 @@ import {
   SnowpackDevServer,
   SnowpackConfig,
 } from 'snowpack';
+import WebSocket from 'ws';
 import { MIDDLEWARE_PATH_PREFIX } from '../../constants';
 import { refreshPluginFactory } from './snowpack/refreshPlugin';
 
@@ -35,7 +35,7 @@ export function snowpackPluginFactory(coreConfig: DevServerCoreConfig): {
             resolve: false,
           },
         }),
-        {}
+        {},
       ),
     },
     alias: {},
@@ -57,7 +57,7 @@ export function snowpackPluginFactory(coreConfig: DevServerCoreConfig): {
       snowpackConfig.plugins.push(refreshPluginFactory(snowpackConfig));
       _snowpack = await startServer(
         { config: snowpackConfig },
-        { isDev: true, isWatch: true }
+        { isDev: true, isWatch: true },
       );
       const { hmrEngine } = _snowpack;
       if (!hmrEngine) {
@@ -103,7 +103,7 @@ export function snowpackPluginFactory(coreConfig: DevServerCoreConfig): {
         }
         if (ctx.path.startsWith(`${MIDDLEWARE_PATH_PREFIX}/-/resolve/`)) {
           const locator = ctx.path.substring(
-            `${MIDDLEWARE_PATH_PREFIX}/-/resolve/`.length
+            `${MIDDLEWARE_PATH_PREFIX}/-/resolve/`.length,
           );
           try {
             const nextUrl = await _snowpack.getUrlForPackage(locator);

@@ -3,10 +3,10 @@ import { RuntimeEnvironment } from '../types';
 
 const errorBoundary = (errorCallback: (error: Error) => void) => {
   return class ErrorBoundary extends React.Component<
-    {},
+    unknown,
     { hasError: boolean }
   > {
-    constructor(props: {}) {
+    constructor(props: unknown) {
       super(props);
       this.state = { hasError: false };
     }
@@ -44,7 +44,7 @@ export const renderLiveElement = ({
       resultCallback(
         <ErrorBoundary>
           <Element />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
     }
     return environment;

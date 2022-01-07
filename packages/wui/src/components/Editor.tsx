@@ -1,10 +1,3 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from 'react';
 import MonacoEditor, {
   loader as editorLoader,
   OnMount as OnEditorMount,
@@ -12,6 +5,8 @@ import MonacoEditor, {
   Monaco,
 } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { noop } from '../util';
 
 export interface EditorLoaderConfig {
   paths?: {
@@ -51,7 +46,7 @@ const useEditorContentManager = ({
   onChange: (code: string) => void;
 }) => {
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
-    null
+    null,
   );
   const outgoingQueue = useRef<string[]>([]);
   const incomingQueue = useRef<string[]>([]);
@@ -65,7 +60,7 @@ const useEditorContentManager = ({
         onChange(code);
       }
     },
-    [onChange]
+    [onChange],
   );
   const changeHandler = useAsyncEvent(onChangeWrapped);
 
@@ -90,7 +85,7 @@ const useEditorContentManager = ({
       });
       setEditor(editor);
     },
-    [changeHandler]
+    [changeHandler],
   );
   return { setup };
 };
@@ -117,7 +112,7 @@ export interface EditorProps {
   editorLoaderConfig?: EditorLoaderConfig;
   onEditorUpdate?: (
     editor: editor.IStandaloneCodeEditor,
-    monaco: Monaco
+    monaco: Monaco,
   ) => void;
   onChange?: (code: string) => void;
   onCreateNewBlockCommand?: () => void;
@@ -142,20 +137,20 @@ export const Editor: React.FC<EditorProps> = ({
     bottom: 24,
   },
   editorLoaderConfig,
-  onEditorUpdate = () => {},
-  onChange = () => {},
-  onCreateNewBlockCommand = () => {},
-  onMoveForwardCommand = () => {},
-  onMoveBackwardCommand = () => {},
-  onFocus = () => {},
-  onBlur = () => {},
-  onContentHeightChange = () => {},
+  onEditorUpdate = noop,
+  onChange = noop,
+  onCreateNewBlockCommand = noop,
+  onMoveForwardCommand = noop,
+  onMoveBackwardCommand = noop,
+  onFocus = noop,
+  onBlur = noop,
+  onContentHeightChange = noop,
 }) => {
   const [initialCode] = useState(() => code);
   const [canLoadEditor, setCanLoadEditor] = useState(false);
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(
-    null
+    null,
   );
   const editorContentManager = useEditorContentManager({ code, onChange });
   const createNewBlockCommandHandler = useAsyncEvent(onCreateNewBlockCommand);
@@ -196,15 +191,15 @@ export const Editor: React.FC<EditorProps> = ({
     onEditorUpdate(editor, monaco);
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-      createNewBlockCommandHandler
+      createNewBlockCommandHandler,
     );
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow,
-      moveBackwardCommandHandler
+      moveBackwardCommandHandler,
     );
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow,
-      moveForwardCommandHandler
+      moveForwardCommandHandler,
     );
     editor.onDidFocusEditorText(focusHandler);
     editor.onDidBlurEditorText(blurHandler);

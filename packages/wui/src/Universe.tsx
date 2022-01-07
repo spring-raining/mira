@@ -1,14 +1,15 @@
 import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
-import { useHistory, HistoryObserver } from './hooks/useHistory';
-import { ProvidenceObserver } from './hooks/useProvidence';
-import { useBricks } from './state/brick';
+import * as style from './Universe.css';
 import { EditorLoaderConfig } from './components/Editor';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
+import { HistoryObserver } from './hooks/useHistory';
+import { ProvidenceObserver } from './hooks/useProvidence';
 import { hydrateMdx } from './mdx/io';
-import * as style from './Universe.css';
+import { useBricks } from './state/brick';
+import { noop, noopAsync } from './util';
 
 export interface UniverseProps {
   mdx?: string;
@@ -22,7 +23,7 @@ export interface UniverseProps {
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
-  onUpdate = () => {},
+  onUpdate = noop,
   transpilerConfig,
   editorLoaderConfig,
 }) => {
@@ -30,7 +31,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
     onUpdateMdx: onUpdate,
   });
 
-  const history = useHistory();
+  // const history = useHistory();
 
   useEffect(() => {
     (async () => {
@@ -75,7 +76,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
 export const Universe: React.VFC<UniverseProps> = ({
   path = '/',
   depsRootPath = '/_mira',
-  moduleLoader = async () => {},
+  moduleLoader = noopAsync,
   ...other
 }) => {
   return (

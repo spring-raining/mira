@@ -1,15 +1,8 @@
 {
   "extends": "@tsconfig/node12/tsconfig.json",
-  "include": [
-    "module/**/*.ts",
-    "src/**/*.ts"
-  ],
+  "include": ["module/**/*.ts", "src/**/*.ts"],
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",
     "experimentalDecorators": true,

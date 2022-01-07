@@ -17,14 +17,14 @@ import { transpileCode } from './transpileCode';
 
 const intersection = <T extends string | number>(
   a: readonly T[],
-  b: readonly T[]
+  b: readonly T[],
 ): T[] => {
   return a.filter((v) => b.includes(v));
 };
 
 const checkImportDeps = (
   def: ImportDefinition,
-  affectedVal: readonly string[]
+  affectedVal: readonly string[],
 ): boolean => {
   return (
     // namespace import has dynamic references so evaluate every times
@@ -130,7 +130,7 @@ export class DependencyManager extends EventTarget<{
           [name]: mapping.name ? mod[mapping.name] : mod,
         };
       },
-      {}
+      {},
     );
     this.moduleVal = nextModuleVal;
     this.dispatchEvent(
@@ -140,7 +140,7 @@ export class DependencyManager extends EventTarget<{
           importDef: { ...this.miraBrickModuleImportDef },
           importError: { ...this.miraBrickModuleImportError },
         },
-      })
+      }),
     );
     Object.keys(this.miraBrickImportDef).forEach((id) => {
       this.effectDependency(id);
@@ -164,14 +164,14 @@ export class DependencyManager extends EventTarget<{
     const traverseRef = (
       depsVal: readonly string[],
       exportVal: readonly string[],
-      refMemo: readonly string[] = []
+      refMemo: readonly string[] = [],
     ): string[] => {
       const cyclicRefVal = intersection(depsVal, exportVal);
       if (cyclicRefVal.length > 0) {
         throw new Error(
           `Cyclic reference was found. Please check the exporting value: ${cyclicRefVal.join(
-            ', '
-          )}`
+            ', ',
+          )}`,
         );
       }
       const memo = [...depsVal, ...refMemo];
@@ -180,7 +180,7 @@ export class DependencyManager extends EventTarget<{
         ...depsVal.flatMap((v) =>
           v in this.miraValDependency && !(v in refMemo)
             ? traverseRef([...this.miraValDependency[v]], exportVal, memo)
-            : []
+            : [],
         ),
       ];
     };
@@ -201,7 +201,7 @@ export class DependencyManager extends EventTarget<{
       }
       const [imports, exports] = await scanModuleSpecifier(transformedCode);
       const importDef = imports.flatMap(
-        (imp) => parseImportStatement(transformedCode, imp) ?? []
+        (imp) => parseImportStatement(transformedCode, imp) ?? [],
       );
       const namedImportVal = importDef.flatMap((def) => def.named);
       const namedExportVal = exports.filter((val) => val !== 'default');
@@ -209,7 +209,7 @@ export class DependencyManager extends EventTarget<{
       const anyAlreadyDefinedValue = namedExportVal.find(
         (val) =>
           (this.miraDefinedValues.has(val) && !prevExports.includes(val)) ||
-          namedImportVal.includes(val)
+          namedImportVal.includes(val),
       );
       if (anyAlreadyDefinedValue) {
         throw new Error(`Value ${anyAlreadyDefinedValue} has already defined`);
@@ -269,7 +269,7 @@ export class DependencyManager extends EventTarget<{
   updateExports(exportVal: Record<string, unknown>) {
     const changedVal = Object.entries(exportVal)
       .filter(
-        ([k, v]) => !(k in this.miraExportVal) || v !== this.miraExportVal[k]
+        ([k, v]) => !(k in this.miraExportVal) || v !== this.miraExportVal[k],
       )
       .map(([k]) => k);
     const nextExportVal = { ...this.miraExportVal, ...exportVal };
@@ -303,7 +303,7 @@ export class DependencyManager extends EventTarget<{
                   depsRootPath: this.depsRootPath,
                 })),
             };
-          })
+          }),
         );
         importResults.forEach(({ definition, mod }) => {
           this.moduleCache.set(definition.specifier, mod);
@@ -313,7 +313,7 @@ export class DependencyManager extends EventTarget<{
             ...acc,
             ...mapModuleValues(m),
           }),
-          mapping
+          mapping,
         );
         delete this.miraBrickModuleImportError[id];
       } catch (error) {
@@ -333,7 +333,7 @@ export class DependencyManager extends EventTarget<{
           ([name, mapping]) =>
             !(name in this.moduleImportMapping) ||
             mapping.name !== this.moduleImportMapping[name].name ||
-            mapping.specifier !== this.moduleImportMapping[name].specifier
+            mapping.specifier !== this.moduleImportMapping[name].specifier,
         ) ||
         prevModuleMappedName.some((name) => !(name in mapping))
       ) {
@@ -380,7 +380,7 @@ export class DependencyManager extends EventTarget<{
     let nextImportMapping = { ...this.moduleImportMapping };
     Object.entries(this.miraBrickModuleImportDef)
       .filter(([, { importStatement }]) =>
-        importStatement.some((s) => s.specifier === specifier)
+        importStatement.some((s) => s.specifier === specifier),
       )
       .forEach(([id, { mappedName, importStatement }]) => {
         let mapping: ReturnType<typeof mapModuleValues> = {};
@@ -396,7 +396,7 @@ export class DependencyManager extends EventTarget<{
                 definition,
               }),
             }),
-            mapping
+            mapping,
           );
           delete this.miraBrickModuleImportError[id];
         } catch (error) {

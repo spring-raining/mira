@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useRef,
-  useMemo,
-  useEffect,
-  useState,
-} from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { useDrag, useDrop, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useUniverseContext } from '../../context';
@@ -88,7 +82,7 @@ const PlanetaryListItem: React.FC<{
       onSelect(brickId);
       setActive();
     },
-    [brickId, onSelect, onRangeSelect, onMultipleSelect, setActive]
+    [brickId, onSelect, onRangeSelect, onMultipleSelect, setActive],
   );
   const [, drop] = useDrop<ListItemDragObject, unknown, unknown>(
     () => ({
@@ -110,7 +104,7 @@ const PlanetaryListItem: React.FC<{
         onHoverDragItem(dropIndex);
       },
     }),
-    [index, onDropItem, onHoverDragItem]
+    [index, onDropItem, onHoverDragItem],
   );
   const [{ isDragging }, drag] = useDrag<
     ListItemDragObject,
@@ -127,7 +121,7 @@ const PlanetaryListItem: React.FC<{
         onDragEnd();
       },
     }),
-    [onDragEnd]
+    [onDragEnd],
   );
 
   // multiply ref
@@ -183,7 +177,7 @@ export const PlanetarySystem: React.VFC = () => {
           .filter((id) => !draggingBrickIds.includes(id)),
       ]);
     },
-    [bricks, selectedBrickIds, updateBrickOrder, hoverTargetIndex]
+    [bricks, selectedBrickIds, updateBrickOrder, hoverTargetIndex],
   );
   const onDragEnd = useCallback(() => {
     setHoverTargetIndex(null);
@@ -194,7 +188,7 @@ export const PlanetarySystem: React.VFC = () => {
       setLastSelectId(brickId);
       setSelectedBrickIds([brickId]);
     },
-    [setSelectedBrickIds]
+    [setSelectedBrickIds],
   );
   const onRangeSelect = useCallback(
     (brickId: string) => {
@@ -205,17 +199,17 @@ export const PlanetarySystem: React.VFC = () => {
         .map((b) => b.id);
       setSelectedBrickIds(selectedIds);
     },
-    [bricks, lastSelectId, setSelectedBrickIds]
+    [bricks, lastSelectId, setSelectedBrickIds],
   );
   const onMultipleSelect = useCallback(
     (brickId: string) => {
       setSelectedBrickIds((selectedIds) =>
         selectedIds.includes(brickId)
           ? selectedIds.filter((id) => id !== brickId)
-          : [...selectedIds, brickId]
+          : [...selectedIds, brickId],
       );
     },
-    [setSelectedBrickIds]
+    [setSelectedBrickIds],
   );
 
   return (

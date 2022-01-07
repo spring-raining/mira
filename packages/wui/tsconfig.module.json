@@ -1,9 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": [
-    "module",
-    "src"
-  ],
+  "include": ["module", "src"],
   "compilerOptions": {
     "noEmit": false,
     "declaration": true

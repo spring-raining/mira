@@ -63,18 +63,18 @@ const renamedVars = createGlobalThemeContract(
   walkObject(
     miraTheme,
     // vanilla-extract only accepts string
-    (value) => String(value)
+    (value) => String(value),
   ),
   (_, path) => {
     const varName = cssesc(path.join('-').replace('.', '_'), {
       isIdentifier: true,
     });
     return `mira-${varName}`;
-  }
+  },
 );
 export const vars = walkObject(
   renamedVars,
-  (value) => String(value).replace('_', '\\.') as CSSVarFunction
+  (value) => String(value).replace('_', '\\.') as CSSVarFunction,
 );
 
 createGlobalTheme(
@@ -83,6 +83,6 @@ createGlobalTheme(
   walkObject(
     miraTheme,
     // vanilla-extract only accepts string
-    (value) => String(value)
-  )
+    (value) => String(value),
+  ),
 );

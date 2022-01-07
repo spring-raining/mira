@@ -3,5 +3,7 @@ import { startServer } from './server';
 
 export function main() {
   const args = parseArgs();
-  startServer(args);
+  if (args) {
+    startServer(args);
+  }
 }

@@ -11,7 +11,7 @@ export { style, globalStyle } from '@vanilla-extract/css';
 export { recipe } from '@vanilla-extract/recipes';
 
 const theme = toCSSVar(
-  extendTheme({ ...miraTheme, config: { cssVarPrefix: 'mira' } })
+  extendTheme({ ...miraTheme, config: { cssVarPrefix: 'mira' } }),
 );
 
 export const css = (styles: CSSObject) =>

@@ -24,7 +24,7 @@ export const refreshPluginFactory: SnowpackPluginFactory = () => ({
     }
     if (fileExt === '.js' && !isSSR) {
       return transformJs(
-        typeof contents === 'string' ? contents : contents.toString()
+        typeof contents === 'string' ? contents : contents.toString(),
       );
     }
   },

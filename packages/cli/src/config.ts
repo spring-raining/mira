@@ -1,4 +1,4 @@
-import { Plugin, DevServerCoreConfig } from '@web/dev-server-core';
+import { DevServerCoreConfig } from '@web/dev-server-core';
 import { CliArgs } from './commands';
 
 export interface ProjectConfig {
@@ -13,7 +13,7 @@ export interface ProjectConfig {
 }
 
 export const collectProjectConfig = async (
-  cliArgs: CliArgs
+  cliArgs: CliArgs,
 ): Promise<ProjectConfig> => {
   return {
     server: {

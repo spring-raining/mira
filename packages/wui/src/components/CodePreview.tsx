@@ -1,6 +1,6 @@
-import React from 'react';
 import Highlight, { defaultProps, Language } from 'prism-react-renderer';
 import lightTheme from 'prism-react-renderer/themes/nightOwlLight';
+import React from 'react';
 
 export const CodePreview: React.VFC<{ code: string; language: Language }> = ({
   code,
@@ -15,13 +15,17 @@ export const CodePreview: React.VFC<{ code: string; language: Language }> = ({
     >
       {({ tokens, getLineProps, getTokenProps }) => (
         <>
-          {tokens.map((line, key) => (
-            <div {...getLineProps({ line, key })}>
-              {line.map((token, key) => (
-                <span {...getTokenProps({ token, key })} />
-              ))}
-            </div>
-          ))}
+          {tokens.map((line, _key) => {
+            const { key, ...other } = getLineProps({ line, key: _key });
+            return (
+              <div key={key} {...other}>
+                {line.map((token, _key) => {
+                  const { key, ...other } = getTokenProps({ token, key: _key });
+                  return <span key={key} {...other} />;
+                })}
+              </div>
+            );
+          })}
         </>
       )}
     </Highlight>

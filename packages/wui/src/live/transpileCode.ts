@@ -22,10 +22,10 @@ export const transpileCode = async ({
     // transpilerService.stop();
   }
   const mapMessage = (
-    messages: { text: string; location: MarkerMessage['location'] | null }[]
+    messages: { text: string; location: MarkerMessage['location'] | null }[],
   ) =>
     messages.flatMap<MarkerMessage>(({ text, location }) =>
-      location ? { location, text } : []
+      location ? { location, text } : [],
     );
   try {
     const transpiled = await transpilerService.build({
@@ -51,7 +51,7 @@ export const transpileCode = async ({
                 contents: declaredValues
                   .map(
                     (val) =>
-                      `export const ${val} = /* @__PURE__ */ $use('${val}');`
+                      `export const ${val} = /* @__PURE__ */ $use('${val}');`,
                   )
                   .join('\n'),
                 loader: 'js',

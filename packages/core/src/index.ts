@@ -28,7 +28,7 @@ export const mdxOptions: Options = {
 
 export async function compile(
   input: string,
-  options: Options = mdxOptions
+  options: Options = mdxOptions,
 ): Promise<string> {
   return await mdx.mdx(input, options);
 }

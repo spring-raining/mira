@@ -9,7 +9,7 @@ import { resolveProjectPath } from '../../file';
 
 export const getFile = async (
   { path }: { path: string[] },
-  config: ProjectConfig
+  config: ProjectConfig,
 ): Promise<FSFileObject> => {
   return {
     buf: await fs.readFile(resolveProjectPath({ pathname: path, config })),
@@ -19,12 +19,11 @@ export const getFile = async (
 export const getFileHandle = async (
   {
     path,
-    options,
   }: {
     path: string[];
     options?: { create?: boolean };
   },
-  config: ProjectConfig
+  config: ProjectConfig,
 ): Promise<FSFileHandlerObject> => {
   const stat = await fs.lstat(resolveProjectPath({ pathname: path, config }));
   if (!stat.isFile()) {
@@ -39,34 +38,32 @@ export const getFileHandle = async (
 export const getDirectoryHandle = async (
   {
     path,
-    options,
   }: {
     path: string[];
     options?: { create?: boolean };
   },
-  config: ProjectConfig
+  config: ProjectConfig,
 ): Promise<FSDirectoryHandlerObject> => {
   const children = await fs.readdir(
     resolveProjectPath({ pathname: path, config }),
     {
       withFileTypes: true,
-    }
+    },
   );
   return {
     kind: 'directory',
     name: path[path.length - 1] ?? '.',
-    ls: children.flatMap((d): (
-      | FSFileHandlerObject
-      | FSDirectoryHandlerObject
-    )[] => {
-      if (d.isFile()) {
-        return [{ kind: 'file', name: d.name }];
-      } else if (d.isDirectory()) {
-        return [{ kind: 'directory', name: d.name }];
-      } else {
-        return [];
-      }
-    }),
+    ls: children.flatMap(
+      (d): (FSFileHandlerObject | FSDirectoryHandlerObject)[] => {
+        if (d.isFile()) {
+          return [{ kind: 'file', name: d.name }];
+        } else if (d.isDirectory()) {
+          return [{ kind: 'directory', name: d.name }];
+        } else {
+          return [];
+        }
+      },
+    ),
   };
 };
 
@@ -78,7 +75,7 @@ export const writeFile = async (
     path: string[];
     data: Uint8Array | string;
   },
-  config: ProjectConfig
+  config: ProjectConfig,
 ) => {
   await fs.writeFile(resolveProjectPath({ pathname: path, config }), data);
 };

@@ -4,7 +4,7 @@ export const markdownStyling = style(
   css({
     d: 'flex',
     flexDir: 'column',
-  })
+  }),
 );
 const mapSelector = (s: string) => s.replace(/&/g, markdownStyling);
 
@@ -18,7 +18,7 @@ globalStyle(
     borderStyle: 'solid',
     boxSizing: 'border-box',
     wordBreak: 'break-word',
-  })
+  }),
 );
 globalStyle(
   mapSelector(`
@@ -35,7 +35,7 @@ globalStyle(
     & figure,
     & p,
     & pre`),
-  css({ m: 0 })
+  css({ m: 0 }),
 );
 globalStyle(
   mapSelector(`
@@ -46,7 +46,7 @@ globalStyle(
   css({
     fontFamily: 'mono',
     fontSize: 'md',
-  })
+  }),
 );
 globalStyle(mapSelector('& p'), css({ my: 4 }));
 globalStyle(
@@ -57,19 +57,19 @@ globalStyle(
     outline: 'none',
     color: 'blue.500',
     wordWrap: 'break-word',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& a:hover'),
   css({
     textDecoration: 'underline',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& a:focus'),
   css({
     boxShadow: 'outline',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& hr'),
@@ -80,7 +80,7 @@ globalStyle(
     borderTop: '1px',
     borderColor: 'current',
     my: 4,
-  })
+  }),
 );
 globalStyle(
   mapSelector(`
@@ -95,43 +95,43 @@ globalStyle(
     fontWeight: 'bold',
     lineHeight: 'shorter',
     my: 4,
-  })
+  }),
 );
 globalStyle(
   mapSelector('& h1'),
   css({
     fontSize: '4xl',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& h2'),
   css({
     fontSize: '3xl',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& h3'),
   css({
     fontSize: '2xl',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& h4'),
   css({
     fontSize: 'xl',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& h5'),
   css({
     fontSize: 'lg',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& h6'),
   css({
     fontSize: 'md',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& blockquote'),
@@ -145,7 +145,7 @@ globalStyle(
     my: 4,
     bgColor: 'blackAlpha.100',
     borderRadius: 'lg',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& ul, & ol'),
@@ -154,7 +154,7 @@ globalStyle(
     p: 0,
     my: 2,
     ms: 4,
-  })
+  }),
 );
 globalStyle(mapSelector('& table'), {
   fontVariantNumeric: 'lining-nums tabular-nums',
@@ -175,13 +175,13 @@ globalStyle(
     lineHeight: 'short',
     borderBottom: '1px',
     borderColor: 'gray.100',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& tr:last-of-type th'),
   css({
     borderBottom: 'none',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& td'),
@@ -192,7 +192,7 @@ globalStyle(
     lineHeight: 'shorter',
     borderBottom: '1px',
     borderColor: 'gray.100',
-  })
+  }),
 );
 globalStyle(mapSelector('& pre'), css({ my: 4 }));
 globalStyle(
@@ -207,7 +207,7 @@ globalStyle(
     bgColor: 'gray.100',
     borderRadius: 'lg',
     overflowX: 'auto',
-  })
+  }),
 );
 globalStyle(
   mapSelector('& :not(pre) > code'),
@@ -216,6 +216,6 @@ globalStyle(
     mx: 1,
     bgColor: 'gray.100',
     borderRadius: 'sm',
-  })
+  }),
 );
 globalStyle(mapSelector('& img'), css({ maxW: 'full' }));

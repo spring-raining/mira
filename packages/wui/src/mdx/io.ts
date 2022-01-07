@@ -24,7 +24,7 @@ export const parseMdx = (mdxString: string): Node[] => {
   const compiler = createCompiler();
   const parsed = compiler.parse(mdxString) as Parent;
   return parsed.children.filter(
-    (node) => node.type !== 'yaml' // Skip config block
+    (node) => node.type !== 'yaml', // Skip config block
   );
 };
 
@@ -90,7 +90,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
 
   const scan = (node: ASTNode): ASTNode => {
     const n = { ...node };
-    for (let omit of omitProperties) {
+    for (const omit of omitProperties) {
       delete n[omit];
     }
     return {
@@ -98,26 +98,24 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       ...(node.children && { children: node.children.map(scan) }),
     };
   };
-  const bricks = chunk.map(
-    (el): Brick => {
-      const { children } = el;
-      const text: string =
-        children[0]?.type === 'code'
-          ? children[0].value
-          : children
-              .map(({ position }) =>
-                mdxString.slice(position.start.offset, position.end.offset)
-              )
-              .join('\n\n');
-      return { ...el, children: children.map(scan), text } as Brick;
-    }
-  );
+  const bricks = chunk.map((el): Brick => {
+    const { children } = el;
+    const text: string =
+      children[0]?.type === 'code'
+        ? children[0].value
+        : children
+            .map(({ position }) =>
+              mdxString.slice(position.start.offset, position.end.offset),
+            )
+            .join('\n\n');
+    return { ...el, children: children.map(scan), text } as Brick;
+  });
   return bricks;
 };
 
 export const dehydrateBrick = (brick: Brick): string => {
   return toMarkdown(
     { type: 'root', children: brick.children },
-    { listItemIndent: 'one', extensions: [mdxMarkdownExt] }
+    { listItemIndent: 'one', extensions: [mdxMarkdownExt] },
   );
 };

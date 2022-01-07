@@ -27,7 +27,7 @@ const usePortalTarget = ({ id }: { id: string }) => {
     })();
     document.body.insertBefore(
       rootContainer,
-      document.body.lastElementChild!.nextElementSibling
+      document.body.lastElementChild!.nextElementSibling,
     );
     rootContainer.appendChild(getRootEl());
     return () => {
@@ -46,18 +46,15 @@ export const PopperPortal: React.FC<{
 }> = ({ children, popperOptions }) => {
   const id = useRef(nanoid());
   const target = usePortalTarget({ id: id.current });
-  const [
-    referenceElement,
-    setReferenceElement,
-  ] = React.useState<HTMLDivElement | null>(null);
-  const [
-    popperElement,
-    setPopperElement,
-  ] = React.useState<HTMLDivElement | null>(null);
+  const [referenceElement, setReferenceElement] =
+    useState<HTMLDivElement | null>(null);
+  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
+    null,
+  );
   const { styles, attributes } = usePopper(
     referenceElement,
     popperElement,
-    popperOptions
+    popperOptions,
   );
 
   return (
@@ -70,7 +67,7 @@ export const PopperPortal: React.FC<{
         >
           {children}
         </div>,
-        target
+        target,
       )}
     </div>
   );

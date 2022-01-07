@@ -11,7 +11,7 @@ export const codeFragmentsState = selector<
     const brickTextSwap = get(brickTextSwapState);
     const livedSnippets = Object.values(brickDict).filter(
       (v): v is SnippetBrick & { mira: Mira } =>
-        v.type === 'snippet' && !!v.mira?.isLived
+        v.type === 'snippet' && !!v.mira?.isLived,
     );
     return livedSnippets.map(({ id, text, language, mira }) => {
       const ret = { id, text, language, mira };
@@ -32,7 +32,7 @@ export const scriptFragmentsState = selector<ScriptBrick[]>({
   get: ({ get }) => {
     const brickDict = get(brickDictState);
     const scripts = Object.values(brickDict).filter(
-      (v): v is ScriptBrick => v.type === 'script'
+      (v): v is ScriptBrick => v.type === 'script',
     );
     return scripts;
   },

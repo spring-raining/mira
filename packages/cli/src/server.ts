@@ -1,25 +1,20 @@
 import { DevServer, Plugin } from '@web/dev-server-core';
-import { hmrPlugin } from '@web/dev-server-hmr';
 import { CliArgs } from './commands';
 import { collectProjectConfig } from './config';
 import { createLogger } from './server/logger/createLogger';
 import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
-import { webSocketPlugin } from './server/plugins/webSocketPlugin';
-import { esbuildPlugin } from './server/plugins/esbuildPlugin';
-import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
+import { watcherPlugin } from './server/plugins/watcherPlugin';
+import { webSocketPlugin } from './server/plugins/webSocketPlugin';
 import { getWorkspaceRepository } from './workspace';
 
 export async function startServer(args: CliArgs) {
   try {
     const config = await collectProjectConfig(args);
     const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
-      config.server
+      config.server,
     );
     const plugins: Plugin[] = [
-      // nodeResolvePlugin(coreConfig.rootDir),
-      // esbuildPlugin(),
-      // hmrPlugin() as any, // FIXME
       webSocketPlugin({ config }),
       watcherPlugin({ config, snowpackConfig }),
       snowpackPlugin,
@@ -40,7 +35,7 @@ export async function startServer(args: CliArgs) {
         ],
         plugins,
       },
-      logger
+      logger,
     );
     const { webSocketServer } = server.webSockets;
     webSocketServer.listeners('connection').forEach((fn: any) => {
@@ -52,13 +47,12 @@ export async function startServer(args: CliArgs) {
     });
     process.on('SIGINT', async () => {
       await server.stop();
-      process.exit(0);
     });
 
     await server.start();
     // openBrowser();
   } catch (error) {
     console.error(error);
-    process.exit(1);
+    throw error;
   }
 }

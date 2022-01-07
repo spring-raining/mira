@@ -2,13 +2,13 @@ import { RuntimeEnvironment } from '../types';
 
 // eslint-disable-next-line no-new-func
 const AsyncFunctionShim = new Function(
-  'return Object.getPrototypeOf(async function(){}).constructor'
+  'return Object.getPrototypeOf(async function(){}).constructor',
 )();
 
 export const asyncEval = (
   code: string,
   scope: Record<string, any>,
-  environment: RuntimeEnvironment
+  environment: RuntimeEnvironment,
 ) => {
   const runtimeScope: Record<string, any> = {
     ...scope,

@@ -2,6 +2,7 @@
   "name": "@mirajs/wui",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "exports": {
     ".": {
       "import": "./lib/index.es.js"
@@ -15,7 +16,9 @@
     "build": "run-p build:module:*",
     "build:module:vite": "tsc && vite build",
     "build:module:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,tsx",
+    "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
   "dependencies": {
     "@mdx-js/react": "2.0.0-next.9",
