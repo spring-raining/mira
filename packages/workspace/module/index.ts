@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import next, { NextServer } from 'next';
+import next from 'next';
 import type createServer from 'next/dist/server/next';
 import { container } from 'tsyringe';
 import {
@@ -37,7 +37,7 @@ export default (
   { workspaceRepository }: { workspaceRepository: WorkspaceRepository },
   options: Parameters<typeof createServer>[0] = {},
 ): {
-  app: NextServer;
+  app: ReturnType<typeof next>;
 } => {
   container.register(workspaceServiceToken, {
     useValue: new WorkspaceService(workspaceRepository),
