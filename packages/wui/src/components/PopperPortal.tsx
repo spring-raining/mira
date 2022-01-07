@@ -1,12 +1,7 @@
-import { styled } from '@linaria/react';
 import { nanoid } from 'nanoid';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
-
-const PortalHolder = styled.div`
-  position: absolute;
-`;
 
 const usePortalTarget = ({ id }: { id: string }) => {
   const rootEl = useRef<HTMLDivElement | null>(null);
@@ -68,13 +63,13 @@ export const PopperPortal: React.FC<{
   return (
     <div ref={setReferenceElement}>
       {createPortal(
-        <PortalHolder
+        <div
           ref={setPopperElement}
           style={styles.popper}
           {...attributes.popper}
         >
           {children}
-        </PortalHolder>,
+        </div>,
         target
       )}
     </div>

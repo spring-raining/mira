@@ -1,43 +1,41 @@
-import { styled } from '@linaria/react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { cssVar } from '../../theme';
 
-const FormContainer = styled.div`
-  display: flex;
-  align-items: center;
-  position: relative;
-  width: 100%;
-  height: 100%;
-`;
-const FormInput = styled.input<{ active?: boolean }>`
-  flex: 1;
-  appearance: none;
-  background: inherit;
-  outline: none;
-  border: 2px solid transparent;
-  padding-inline-start: 1rem;
-  padding-inline-end: 1rem;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  font-family: ${cssVar('fonts.mono')};
-  font-size: 0.8em;
-  opacity: ${(props) => (props.active ? 1 : 0)};
-  &:focus {
-    border-color: ${cssVar('colors.blue.500')};
-  }
-`;
-const FormDisplayingCode = styled.code<{ active?: boolean }>`
-  flex: 1;
-  padding-inline-start: calc(1rem + 2px);
-  padding-inline-end: calc(1rem + 2px);
-  font-family: ${cssVar('fonts.mono')};
-  font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  visibility: ${(props) => (props.active ? 'initial' : 'hidden')};
-`;
+// const FormContainer = styled.div`
+//   display: flex;
+//   align-items: center;
+//   position: relative;
+//   width: 100%;
+//   height: 100%;
+// `;
+// const FormInput = styled.input<{ active?: boolean }>`
+//   flex: 1;
+//   appearance: none;
+//   background: inherit;
+//   outline: none;
+//   border: 2px solid transparent;
+//   padding-inline-start: 1rem;
+//   padding-inline-end: 1rem;
+//   position: absolute;
+//   width: 100%;
+//   height: 100%;
+//   font-family: ${cssVar('fonts.mono')};
+//   font-size: 0.8em;
+//   opacity: ${(props) => (props.active ? 1 : 0)};
+//   &:focus {
+//     border-color: ${cssVar('colors.blue.500')};
+//   }
+// `;
+// const FormDisplayingCode = styled.code<{ active?: boolean }>`
+//   flex: 1;
+//   padding-inline-start: calc(1rem + 2px);
+//   padding-inline-end: calc(1rem + 2px);
+//   font-family: ${cssVar('fonts.mono')};
+//   font-size: 0.8rem;
+//   overflow: hidden;
+//   text-overflow: ellipsis;
+//   white-space: nowrap;
+//   visibility: ${(props) => (props.active ? 'initial' : 'hidden')};
+// `;
 
 export const LanguageCompletionForm: React.VFC<
   {
@@ -105,8 +103,8 @@ export const LanguageCompletionForm: React.VFC<
   }, [editorActive]);
 
   return (
-    <FormContainer onClick={handleClick}>
-      <FormInput
+    <div onClick={handleClick}>
+      <input
         {...other}
         ref={inputEl}
         type="text"
@@ -116,10 +114,14 @@ export const LanguageCompletionForm: React.VFC<
         spellCheck="false"
         value={text}
         onChange={handleChangeText}
-        active={editorActive}
+        // active={editorActive}
         {...{ onFocus, onBlur, onKeyDown }}
       />
-      <FormDisplayingCode active={!editorActive}>{text}</FormDisplayingCode>
-    </FormContainer>
+      <code
+      // active={!editorActive}
+      >
+        {text}
+      </code>
+    </div>
   );
 };

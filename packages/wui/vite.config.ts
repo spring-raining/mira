@@ -1,5 +1,6 @@
 import path from 'path';
 import { defineConfig } from 'vite';
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import react from '@vitejs/plugin-react';
 import * as packageJson from './package.json';
 
@@ -11,6 +12,8 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
     },
     outDir: path.resolve(__dirname, 'lib'),
+    // avoid deleting type directory on development
+    emptyOutDir: false,
     rollupOptions: {
       external: [
         ...Object.keys(packageJson.dependencies),
@@ -22,5 +25,5 @@ export default defineConfig({
       ],
     },
   },
-  plugins: [react()],
+  plugins: [react(), vanillaExtractPlugin({ identifiers: 'debug' })],
 });

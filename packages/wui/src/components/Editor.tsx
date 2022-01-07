@@ -1,4 +1,3 @@
-import { styled } from '@linaria/react';
 import React, {
   useState,
   useEffect,

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { theme } from '@mirajs/wui';
-import { ChakraProvider } from '@chakra-ui/react';
+import { miraTheme } from '@mirajs/wui';
+import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import App from 'next/app';
 import type { AppProps, AppInitialProps, AppContext } from 'next/app';
 import { useEffect } from 'react';
@@ -16,7 +16,9 @@ import {
   WorkspaceService,
   workspaceServiceToken,
 } from '../services/workspace/workspace.trait';
-// import '@mirajs/wui/styles.css';
+import '@mirajs/wui/styles.css';
+
+const theme = extendTheme(miraTheme);
 
 export type AppCustomProps = {
   constants: WorkspaceRepository['constants'];

@@ -1,4 +1,3 @@
-import { styled } from '@linaria/react';
 import React, {
   useCallback,
   useRef,
@@ -11,66 +10,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useUniverseContext } from '../../context';
 import { getMarkdownSubject } from '../../mdx/util';
 import { useBricks, useBrick } from '../../state/brick';
-import { cssVar } from '../../theme';
-
-const PlanetarySystemContainer = styled.div`
-  transition: all 200ms ease;
-`;
-const ItemRow = styled.div<{
-  isSelected?: boolean;
-  isDragging?: boolean;
-}>`
-  display: flex;
-  align-items: center;
-  height: 1.5rem;
-  cursor: pointer;
-  background-color: ${(props) =>
-    props.isSelected ? cssVar('colors.cyan.50') : cssVar('colors.white')};
-  opacity: ${(props) => (props.isDragging ? 0.5 : 1)};
-  &:hover {
-    background-color: ${(props) =>
-      props.isSelected ? cssVar('colors.cyan.50') : cssVar('colors.gray.100')};
-  }
-`;
-const ItemPinContainer = styled.div`
-  width: 2rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-const ItemPin = styled.span<{
-  isLarge?: boolean;
-  isActive?: boolean;
-  isFocused?: boolean;
-}>`
-  background-color: ${(props) =>
-    props.isFocused || props.isActive
-      ? cssVar('colors.gray.500')
-      : cssVar('colors.gray.300')};
-  border-radius: 50%;
-  box-shadow: ${(props) =>
-    props.isActive ? `0 0 0 5px ${cssVar('colors.cyan.100')}` : 'unset'};
-  width: ${(props) => (props.isLarge ? '0.75rem' : '0.375rem')};
-  height: ${(props) => (props.isLarge ? '0.75rem' : '0.375rem')};
-`;
-const ItemRowText = styled.span`
-  flex: 1;
-  color: ${cssVar('colors.gray.900')};
-  font-size: ${cssVar('fontSizes.xs')};
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-`;
-const ItemRowContainer = styled.div`
-  position: relative;
-`;
-const ItemRowInsertGutter = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  border-top: 1px solid ${cssVar('colors.blue.700')};
-`;
+import * as style from './planetarySystem.css';
 
 const useScrollAdjustSystem = () => {
   const { __cache } = useUniverseContext();
@@ -194,25 +134,25 @@ const PlanetaryListItem: React.FC<{
   drag(drop(ref));
 
   return (
-    <ItemRowContainer>
-      {hasInsertGutter && <ItemRowInsertGutter />}
-      <ItemRow ref={ref} {...{ isSelected, isDragging, onClick }}>
-        <ItemPinContainer>
-          <ItemPin {...{ isLarge, isActive, isFocused }} />
-        </ItemPinContainer>
-        <ItemRowText>{children}</ItemRowText>
-      </ItemRow>
-    </ItemRowContainer>
+    <div className={style.itemRowContainer}>
+      {hasInsertGutter && <div className={style.itemRowInsertGutter} />}
+      <div
+        ref={ref}
+        className={style.itemRow({ isSelected, isDragging })}
+        {...{ onClick }}
+      >
+        <div className={style.itemPinContainer}>
+          <span className={style.itemPin({ isLarge, isActive, isFocused })} />
+        </div>
+        <span className={style.itemRowText}>{children}</span>
+      </div>
+    </div>
   );
 };
 
 export const PlanetarySystem: React.VFC = () => {
-  const {
-    bricks,
-    selectedBrickIds,
-    updateBrickOrder,
-    setSelectedBrickIds,
-  } = useBricks();
+  const { bricks, selectedBrickIds, updateBrickOrder, setSelectedBrickIds } =
+    useBricks();
   const onClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
@@ -280,7 +220,11 @@ export const PlanetarySystem: React.VFC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <PlanetarySystemContainer {...{ ref, onClick }} style={{ marginTop }}>
+      <div
+        {...{ ref, onClick }}
+        className={style.planetarySystemContainer}
+        style={{ marginTop }}
+      >
         {bricks.map((brick, i) => (
           <PlanetaryListItem
             key={brick.id}
@@ -300,7 +244,7 @@ export const PlanetarySystem: React.VFC = () => {
             {brick.type === 'note' && getMarkdownSubject(brick.children ?? [])}
           </PlanetaryListItem>
         ))}
-      </PlanetarySystemContainer>
+      </div>
     </DndProvider>
   );
 };

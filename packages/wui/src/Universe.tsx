@@ -1,4 +1,3 @@
-import { styled } from '@linaria/react';
 import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
@@ -9,6 +8,7 @@ import { EditorLoaderConfig } from './components/Editor';
 import { PlanetarySystem } from './components/planetarySystem';
 import { Block } from './components/workspace/Block';
 import { hydrateMdx } from './mdx/io';
+import * as style from './Universe.css';
 
 export interface UniverseProps {
   mdx?: string;
@@ -19,29 +19,6 @@ export interface UniverseProps {
   transpilerConfig?: ServiceOptions;
   editorLoaderConfig?: EditorLoaderConfig;
 }
-
-const UniverseContainer = styled.div`
-  width: 100%;
-  display: flex;
-`;
-const PlanetarySystemPane = styled.div`
-  width: 12rem;
-`;
-const PlanetarySystemSticky = styled.div`
-  top: 0;
-  position: sticky;
-  padding: 70px 0;
-`;
-const MainPane = styled.div`
-  flex: 1;
-`;
-const MainSticky = styled.div`
-  width: '100%';
-  position: sticky;
-  top: 0;
-  padding: 70px 0;
-  margin-inline-start: 1rem;
-`;
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
@@ -74,14 +51,14 @@ const UniverseView: React.VFC<UniverseProps> = ({
   }, [resetActiveBrick]);
 
   return (
-    <UniverseContainer>
-      <PlanetarySystemPane>
-        <PlanetarySystemSticky>
+    <div className={style.universeContainer}>
+      <div className={style.planetarySystemPane}>
+        <div className={style.planetarySystemSticky}>
           <PlanetarySystem />
-        </PlanetarySystemSticky>
-      </PlanetarySystemPane>
-      <MainPane>
-        <MainSticky>
+        </div>
+      </div>
+      <div className={style.mainPane}>
+        <div className={style.mainSticky}>
           {bricks.map((brick) => (
             <Block
               key={brick.id}
@@ -89,9 +66,9 @@ const UniverseView: React.VFC<UniverseProps> = ({
               {...brick}
             />
           ))}
-        </MainSticky>
-      </MainPane>
-    </UniverseContainer>
+        </div>
+      </div>
+    </div>
   );
 };
 

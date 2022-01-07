@@ -1,65 +1,63 @@
-import { css } from '@linaria/core';
-import { styled } from '@linaria/react';
 import React, { useState, useCallback } from 'react';
-import { cssVar } from '../../theme';
 import { CodeIcon, FunctionIcon, MenuAlt2Icon } from '../icon';
 
-const SelectContainer = styled.div`
-  position: relative;
-  width: 14rem;
-  height: 2rem;
-`;
+// const SelectContainer = styled.div`
+//   position: relative;
+//   width: 14rem;
+//   height: 2rem;
+// `;
 
-const SelectButtonStack = styled.div<{ placementIndex: number }>`
-  position: absolute;
-  left: 0;
-  width: 100%;
-  top: ${(props) => -2.25 * props.placementIndex}rem;
-  margin: -0.125rem 0;
-  display: flex;
-  flex-direction: column;
-`;
+// const SelectButtonStack = styled.div<{ placementIndex: number }>`
+//   position: absolute;
+//   left: 0;
+//   width: 100%;
+//   top: ${(props) => -2.25 * props.placementIndex}rem;
+//   margin: -0.125rem 0;
+//   display: flex;
+//   flex-direction: column;
+// `;
 
-const SelectButton = styled.button<{ active?: boolean; visible?: boolean }>`
-  height: 2rem;
-  margin: 0.125rem 0;
-  padding: 0 0.25rem;
-  display: ${(props) => (props.visible ? 'inline-flex' : 'none')};
-  appearance: none;
-  justify-content: start;
-  align-items: center;
-  user-select: none;
-  outline: none;
-  cursor: pointer;
-  color: ${(props) =>
-    props.active ? cssVar('colors.white') : cssVar('colors.blue.500')};
-  font-size: ${cssVar('fontSizes.sm')};
-  background: ${(props) =>
-    props.active ? cssVar('colors.blue.500') : cssVar('colors.white')};
-  border: 1px solid ${cssVar('colors.blue.500')};
-  border-radius: 2rem;
-  &:hover {
-    color: ${cssVar('colors.white')};
-    background: ${cssVar('colors.blue.500')};
-  }
-`;
+// const SelectButton = styled.button<{ active?: boolean; visible?: boolean }>`
+//   height: 2rem;
+//   margin: 0.125rem 0;
+//   padding: 0 0.25rem;
+//   display: ${(props) => (props.visible ? 'inline-flex' : 'none')};
+//   appearance: none;
+//   justify-content: start;
+//   align-items: center;
+//   user-select: none;
+//   outline: none;
+//   cursor: pointer;
+//   color: ${(props) =>
+//     props.active ? cssVar('colors.white') : cssVar('colors.blue.500')};
+//   font-size: ${cssVar('fontSizes.sm')};
+//   background: ${(props) =>
+//     props.active ? cssVar('colors.blue.500') : cssVar('colors.white')};
+//   border: 1px solid ${cssVar('colors.blue.500')};
+//   border-radius: 2rem;
+//   &:hover {
+//     color: ${cssVar('colors.white')};
+//     background: ${cssVar('colors.blue.500')};
+//   }
+// `;
 
-const selectButtonAppearAnim = css`
-  animation: appear 0.05s ease-out 1;
-  @keyframes appear {
-    from {
-      transform: translateY(4px);
-    }
-    to {
-      transform: translateY(0);
-    }
-  }
-`;
+// const selectButtonAppearAnim = css`
+//   animation: appear 0.05s ease-out 1;
+//   @keyframes appear {
+//     from {
+//       transform: translateY(4px);
+//     }
+//     to {
+//       transform: translateY(0);
+//     }
+//   }
+// `;
 
-const iconStyle = css`
-  height: 1.125rem;
-  margin: 0 0.25rem;
-`;
+const iconStyle = '';
+// const iconStyle = css`
+//   height: 1.125rem;
+//   margin: 0 0.25rem;
+// `;
 
 type BlockType = 'note' | 'snippet' | 'script';
 
@@ -84,46 +82,46 @@ export const BlockTypeSelect: React.VFC<{
   };
 
   return (
-    <SelectContainer {...selectContainerCallbacks}>
-      <SelectButtonStack
-        placementIndex={
-          !isMouseEntered
-            ? 0
-            : placeCenterFor === 'script'
-            ? 2
-            : placeCenterFor === 'snippet'
-            ? 1
-            : 0
-        }
+    <div {...selectContainerCallbacks}>
+      <div
+      // placementIndex={
+      //   !isMouseEntered
+      //     ? 0
+      //     : placeCenterFor === 'script'
+      //     ? 2
+      //     : placeCenterFor === 'snippet'
+      //     ? 1
+      //     : 0
+      // }
       >
-        <SelectButton
-          active={value === 'note'}
-          visible={value === 'note' || isMouseEntered}
-          className={value !== 'note' ? selectButtonAppearAnim : undefined}
+        <button
+          // active={value === 'note'}
+          // visible={value === 'note' || isMouseEntered}
+          // className={value !== 'note' ? selectButtonAppearAnim : undefined}
           onClick={onSelectButtonClick.note}
         >
           <MenuAlt2Icon className={iconStyle} />
           Note
-        </SelectButton>
-        <SelectButton
-          active={value === 'snippet'}
-          visible={value === 'snippet' || isMouseEntered}
-          className={value !== 'snippet' ? selectButtonAppearAnim : undefined}
+        </button>
+        <button
+          // active={value === 'snippet'}
+          // visible={value === 'snippet' || isMouseEntered}
+          // className={value !== 'snippet' ? selectButtonAppearAnim : undefined}
           onClick={onSelectButtonClick.snippet}
         >
           <CodeIcon className={iconStyle} />
           Snippet
-        </SelectButton>
-        <SelectButton
-          active={value === 'script'}
-          visible={value === 'script' || isMouseEntered}
-          className={value !== 'script' ? selectButtonAppearAnim : undefined}
+        </button>
+        <button
+          // active={value === 'script'}
+          // visible={value === 'script' || isMouseEntered}
+          // className={value !== 'script' ? selectButtonAppearAnim : undefined}
           onClick={onSelectButtonClick.script}
         >
           <FunctionIcon className={iconStyle} />
           Script
-        </SelectButton>
-      </SelectButtonStack>
-    </SelectContainer>
+        </button>
+      </div>
+    </div>
   );
 };
