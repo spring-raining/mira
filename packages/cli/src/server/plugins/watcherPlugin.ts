@@ -1,5 +1,5 @@
 import path from 'path';
-import { DevServerEvent } from '@mirajs/cli-workspace';
+import { DevServerEvent } from '@mirajs/workspace';
 import { Plugin, WebSocketsManager } from '@web/dev-server-core';
 import chokidar, { FSWatcher } from 'chokidar';
 import debounce from 'debounce';

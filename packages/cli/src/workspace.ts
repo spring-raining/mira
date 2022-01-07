@@ -1,4 +1,4 @@
-import { WorkspaceRepository } from '@mirajs/cli-workspace';
+import { WorkspaceRepository } from '@mirajs/workspace';
 import { devServerWatcherUpdateEventName } from './clientCode/devServer';
 import { hmrUpdateEventName } from './clientCode/hmr';
 import { ProjectConfig } from './config';

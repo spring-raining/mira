@@ -8,7 +8,7 @@
     "packages/core",
     "packages/transpiler",
     "packages/wui",
-    "packages/cli-workspace",
+    "packages/workspace",
     "packages/*"
   ],
   "devDependencies": {

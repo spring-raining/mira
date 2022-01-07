@@ -38,7 +38,7 @@
     "@types/picomatch": "^2.2.4"
   },
   "dependencies": {
-    "@mirajs/cli-workspace": "1.0.0",
+    "@mirajs/workspace": "1.0.0",
     "@msgpack/msgpack": "2.7.1",
     "@web/dev-server": "^0.1.14",
     "@web/dev-server-hmr": "^0.1.9",

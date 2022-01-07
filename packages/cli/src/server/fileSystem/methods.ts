@@ -3,7 +3,7 @@ import {
   FSFileObject,
   FSFileHandlerObject,
   FSDirectoryHandlerObject,
-} from '@mirajs/cli-workspace';
+} from '@mirajs/workspace';
 import { ProjectConfig } from '../../config';
 import { resolveProjectPath } from '../../file';
 

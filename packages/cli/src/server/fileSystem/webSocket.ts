@@ -1,4 +1,4 @@
-import { DevServerMessage } from '@mirajs/cli-workspace';
+import { DevServerMessage } from '@mirajs/workspace';
 import { ProjectConfig } from '../../config';
 import {
   getFile,

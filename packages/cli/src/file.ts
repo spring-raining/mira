@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { MiraMdxFileItem, FileStat } from '@mirajs/cli-workspace';
+import { MiraMdxFileItem, FileStat } from '@mirajs/workspace';
 import picomatch from 'picomatch';
 import { ProjectConfig } from './config';
 import { MIDDLEWARE_PATH_PREFIX } from './constants';
