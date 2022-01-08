@@ -1,15 +1,15 @@
 import { ServiceOptions } from '@mirajs/transpiler';
 import React, { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
+import { HistoryObserver } from '../hooks/useHistory';
+import { ProvidenceObserver } from '../hooks/useProvidence';
+import { hydrateMdx } from '../mdx/io';
+import { useBricks } from '../state/brick';
+import { noop, noopAsync } from '../util';
+import { EditorLoaderConfig } from './Editor';
 import * as style from './Universe.css';
-import { EditorLoaderConfig } from './components/Editor';
-import { PlanetarySystem } from './components/planetarySystem';
-import { Block } from './components/workspace/Block';
-import { HistoryObserver } from './hooks/useHistory';
-import { ProvidenceObserver } from './hooks/useProvidence';
-import { hydrateMdx } from './mdx/io';
-import { useBricks } from './state/brick';
-import { noop, noopAsync } from './util';
+import { Block } from './main/Block';
+import { PlanetarySystem } from './planetarySystem';
 
 export interface UniverseProps {
   mdx?: string;

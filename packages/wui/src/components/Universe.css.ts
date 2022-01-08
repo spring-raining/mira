@@ -1,4 +1,4 @@
-import { css, style } from './styles/system.css';
+import { css, style } from '../styles/system.css';
 
 export const universeContainer = style(
   css({

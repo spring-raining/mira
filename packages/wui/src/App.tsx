@@ -1,5 +1,5 @@
 import React from 'react';
-import { Universe } from './Universe';
+import { Universe } from './components/Universe';
 
 function App() {
   return (
