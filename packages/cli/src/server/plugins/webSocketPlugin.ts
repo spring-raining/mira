@@ -55,7 +55,7 @@ const overrideWebSocketsHandler = (webSockets: WebSocketsManager) => {
   });
 
   const openSockets = new Set<WebSocket>();
-  webSocketServer.on('connection', (webSocket) => {
+  webSocketServer.on('connection', (webSocket, req) => {
     openSockets.add(webSocket);
     webSocket.on('close', () => {
       openSockets.delete(webSocket);

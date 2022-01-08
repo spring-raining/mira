@@ -16,6 +16,9 @@ export const Mira: React.VFC<{
   }, []);
   const { refreshModule } = useUniverseContext();
   useEffect(() => {
+    if (!hmrUpdateEventName) {
+      return;
+    }
     const fn = (event: CustomEvent<RefreshModuleEvent>) => {
       refreshModule(event.detail);
     };

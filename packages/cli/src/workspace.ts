@@ -15,6 +15,7 @@ export const getWorkspaceRepository = ({
   config: ProjectConfig;
 }): WorkspaceRepository => {
   return {
+    mode: 'devServer',
     getMiraFiles: async () => {
       const { includes, excludes } = config.mira.mdx;
       const paths = await globFiles({

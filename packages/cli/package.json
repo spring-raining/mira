@@ -22,7 +22,7 @@
     "build:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
     "predev": "shx rm -rf lib",
     "dev": "run-p dev:*",
-    "dev:cli": "rollup -c -w --no-watch.clearScreen",
+    "dev:cli": "rollup -c -w --no-watch.clearScreen --environment DEV",
     "dev:wui": "yarn workspace @mirajs/wui vite build -w",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
@@ -31,6 +31,7 @@
     "access": "public"
   },
   "devDependencies": {
+    "@rollup/plugin-replace": "3.0.1",
     "@types/babel__code-frame": "^7.0.2",
     "@types/command-line-usage": "^5.0.1",
     "@types/debounce": "^1.2.0",

@@ -6,6 +6,7 @@ import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
 import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { webSocketPlugin } from './server/plugins/webSocketPlugin';
+import { workspaceServerPluginFactory } from './server/plugins/workspaceServerPlugin';
 import { getWorkspaceRepository } from './workspace';
 
 export async function startServer(args: CliArgs) {
@@ -14,10 +15,15 @@ export async function startServer(args: CliArgs) {
     const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
       config.server,
     );
+    const { workspaceServerPlugin, workspaceServerMiddleware } =
+      await workspaceServerPluginFactory({
+        workspaceRepository: getWorkspaceRepository({ config }),
+      });
     const plugins: Plugin[] = [
       webSocketPlugin({ config }),
       watcherPlugin({ config, snowpackConfig }),
       snowpackPlugin,
+      workspaceServerPlugin,
     ];
     const { logger, loggerPlugin } = createLogger({
       debugLogging: false,
@@ -29,9 +35,10 @@ export async function startServer(args: CliArgs) {
       {
         ...config.server,
         middleware: [
-          await workspaceMiddleware({
-            workspaceRepository: getWorkspaceRepository({ config }),
-          }),
+          workspaceServerMiddleware,
+          // await workspaceMiddleware({
+          //   workspaceRepository: getWorkspaceRepository({ config }),
+          // }),
         ],
         plugins,
       },
@@ -47,6 +54,8 @@ export async function startServer(args: CliArgs) {
     });
     process.on('SIGINT', async () => {
       await server.stop();
+      // eslint-disable-next-line no-process-exit
+      process.exit(0);
     });
 
     await server.start();

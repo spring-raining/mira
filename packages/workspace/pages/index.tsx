@@ -24,9 +24,11 @@ interface PageProps {
   constants: WorkspaceRepository['constants'];
 }
 
-export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
+export const getServerSideProps: GetServerSideProps<PageProps> = async (
+  ctx,
+) => {
   const cli = container.resolve<WorkspaceService>(workspaceServiceToken);
-  const mira = await cli.service.getMiraFiles();
+  const mira = await cli.service.getMiraFiles(ctx);
   return {
     props: { mira, constants: cli.service.constants },
   };
@@ -52,15 +54,11 @@ export default function Home({ mira, constants }: PageProps) {
         // TODO
       }
     };
-    window.addEventListener(
-      constants.devServerWatcherUpdateEventName,
-      fn as EventListener,
-    );
-    return () =>
-      window.removeEventListener(
-        constants.devServerWatcherUpdateEventName,
-        fn as EventListener,
-      );
+    if (constants.devServerWatcherUpdateEventName) {
+      const eventName = constants.devServerWatcherUpdateEventName;
+      window.addEventListener(eventName, fn as EventListener);
+      return () => window.removeEventListener(eventName, fn as EventListener);
+    }
   }, [constants.devServerWatcherUpdateEventName]);
 
   const test = useCallback(async () => {
@@ -90,8 +88,12 @@ export default function Home({ mira, constants }: PageProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Script type="module" src={constants.devServerWatcherImportPath} />
-      <Script type="module" src={constants.hmrPreambleImportPath} />
+      {constants.devServerWatcherImportPath && (
+        <Script type="module" src={constants.devServerWatcherImportPath} />
+      )}
+      {constants.hmrPreambleImportPath && (
+        <Script type="module" src={constants.hmrPreambleImportPath} />
+      )}
 
       <Flex alignItems="stretch" height="100vh">
         <Flex

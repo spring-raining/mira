@@ -11,7 +11,14 @@ export async function workspaceMiddleware({
       workspaceRepository,
     },
     {
-      dev: process.env.NODE_ENV === 'development',
+      // see the rollup config
+      dev: process.env.DEV as unknown as boolean,
+      customServer: true,
+      conf: {
+        serverRuntimeConfig: {
+          disableStandaloneMode: true,
+        },
+      },
     },
   );
   const handle = app.getRequestHandler();

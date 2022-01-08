@@ -1,9 +1,13 @@
 import path from 'path';
 import nodeResolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 import * as packageJson from './package.json';
 
 const plugins = [
+  replace({
+    'process.env.DEV': !!process.env.DEV,
+  }),
   nodeResolve({ preferBuiltins: true }),
   typescript({
     tsconfig: './tsconfig.module.json',
