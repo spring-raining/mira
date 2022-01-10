@@ -1,6 +1,6 @@
-import { css, style, globalStyle } from '../../styles/system.css';
+import { css, defineStyle, defineGlobalStyle } from '../../styles/system.css';
 
-export const markdownStyling = style(
+export const markdownStyling = defineStyle(
   css({
     d: 'flex',
     flexDir: 'column',
@@ -8,7 +8,7 @@ export const markdownStyling = style(
 );
 const mapSelector = (s: string) => s.replace(/&/g, markdownStyling);
 
-globalStyle(
+defineGlobalStyle(
   mapSelector('& *'),
   css({
     fontFamily: 'body',
@@ -20,7 +20,7 @@ globalStyle(
     wordBreak: 'break-word',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector(`
     & blockquote,
     & dl,
@@ -37,7 +37,7 @@ globalStyle(
     & pre`),
   css({ m: 0 }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector(`
     & pre,
     & code,
@@ -48,8 +48,8 @@ globalStyle(
     fontSize: 'md',
   }),
 );
-globalStyle(mapSelector('& p'), css({ my: 4 }));
-globalStyle(
+defineGlobalStyle(mapSelector('& p'), css({ my: 4 }));
+defineGlobalStyle(
   mapSelector('& a'),
   css({
     cursor: 'pointer',
@@ -59,19 +59,19 @@ globalStyle(
     wordWrap: 'break-word',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& a:hover'),
   css({
     textDecoration: 'underline',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& a:focus'),
   css({
     boxShadow: 'outline',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& hr'),
   css({
     boxSizing: 'content-box',
@@ -82,7 +82,7 @@ globalStyle(
     my: 4,
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector(`
     & h1,
     & h2,
@@ -97,43 +97,43 @@ globalStyle(
     my: 4,
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& h1'),
   css({
     fontSize: '4xl',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& h2'),
   css({
     fontSize: '3xl',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& h3'),
   css({
     fontSize: '2xl',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& h4'),
   css({
     fontSize: 'xl',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& h5'),
   css({
     fontSize: 'lg',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& h6'),
   css({
     fontSize: 'md',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& blockquote'),
   css({
     w: 'full',
@@ -147,7 +147,7 @@ globalStyle(
     borderRadius: 'lg',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& ul, & ol'),
   css({
     m: 0,
@@ -156,12 +156,12 @@ globalStyle(
     ms: 4,
   }),
 );
-globalStyle(mapSelector('& table'), {
+defineGlobalStyle(mapSelector('& table'), {
   fontVariantNumeric: 'lining-nums tabular-nums',
   borderCollapse: 'collapse',
   width: '100%',
 });
-globalStyle(
+defineGlobalStyle(
   mapSelector('& th'),
   css({
     fontFamily: 'heading',
@@ -177,13 +177,13 @@ globalStyle(
     borderColor: 'gray.100',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& tr:last-of-type th'),
   css({
     borderBottom: 'none',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& td'),
   css({
     textAlign: 'start',
@@ -194,8 +194,8 @@ globalStyle(
     borderColor: 'gray.100',
   }),
 );
-globalStyle(mapSelector('& pre'), css({ my: 4 }));
-globalStyle(
+defineGlobalStyle(mapSelector('& pre'), css({ my: 4 }));
+defineGlobalStyle(
   mapSelector('& pre > code'),
   css({
     d: 'inline-block',
@@ -209,7 +209,7 @@ globalStyle(
     overflowX: 'auto',
   }),
 );
-globalStyle(
+defineGlobalStyle(
   mapSelector('& :not(pre) > code'),
   css({
     px: '0.2em',
@@ -218,4 +218,4 @@ globalStyle(
     borderRadius: 'sm',
   }),
 );
-globalStyle(mapSelector('& img'), css({ maxW: 'full' }));
+defineGlobalStyle(mapSelector('& img'), css({ maxW: 'full' }));

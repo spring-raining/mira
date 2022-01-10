@@ -1,48 +1,17 @@
+import clsx from 'clsx';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { sprinkles } from '../../styles/sprinkles.css';
 import { noop } from '../../util';
-
-// const FormContainer = styled.div`
-//   display: flex;
-//   align-items: center;
-//   position: relative;
-//   width: 100%;
-//   height: 100%;
-// `;
-// const FormInput = styled.input<{ active?: boolean }>`
-//   flex: 1;
-//   appearance: none;
-//   background: inherit;
-//   outline: none;
-//   border: 2px solid transparent;
-//   padding-inline-start: 1rem;
-//   padding-inline-end: 1rem;
-//   position: absolute;
-//   width: 100%;
-//   height: 100%;
-//   font-family: ${cssVar('fonts.mono')};
-//   font-size: 0.8em;
-//   opacity: ${(props) => (props.active ? 1 : 0)};
-//   &:focus {
-//     border-color: ${cssVar('colors.blue.500')};
-//   }
-// `;
-// const FormDisplayingCode = styled.code<{ active?: boolean }>`
-//   flex: 1;
-//   padding-inline-start: calc(1rem + 2px);
-//   padding-inline-end: calc(1rem + 2px);
-//   font-family: ${cssVar('fonts.mono')};
-//   font-size: 0.8rem;
-//   overflow: hidden;
-//   text-overflow: ellipsis;
-//   white-space: nowrap;
-//   visibility: ${(props) => (props.active ? 'initial' : 'hidden')};
-// `;
+import { Input, InputGroup, InputElement } from '../atomic/input';
+import * as style from './LanguageCompletionForm.css';
 
 export const LanguageCompletionForm: React.VFC<
   {
     language: string;
     onChange?: (lang: string) => void;
     onSubmit?: (lang: string) => void;
+    isActive: boolean;
+    rightElement: React.ReactElement;
   } & Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange' | 'onSubmit'>
 > = ({
   language,
@@ -50,6 +19,8 @@ export const LanguageCompletionForm: React.VFC<
   onSubmit = noop,
   onFocus: handleFocus = noop,
   onBlur: handleBlur = noop,
+  isActive,
+  rightElement,
   ...other
 }) => {
   const [text, setText] = useState(language);
@@ -93,6 +64,10 @@ export const LanguageCompletionForm: React.VFC<
   }, []);
 
   useEffect(() => {
+    setText(language);
+  }, [language]);
+
+  useEffect(() => {
     if (!editorActive) {
       return;
     }
@@ -104,9 +79,16 @@ export const LanguageCompletionForm: React.VFC<
   }, [editorActive]);
 
   return (
-    <div onClick={handleClick}>
-      <input
+    <InputGroup
+      className={style.formContainer({ isActive })}
+      onClick={handleClick}
+    >
+      <Input
         {...other}
+        className={clsx(
+          style.formInput,
+          !editorActive && sprinkles({ opacity: 0 }),
+        )}
         ref={inputEl}
         type="text"
         tabIndex={0}
@@ -115,14 +97,22 @@ export const LanguageCompletionForm: React.VFC<
         spellCheck="false"
         value={text}
         onChange={handleChangeText}
-        // active={editorActive}
         {...{ onFocus, onBlur, onKeyDown }}
       />
       <code
-      // active={!editorActive}
+        className={clsx(
+          style.formDisplayingCode,
+          editorActive && sprinkles({ visibility: 'hidden' }),
+        )}
       >
         {text}
       </code>
-    </div>
+      <InputElement
+        placement="right"
+        className={clsx(!isActive && sprinkles({ visibility: 'hidden' }))}
+      >
+        {rightElement}
+      </InputElement>
+    </InputGroup>
   );
 };

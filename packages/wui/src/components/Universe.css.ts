@@ -1,60 +1,43 @@
-import { css, style } from '../styles/system.css';
+import { styleVariants } from '@vanilla-extract/css';
+import { css, defineStyle } from '../styles/system.css';
 
-export const universeContainer = style(
+export const displayColumn = styleVariants({
+  oneColumn: {},
+  twoColumn: {},
+});
+
+export const universeContainer = defineStyle(
   css({
     w: 'full',
     d: 'flex',
   }),
 );
-// const UniverseContainer = styled.div`
-//   width: 100%;
-//   display: flex;
-// `;
 
-export const planetarySystemPane = style(
+export const planetarySystemPane = defineStyle(
   css({
     w: '12rem',
   }),
 );
-// const PlanetarySystemPane = styled.div`
-//   width: 12rem;
-// `;
 
-export const planetarySystemSticky = style(
+export const planetarySystemSticky = defineStyle(
   css({
     top: 0,
     pos: 'sticky',
-    py: 70,
+    py: 20,
   }),
 );
-// const PlanetarySystemSticky = styled.div`
-//   top: 0;
-//   position: sticky;
-//   padding: 70px 0;
-// `;
 
-export const mainPane = style(
+export const mainPane = defineStyle(
   css({
     flex: 1,
   }),
 );
-// const MainPane = styled.div`
-//   flex: 1;
-// `;
 
-export const mainSticky = style(
+export const mainSticky = defineStyle(
   css({
     w: 'full',
     pos: 'sticky',
     top: 0,
-    py: 70,
-    ms: 4,
+    py: 20,
   }),
 );
-// const MainSticky = styled.div`
-//   width: '100%';
-//   position: sticky;
-//   top: 0;
-//   padding: 70px 0;
-//   margin-inline-start: 1rem;
-// `;

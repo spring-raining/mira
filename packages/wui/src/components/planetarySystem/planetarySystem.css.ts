@@ -1,7 +1,7 @@
-import { css, style, recipe } from '../../styles/system.css';
+import { css, defineStyle, defineRecipe } from '../../styles/system.css';
 import { vars } from '../../styles/themes.css';
 
-export const planetarySystemContainer = style(
+export const planetarySystemContainer = defineStyle(
   css({
     transitionProperty: 'margin-top',
     transitionTimingFunction: 'ease-in-out',
@@ -9,7 +9,7 @@ export const planetarySystemContainer = style(
   }),
 );
 
-export const itemRow = recipe({
+export const itemRow = defineRecipe({
   base: [
     css({
       d: 'flex',
@@ -46,7 +46,7 @@ export const itemRow = recipe({
   },
 });
 
-export const itemPinContainer = style(
+export const itemPinContainer = defineStyle(
   css({
     w: 8,
     d: 'flex',
@@ -55,7 +55,7 @@ export const itemPinContainer = style(
   }),
 );
 
-export const itemPin = recipe({
+export const itemPin = defineRecipe({
   base: css({
     bgColor: 'gray.300',
     borderRadius: 'full',
@@ -84,7 +84,7 @@ export const itemPin = recipe({
   },
 });
 
-export const itemRowText = style(
+export const itemRowText = defineStyle(
   css({
     flex: 1,
     color: 'gray.900',
@@ -95,13 +95,13 @@ export const itemRowText = style(
   }),
 );
 
-export const itemRowContainer = style(
+export const itemRowContainer = defineStyle(
   css({
     pos: 'relative',
   }),
 );
 
-export const itemRowInsertGutter = style(
+export const itemRowInsertGutter = defineStyle(
   css({
     pos: 'absolute',
     top: 0,

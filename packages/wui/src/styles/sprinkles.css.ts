@@ -8,6 +8,7 @@ const displayProperties = defineProperties({
     alignItems: ['stretch', 'flex-start', 'center', 'flex-end'],
     alignSelf: ['stretch', 'flex-start', 'center', 'flex-end'],
     justifyContent: ['stretch', 'flex-start', 'center', 'flex-end'],
+    opacity: [0, 1],
   },
 });
 

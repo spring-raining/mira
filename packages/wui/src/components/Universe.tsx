@@ -1,10 +1,18 @@
 import { ServiceOptions } from '@mirajs/transpiler';
-import React, { useEffect } from 'react';
+import clsx from 'clsx';
+import React, { useEffect, useMemo } from 'react';
 import { RecoilRoot } from 'recoil';
 import { HistoryObserver } from '../hooks/useHistory';
 import { ProvidenceObserver } from '../hooks/useProvidence';
+import {
+  RootContainerQueryProvider,
+  useRootContainerQuery,
+} from '../hooks/useRootContainerQuery';
 import { hydrateMdx } from '../mdx/io';
+import { wuiConfigState } from '../state/atoms';
 import { useBricks } from '../state/brick';
+import { useConfig } from '../state/config';
+import { MiraWuiConfig } from '../types';
 import { noop, noopAsync } from '../util';
 import { EditorLoaderConfig } from './Editor';
 import * as style from './Universe.css';
@@ -19,6 +27,7 @@ export interface UniverseProps {
   onUpdate?: (mdx: string) => void;
   transpilerConfig?: ServiceOptions;
   editorLoaderConfig?: EditorLoaderConfig;
+  config?: MiraWuiConfig;
 }
 
 const UniverseView: React.VFC<UniverseProps> = ({
@@ -30,6 +39,19 @@ const UniverseView: React.VFC<UniverseProps> = ({
   const { bricks, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
+  const config = useConfig();
+  const rootContainerQuery = useRootContainerQuery();
+  const displayColumnClass = useMemo(
+    () =>
+      config.layout === 'oneColumn'
+        ? style.displayColumn.oneColumn
+        : config.layout === 'twoColumn'
+        ? style.displayColumn.twoColumn
+        : rootContainerQuery.md || rootContainerQuery.sm
+        ? style.displayColumn.oneColumn
+        : style.displayColumn.twoColumn,
+    [config, rootContainerQuery],
+  );
 
   // const history = useHistory();
 
@@ -52,13 +74,8 @@ const UniverseView: React.VFC<UniverseProps> = ({
   }, [resetActiveBrick]);
 
   return (
-    <div className={style.universeContainer}>
-      <div className={style.planetarySystemPane}>
-        <div className={style.planetarySystemSticky}>
-          <PlanetarySystem />
-        </div>
-      </div>
-      <div className={style.mainPane}>
+    <div className={clsx(style.universeContainer, displayColumnClass)}>
+      <main className={style.mainPane}>
         <div className={style.mainSticky}>
           {bricks.map((brick) => (
             <Block
@@ -68,7 +85,12 @@ const UniverseView: React.VFC<UniverseProps> = ({
             />
           ))}
         </div>
-      </div>
+      </main>
+      <aside className={style.planetarySystemPane}>
+        <div className={style.planetarySystemSticky}>
+          <PlanetarySystem />
+        </div>
+      </aside>
     </div>
   );
 };
@@ -77,16 +99,26 @@ export const Universe: React.VFC<UniverseProps> = ({
   path = '/',
   depsRootPath = '/_mira',
   moduleLoader = noopAsync,
+  config,
   ...other
 }) => {
   return (
-    <RecoilRoot>
+    <RecoilRoot
+      initializeState={({ set }) => {
+        set(wuiConfigState, config ?? {});
+      }}
+    >
       <HistoryObserver />
       <ProvidenceObserver
-        {...{ mdxPath: path, depsRootPath, moduleLoader }}
+        {...{ mdxPath: path, depsRootPath, moduleLoader, config }}
         {...other}
       />
-      <UniverseView {...{ path, depsRootPath, moduleLoader }} {...other} />
+      <RootContainerQueryProvider>
+        <UniverseView
+          {...{ path, depsRootPath, moduleLoader, config }}
+          {...other}
+        />
+      </RootContainerQueryProvider>
     </RecoilRoot>
   );
 };

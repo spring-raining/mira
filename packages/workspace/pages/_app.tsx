@@ -55,12 +55,12 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
     !container.isRegistered(workspaceServiceToken) &&
     !serverRuntimeConfig.disableStandaloneMode
   ) {
-    const { getWorkspaceRepository } = await import(
-      '../services/workspace/workspace.impl.standalone'
-    );
-    container.register(workspaceServiceToken, {
-      useValue: new WorkspaceService(await getWorkspaceRepository()),
-    });
+    // const { getWorkspaceRepository } = await import(
+    //   '../services/workspace/workspace.impl.standalone'
+    // );
+    // container.register(workspaceServiceToken, {
+    //   useValue: new WorkspaceService(await getWorkspaceRepository()),
+    // });
   }
 
   const workspace = container.resolve<WorkspaceService>(workspaceServiceToken);

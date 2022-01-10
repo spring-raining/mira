@@ -1,5 +1,10 @@
 import { atom } from 'recoil';
-import { Brick, Mira, EvaluatedResult } from '../types';
+import { Brick, Mira, EvaluatedResult, MiraWuiConfig } from '../types';
+
+export const wuiConfigState = atom<MiraWuiConfig>({
+  key: 'wuiConfigState',
+  default: {},
+});
 
 export const brickDictState = atom<Record<string, Brick>>({
   key: 'brickDictState',

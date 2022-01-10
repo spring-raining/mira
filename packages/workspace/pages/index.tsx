@@ -61,24 +61,24 @@ export default function Home({ mira, constants }: PageProps) {
     }
   }, [constants.devServerWatcherUpdateEventName]);
 
-  const test = useCallback(async () => {
-    const { service } = container.resolve<FileSystemService>(
-      fileSystemServiceToken,
-    );
-    const msg = await service.getFile({
-      path: ['01.mdx'],
-    });
-    console.log('>>>>', msg);
-  }, []);
+  // const test = useCallback(async () => {
+  //   const { service } = container.resolve<FileSystemService>(
+  //     fileSystemServiceToken,
+  //   );
+  //   const msg = await service.getFile({
+  //     path: ['01.mdx'],
+  //   });
+  //   console.log('>>>>', msg);
+  // }, []);
 
-  const fileAccess = useCallback(async () => {
-    const handler = await window.showDirectoryPicker();
-    for await (const key of handler) {
-      console.log(key);
-    }
-    const pkg = await handler.getFileHandle('package.json');
-    console.log(pkg);
-  }, []);
+  // const fileAccess = useCallback(async () => {
+  //   const handler = await window.showDirectoryPicker();
+  //   for await (const key of handler) {
+  //     console.log(key);
+  //   }
+  //   const pkg = await handler.getFileHandle('package.json');
+  //   console.log(pkg);
+  // }, []);
 
   return (
     <>
@@ -103,8 +103,8 @@ export default function Home({ mira, constants }: PageProps) {
           flexDir="column"
           alignItems="stretch"
         >
-          <button onClick={test}>Test</button>
-          <button onClick={fileAccess}>fileAccess</button>
+          {/* <button onClick={test}>Test</button>
+          <button onClick={fileAccess}>fileAccess</button> */}
           <FileTreeView />
         </Flex>
         <Flex

@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useInViewBrickState } from '../../hooks/useInViewState';
+import { useRootContainerQuery } from '../../hooks/useRootContainerQuery';
 import {
   useBrick,
   useBrickManipulator,
@@ -15,16 +16,15 @@ import {
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
 import { useRenderedData } from '../../state/evaluator';
-import { errorPreText, iconSvg } from '../../styles/common.css';
+import { errorPreText } from '../../styles/common.css';
 import { sprinkles } from '../../styles/sprinkles.css';
-import { Mira, Brick } from '../../types';
+import { Mira } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
-import { PopperPortal } from '../PopperPortal';
-import { PlusIcon, TrashIcon } from '../icon';
+import { IconButton } from '../atomic/button';
+import { PlusIcon } from '../icon/plus';
 import * as style from './Block.css';
-import { BlockTypeSelect } from './BlockTypeSelect';
-import { LanguageCompletionForm } from './LanguageCompletionForm';
+import { BlockToolbar } from './BlockToolbar';
 import { MarkdownPreview } from './MarkdownProvider';
 
 const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
@@ -54,58 +54,6 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
         currentOutput?.element
       )}
     </>
-  );
-};
-
-const BlockToolbar: React.VFC<{
-  id: string;
-}> = ({ id }) => {
-  const { brick, updateTrait, setActive } = useBrick(id);
-  const { cleanup } = useBrickManipulator();
-  const [brickType, setBrickType] = useState(() => brick.type);
-  const deleteBrick = useCallback(() => {
-    cleanup(id);
-  }, [cleanup, id]);
-  const handleChangeBlockType = useCallback(
-    (type: Brick['type']) => {
-      updateTrait({ type });
-    },
-    [updateTrait],
-  );
-  const handleChangeEditingLanguage = useCallback(
-    (lang: string) => {
-      setBrickType(
-        lang.trim() ? 'snippet' : brick.type === 'script' ? 'script' : 'note',
-      );
-    },
-    [brick.type],
-  );
-  const handleChangeLanguage = useCallback(
-    (language: string) => {
-      updateTrait({ language, type: brickType });
-    },
-    [brickType, updateTrait],
-  );
-
-  return (
-    <div className={style.toolbar}>
-      <BlockTypeSelect value={brickType} onChange={handleChangeBlockType} />
-      <LanguageCompletionForm
-        language={brick.type === 'snippet' ? brick.language : ''}
-        onChange={handleChangeEditingLanguage}
-        onSubmit={handleChangeLanguage}
-        onFocus={setActive}
-      />
-      <div className={sprinkles({ display: 'flex', alignItems: 'center' })}>
-        <button
-          className={style.iconButton({ colorScheme: 'red' })}
-          aria-label="Delete"
-          onClick={deleteBrick}
-        >
-          <TrashIcon className={iconSvg} />
-        </button>
-      </div>
-    </div>
   );
 };
 
@@ -182,126 +130,97 @@ export const Block: React.FC<{
 
   return (
     <div className={style.blockContainer} {...containerCallbacks}>
-      <div
-        className={clsx(
-          style.topToolPart,
-          !isFocused && !isActive && sprinkles({ visibility: 'hidden' }),
-        )}
-      >
-        <div className={sprinkles({ display: 'flex', alignItems: 'center' })}>
-          <button
-            className={style.iconButton({ colorScheme: 'blue' })}
-            aria-label="Prepend"
-            onClick={prependBrick}
-          >
-            <PlusIcon className={iconSvg} />
-          </button>
-          {isActive && (
-            <div className={style.toolbarHolder}>
-              <PopperPortal
-                popperOptions={{
-                  placement: 'bottom-start',
-                }}
-              >
-                <BlockToolbar id={id} />
-              </PopperPortal>
-            </div>
-          )}
-        </div>
-      </div>
-      <div
-        className={style.middleToolContainer({
-          isActive: isFocused || isActive,
-        })}
-        ref={observerRef}
-        style={{ minHeight: editorHeight }}
-      >
-        <div
-          className={clsx(
-            style.previewPart,
-            isActive && sprinkles({ visibility: 'hidden' }),
-          )}
-          onClick={setActive}
-        >
-          {brick.type === 'script' && (
-            <div className={style.scriptPreviewContainer}>
-              {brick.text.trim() ? (
-                <pre>
-                  <code className={style.scriptPreviewCode}>
-                    <CodePreview
-                      code={syntaxError?.parsedText || brick.text}
-                      language="jsx"
-                    />
-                  </code>
-                </pre>
-              ) : (
-                <p>No content</p>
-              )}
-            </div>
-          )}
-          {brick.type === 'note' && (
-            <div className={style.markdownPreviewContainer}>
-              {syntaxError?.parsedText ? (
-                <pre>
-                  <code className={style.scriptPreviewCode}>
-                    {syntaxError.parsedText}
-                  </code>
-                </pre>
-              ) : brick.text.trim() ? (
-                <MarkdownPreview md={brick.text} />
-              ) : (
-                <p className={style.noContentParagraph}>No content</p>
-              )}
-            </div>
-          )}
-        </div>
-        <div className={style.livePreviewStickyArea}>
-          {brick.type === 'snippet' && brick.mira?.isLived && (
-            <div className={style.livePreviewPart}>
-              <div className={style.livePreviewContainer}>
-                <React.Suspense fallback={null}>
-                  <EvalPresentation
-                    brickId={id}
-                    mira={swap?.mira || brick.mira}
-                  />
-                </React.Suspense>
-              </div>
-            </div>
-          )}
-          {displayingError && (
-            <div className={style.livePreviewPart}>
-              <div className={style.livePreviewContainer}>
-                <pre className={errorPreText}>{String(displayingError)}</pre>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className={style.editorStickyArea}>
-          <div
-            className={clsx(
-              style.editorPart,
-              (brick.type === 'note' || brick.type === 'script') &&
-                !isActive &&
-                sprinkles({ visibility: 'hidden' }),
-            )}
-            style={{ height: editorHeight }}
-          >
-            <div className={style.editorContainer({ isActive })}>
-              <Editor
-                language={editorLanguage}
-                padding={{ top: 16, bottom: 16 }}
-                code={brick.text}
-                {...{ editorLoaderConfig, onContentHeightChange }}
-                {...editorCallbacks}
-              />
+      <div className={style.livePreviewArea}>
+        {brick.type === 'snippet' && brick.mira?.isLived && (
+          <div className={style.topSticky}>
+            <div className={style.livePreviewContainer}>
+              <React.Suspense fallback={null}>
+                <EvalPresentation
+                  brickId={id}
+                  mira={swap?.mira || brick.mira}
+                />
+              </React.Suspense>
             </div>
           </div>
-        </div>
-        <div />
+        )}
+        {displayingError && (
+          <div className={style.topSticky}>
+            <div className={style.livePreviewContainer}>
+              <pre className={errorPreText}>{String(displayingError)}</pre>
+            </div>
+          </div>
+        )}
       </div>
+      <div ref={observerRef} className={style.editorArea}>
+        <div
+          className={clsx(
+            style.topSticky,
+            (brick.type === 'note' || brick.type === 'script') &&
+              !isActive &&
+              sprinkles({ visibility: 'hidden' }),
+          )}
+          style={{ height: editorHeight }}
+        >
+          <div className={style.editorContainer({ isActive })}>
+            <Editor
+              language={editorLanguage}
+              padding={{ top: 16, bottom: 16 }}
+              code={brick.text}
+              {...{ editorLoaderConfig, onContentHeightChange }}
+              {...editorCallbacks}
+            />
+          </div>
+        </div>
+      </div>
+      {brick.type === 'note' && (
+        <div
+          className={clsx(
+            style.notePreviewArea,
+            isActive && sprinkles({ visibility: 'hidden' }),
+          )}
+        >
+          <div className={style.markdownPreviewContainer} onClick={setActive}>
+            {syntaxError?.parsedText ? (
+              <pre>
+                <code className={style.scriptPreviewCode}>
+                  {syntaxError.parsedText}
+                </code>
+              </pre>
+            ) : brick.text.trim() ? (
+              <MarkdownPreview md={brick.text} />
+            ) : (
+              <p className={style.noContentParagraph}>No content</p>
+            )}
+          </div>
+        </div>
+      )}
+      {brick.type === 'script' && (
+        <div
+          className={clsx(
+            style.notePreviewArea,
+            isActive && sprinkles({ visibility: 'hidden' }),
+          )}
+        >
+          <div className={style.scriptPreviewContainer} onClick={setActive}>
+            {brick.text.trim() ? (
+              <pre>
+                <code className={style.scriptPreviewCode}>
+                  <CodePreview
+                    code={syntaxError?.parsedText || brick.text}
+                    language="jsx"
+                  />
+                </code>
+              </pre>
+            ) : (
+              <p>No content</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div
         className={clsx(
-          style.bottomToolPart,
+          style.topToolbarArea,
           !isFocused &&
             !isActive &&
             sprinkles({
@@ -309,15 +228,70 @@ export const Block: React.FC<{
             }),
         )}
       >
-        <div className={sprinkles({ display: 'flex', alignItems: 'center' })}>
-          <button
-            className={style.iconButton({ colorScheme: 'blue' })}
-            aria-label="Append"
-            onClick={appendBrick}
-          >
-            <PlusIcon className={iconSvg} />
-          </button>
-        </div>
+        <BlockToolbar id={id} />
+      </div>
+
+      <div
+        className={clsx(
+          style.contentLeftHandleArea,
+          !isFocused &&
+            !isActive &&
+            sprinkles({
+              visibility: 'hidden',
+            }),
+        )}
+      />
+
+      <div
+        className={clsx(
+          style.topLeftArea,
+          sprinkles({
+            display: 'flex',
+            alignItems: 'center',
+          }),
+          !isFocused &&
+            !isActive &&
+            sprinkles({
+              visibility: 'hidden',
+            }),
+        )}
+      >
+        <IconButton
+          variant="ghost"
+          colorScheme="blue"
+          size="sm"
+          isRound
+          aria-label="Prepend"
+          onClick={prependBrick}
+        >
+          <PlusIcon />
+        </IconButton>
+      </div>
+
+      <div
+        className={clsx(
+          style.bottomLeftArea,
+          sprinkles({
+            display: 'flex',
+            alignItems: 'center',
+          }),
+          !isFocused &&
+            !isActive &&
+            sprinkles({
+              visibility: 'hidden',
+            }),
+        )}
+      >
+        <IconButton
+          variant="ghost"
+          colorScheme="blue"
+          size="sm"
+          isRound
+          aria-label="Append"
+          onClick={appendBrick}
+        >
+          <PlusIcon />
+        </IconButton>
       </div>
     </div>
   );

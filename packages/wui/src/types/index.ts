@@ -1,5 +1,9 @@
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 
+export type MiraWuiConfig = {
+  layout?: 'oneColumn' | 'twoColumn';
+};
+
 export type ParsedImportStatement = ImportDefinition & {
   statement: string;
 };
