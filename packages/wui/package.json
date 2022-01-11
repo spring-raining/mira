@@ -13,9 +13,12 @@
   "scripts": {
     "prebuild": "shx rm -rf dist lib",
     "dev": "vite",
-    "build": "run-p build:module:*",
+    "build": "run-s build:module:vite build:module:types",
     "build:module:vite": "tsc && vite build",
-    "build:module:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
+    "//": "Run tsc twice. It seems to need the buildinfo file",
+    "build:module:types": "run-s -c build:module:types:1 build:module:types:2",
+    "build:module:types:1": "tsc -p tsconfig.module.json --tsBuildInfoFile tsconfig.tsbuildinfo --emitDeclarationOnly --outDir lib 2>/dev/null || exit 0",
+    "build:module:types:2": "tsc -p tsconfig.module.json --tsBuildInfoFile tsconfig.tsbuildinfo --emitDeclarationOnly --outDir lib",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
