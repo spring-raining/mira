@@ -7,12 +7,12 @@ const AsyncFunctionShim = new Function(
 
 export const asyncEval = (
   code: string,
-  scope: Record<string, any>,
+  scopeVal: Record<string, any>,
   environment: RuntimeEnvironment,
 ) => {
   const runtimeScope: Record<string, any> = {
-    ...scope,
-    ...environment.getRuntimeScope({ scope }),
+    ...scopeVal,
+    ...environment.getRuntimeScope({ scopeVal }),
   };
   const scopeKeys = Object.keys(runtimeScope);
   const scopeValues = scopeKeys.map((key) => runtimeScope[key]);

@@ -1,3 +1,4 @@
+import { RuntimeEnvironment as CoreRuntimeEnvironment } from '@mirajs/core';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 
 export type MiraWuiConfig = {
@@ -54,20 +55,12 @@ export interface TranspiledResult {
   errorObject?: Error;
 }
 
-export interface RuntimeScope {
-  $run(element: any): void;
-  $val(...args: any[]): void;
-  $use(val: any): void;
-  $jsxFactory: any;
-  $jsxFragment: any;
-}
-
-export interface RuntimeEnvironment {
+export interface RuntimeEnvironment
+  extends CoreRuntimeEnvironment<{
+    $_default: (element: any) => void;
+  }> {
   envId: string;
-  render: any;
-  exportVal: Record<string, any>;
-  referenceVal: Record<string, any>;
-  getRuntimeScope: (e: { scope: Record<string, unknown> }) => RuntimeScope;
+  render?: (errorCallback: (error: Error) => void) => React.ReactNode;
 }
 
 export interface EvaluatedResult {

@@ -7,6 +7,7 @@
   "workspaces": [
     "packages/core",
     "packages/transpiler",
+    "packages/react",
     "packages/wui",
     "packages/workspace",
     "packages/*"

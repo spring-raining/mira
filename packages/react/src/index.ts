@@ -1,2 +1,1 @@
-export { component } from './component';
-export { getRuntimeScope } from './runtimeScope';
+export { runtimeEnvironmentFactory } from './runtimeEnvironment';

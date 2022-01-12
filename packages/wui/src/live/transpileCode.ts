@@ -51,7 +51,9 @@ export const transpileCode = async ({
                 contents: declaredValues
                   .map(
                     (val) =>
-                      `export const ${val} = /* @__PURE__ */ $use('${val}');`,
+                      `export const ${val} = /* @__PURE__ */ $use('${val}', ${JSON.stringify(
+                        args.path,
+                      )});`,
                   )
                   .join('\n'),
                 loader: 'js',
@@ -67,11 +69,11 @@ export const transpileCode = async ({
       target: 'es2020',
       globalName: '$_exports',
       footer: bundle
-        ? '$_exports=$_exports||{};$val($_exports);$run($_exports.default)'
+        ? '$_exports=$_exports||{};$def($_exports);$_default($_exports.default)'
         : undefined,
       logLevel: 'silent',
       jsxFactory: '$jsxFactory',
-      jsxFragment: '$jsxFragment',
+      jsxFragment: '$jsxFragmentFactory',
     });
     return {
       text: transpiled.outputFiles[0].text,

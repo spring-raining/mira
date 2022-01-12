@@ -13,7 +13,7 @@ import {
   DependencyUpdateEvent,
   ModuleUpdateEvent,
 } from './dependency';
-import { setupRuntimeEnvironment } from './runtimeScope';
+import { setupRuntimeEnvironment } from './runtimeEnvironment';
 import { transpileCode } from './transpileCode';
 
 export interface Providence {

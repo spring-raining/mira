@@ -13,7 +13,13 @@ export {
   scanModuleSpecifier,
   importModules,
 } from './ecmaImport';
-export type { MiraConfig, RuntimeScope } from './types';
+export type {
+  MiraConfig,
+  RuntimeScope,
+  RuntimeScopeFactory,
+  RuntimeEnvironment,
+  RuntimeEnvironmentFactory,
+} from './types';
 
 export const mdxOptions: Options = {
   remarkPlugins: [

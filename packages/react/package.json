@@ -6,6 +6,7 @@
   "types": "dist/cjs/index.d.ts",
   "license": "MIT",
   "scripts": {
+    "prebuild": "shx rm -rf dist",
     "build": "run-p build:*",
     "build:cjs": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
