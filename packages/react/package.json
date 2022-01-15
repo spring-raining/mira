@@ -1,15 +1,15 @@
 {
   "name": "@mirajs/react",
   "version": "1.0.0",
-  "main": "dist/cjs/index.js",
-  "module": "dist/module/index.js",
-  "types": "dist/cjs/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "license": "MIT",
   "scripts": {
     "prebuild": "shx rm -rf dist",
     "build": "run-p build:*",
-    "build:cjs": "tsc -p tsconfig.json",
-    "build:module": "tsc -p tsconfig.module.json",
+    "build:rollup": "rollup -c",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly",
     "test": "npm run build && jest",
     "prepublish": "npm run build",
     "lint": "eslint . --ext .ts,tsx",
@@ -18,10 +18,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@mirajs/core": "1.0.0"
-  },
   "devDependencies": {
+    "@mirajs/core": "1.0.0",
     "@babel/preset-typescript": "^7.10.1",
     "@types/jest": "^26.0.0",
     "jest": "^26.0.1",

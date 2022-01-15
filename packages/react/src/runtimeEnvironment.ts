@@ -1,4 +1,4 @@
-import { RuntimeEnvironmentFactory } from '@mirajs/core';
+import type { RuntimeEnvironmentFactory } from '@mirajs/core';
 import { createElement, Fragment } from 'react';
 import { renderElement } from './renderElement';
 

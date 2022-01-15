@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES5",
-    "module": "CommonJS",
+    "target": "esnext",
+    "module": "esnext",
     "noEmit": false,
-    "outDir": "./dist/cjs",
+    "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
     "jsx": "react"
