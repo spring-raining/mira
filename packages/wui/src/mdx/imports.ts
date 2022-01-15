@@ -1,5 +1,5 @@
 import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
-import { Brick, ParsedImportStatement, ASTNode } from '../types';
+import { ParsedImportStatement, ASTNode } from '../types';
 
 const getExtname = (path: string): string => {
   const sp = path.split('.');
@@ -47,31 +47,33 @@ export const getRelativeSpecifier = ({
   return new URL(targetPath, window.location.origin).pathname;
 };
 
-export const collectImports = async ({
-  brick,
+export const resolveImportSpecifier = ({
+  specifier,
   path,
 }: {
-  brick: Brick;
+  specifier: string;
   path: string;
-}): Promise<ParsedImportStatement[]> => {
-  if (brick.type !== 'script') {
-    return [];
+}): string => {
+  if (isRemoteUrl(specifier)) {
+    return specifier;
   }
-  const parseAll =
-    brick.children
-      ?.filter((node) => node.type === 'mdxjsEsm')
-      .map(async (node) => {
-        return (await scanModuleSpecifier(node.value))[0]
-          .map((imp) => {
-            const def = parseImportStatement(node.value, imp);
-            return def && { ...def, statement: node.value.trim() };
-          })
-          .filter((_): _ is ParsedImportStatement => !!_);
-      }) ?? [];
-  const importDefs = await (await Promise.all(parseAll)).flat();
+  if (isPathImport(specifier)) {
+    const basePath = pathJoin(path.replace(/^\/+/, ''), '../');
+    let resolvedPath = resolveLocalPath(specifier, basePath);
 
-  const rewrited = importDefs.map((def) => rewriteEsmImport(def, { path }));
-  return rewrited;
+    const importExtname = getExtname(resolvedPath);
+    const isProxyImport =
+      importExtname && importExtname !== '.js' && importExtname !== '.mjs';
+    if (importExtname) {
+      if (isProxyImport) {
+        resolvedPath = `${resolvedPath}.proxy.js`;
+      }
+    } else {
+      resolvedPath = `${resolvedPath}.js`;
+    }
+    return resolvedPath;
+  }
+  return pathJoin('/-/resolve', specifier);
 };
 
 export const collectEsmImports = async ({
@@ -93,7 +95,10 @@ export const collectEsmImports = async ({
     );
   const importDefs = await (await Promise.all(parseAll)).flat();
 
-  const rewrited = importDefs.map((def) => rewriteEsmImport(def, { path }));
+  const rewrited = importDefs.map((def) => ({
+    ...def,
+    specifier: resolveImportSpecifier({ specifier: def.specifier, path }),
+  }));
   return rewrited;
 };
 
@@ -137,40 +142,4 @@ export const mapModuleValues = ({
     importValues[definition.namespaceImport] = { specifier, name: null };
   }
   return importValues;
-};
-
-const rewriteEsmImport = (
-  def: ParsedImportStatement,
-  {
-    path,
-  }: {
-    path: string;
-  },
-): ParsedImportStatement => {
-  if (isRemoteUrl(def.specifier)) {
-    return def;
-  }
-  if (isPathImport(def.specifier)) {
-    const basePath = pathJoin(path.replace(/^\/+/, ''), '../');
-    let resolvedPath = resolveLocalPath(def.specifier, basePath);
-
-    const importExtname = getExtname(resolvedPath);
-    const isProxyImport =
-      importExtname && importExtname !== '.js' && importExtname !== '.mjs';
-    if (importExtname) {
-      if (isProxyImport) {
-        resolvedPath = `${resolvedPath}.proxy.js`;
-      }
-    } else {
-      resolvedPath = `${resolvedPath}.js`;
-    }
-    return {
-      ...def,
-      specifier: resolvedPath,
-    };
-  }
-  return {
-    ...def,
-    specifier: pathJoin('/-/resolve', def.specifier),
-  };
 };

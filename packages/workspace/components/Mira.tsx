@@ -43,6 +43,9 @@ export const Mira: React.VFC<{
           vs: '/_mira/-/node_modules/monaco-editor/min/vs',
         },
       }}
+      config={{
+        runtime: '@mirajs/react',
+      }}
     />
   );
 };

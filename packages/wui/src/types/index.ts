@@ -2,6 +2,7 @@ import { RuntimeEnvironment as CoreRuntimeEnvironment } from '@mirajs/core';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 
 export type MiraWuiConfig = {
+  runtime: string;
   layout?: 'oneColumn' | 'twoColumn';
 };
 

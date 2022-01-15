@@ -39,6 +39,7 @@ export interface Providence {
 
 export const setupProvidence = ({
   store,
+  runtime,
   mdxPath,
   depsRootPath,
   moduleLoader,
@@ -46,12 +47,15 @@ export const setupProvidence = ({
   onModuleUpdate,
 }: {
   store: ProvidenceStore;
+  runtime: string;
   mdxPath: string;
   depsRootPath: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
   onEvaluatorUpdate: (e: EvaluatedResult) => void;
   onModuleUpdate: (e: ModuleImportState) => void;
 }): Providence => {
+  const { getRuntimeEnvironment } = setupRuntimeEnvironment({ runtime });
+
   const run = async ({
     id,
     code,
@@ -111,7 +115,7 @@ export const setupProvidence = ({
     if (typeof runTarget?.code !== 'string') {
       return;
     }
-    const environment = setupRuntimeEnvironment();
+    const environment = getRuntimeEnvironment();
     // false positive?
     // eslint-disable-next-line prefer-const
     let runId: number;

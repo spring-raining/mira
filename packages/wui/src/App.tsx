@@ -4,7 +4,7 @@ import { Universe } from './components/Universe';
 function App() {
   return (
     <div>
-      <Universe />
+      <Universe config={{ runtime: '@mirajs/react' }} />
     </div>
   );
 }

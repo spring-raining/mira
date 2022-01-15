@@ -3,7 +3,7 @@ import { Brick, Mira, EvaluatedResult, MiraWuiConfig } from '../types';
 
 export const wuiConfigState = atom<MiraWuiConfig>({
   key: 'wuiConfigState',
-  default: {},
+  default: {} as MiraWuiConfig, // Should be initialized
 });
 
 export const brickDictState = atom<Record<string, Brick>>({

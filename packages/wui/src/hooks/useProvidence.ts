@@ -9,6 +9,7 @@ import {
 import { codeFragmentsState, scriptFragmentsState } from '../state/code';
 import {
   EvaluatedResult,
+  MiraWuiConfig,
   ModuleImportState,
   RefreshModuleEvent,
 } from '../types';
@@ -26,10 +27,12 @@ export const ProvidenceObserver = ({
   mdxPath,
   depsRootPath,
   moduleLoader,
+  config: { runtime },
 }: {
   mdxPath: string;
   depsRootPath: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
+  config: MiraWuiConfig;
 }) => {
   const providenceRef = useProvidenceRef();
   const codeFragments = useRecoilValue(codeFragmentsState);
@@ -63,6 +66,7 @@ export const ProvidenceObserver = ({
   useEffect(() => {
     const p = setupProvidence({
       store: providenceRef.current,
+      runtime,
       mdxPath,
       depsRootPath,
       moduleLoader,
@@ -72,6 +76,7 @@ export const ProvidenceObserver = ({
     providence.current = p;
     return p.teardown;
   }, [
+    runtime,
     mdxPath,
     depsRootPath,
     moduleLoader,

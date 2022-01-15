@@ -27,7 +27,7 @@ export interface UniverseProps {
   onUpdate?: (mdx: string) => void;
   transpilerConfig?: ServiceOptions;
   editorLoaderConfig?: EditorLoaderConfig;
-  config?: MiraWuiConfig;
+  config: MiraWuiConfig;
 }
 
 const UniverseView: React.VFC<UniverseProps> = ({
@@ -102,10 +102,14 @@ export const Universe: React.VFC<UniverseProps> = ({
   config,
   ...other
 }) => {
+  const _config = config || {};
+  if (!_config.runtime) {
+    throw new Error('Missing required config: runtime');
+  }
   return (
     <RecoilRoot
       initializeState={({ set }) => {
-        set(wuiConfigState, config ?? {});
+        set(wuiConfigState, config);
       }}
     >
       <HistoryObserver />
