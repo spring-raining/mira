@@ -49,6 +49,7 @@
     "globby": "^11.0.2",
     "picomatch": "^2.2.2",
     "reflect-metadata": "0.1.13",
-    "snowpack": "3.4.0"
+    "snowpack": "3.4.0",
+    "vite": "2.7.2"
   }
 }

@@ -12,10 +12,10 @@ import { globFiles, DEFAULT_IGNORE } from '../../util';
 
 export function watcherPlugin({
   config,
-  snowpackConfig,
-}: {
+}: // snowpackConfig,
+{
   config: ProjectConfig;
-  snowpackConfig: SnowpackConfig;
+  // snowpackConfig: SnowpackConfig;
 }): Plugin {
   let gitignoreFileWatcher: FSWatcher;
   let workDirWatcher: FSWatcher;
@@ -30,7 +30,10 @@ export function watcherPlugin({
     gitignoreFileWatcher?.close();
 
     const excludeMatch = picomatch(
-      [...DEFAULT_IGNORE, ...snowpackConfig.exclude],
+      [
+        ...DEFAULT_IGNORE,
+        // ...snowpackConfig.exclude,
+      ],
       {
         dot: true,
       },

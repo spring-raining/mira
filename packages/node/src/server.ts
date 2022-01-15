@@ -4,6 +4,7 @@ import { collectProjectConfig } from './config';
 import { createLogger } from './server/logger/createLogger';
 import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
+import { vitePluginFactory } from './server/plugins/vitePlugin';
 import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { webSocketPlugin } from './server/plugins/webSocketPlugin';
 import { workspaceServerPluginFactory } from './server/plugins/workspaceServerPlugin';
@@ -12,17 +13,24 @@ import { getWorkspaceRepository } from './workspace';
 export async function startServer(args: CliArgs) {
   try {
     const config = await collectProjectConfig(args);
-    const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
+    const { vitePlugin, viteMiddleware } = await vitePluginFactory(
       config.server,
     );
+    // const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
+    //   config.server,
+    // );
     const { workspaceServerPlugin, workspaceServerMiddleware } =
       await workspaceServerPluginFactory({
         workspaceRepository: getWorkspaceRepository({ config }),
       });
     const plugins: Plugin[] = [
       webSocketPlugin({ config }),
-      watcherPlugin({ config, snowpackConfig }),
-      snowpackPlugin,
+      watcherPlugin({
+        config,
+        // snowpackConfig,
+      }),
+      // snowpackPlugin,
+      vitePlugin,
       workspaceServerPlugin,
     ];
     const { logger, loggerPlugin } = createLogger({
@@ -35,6 +43,7 @@ export async function startServer(args: CliArgs) {
       {
         ...config.server,
         middleware: [
+          viteMiddleware,
           workspaceServerMiddleware,
           // await workspaceMiddleware({
           //   workspaceRepository: getWorkspaceRepository({ config }),
