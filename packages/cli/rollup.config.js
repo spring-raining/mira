@@ -6,7 +6,10 @@ import * as packageJson from './package.json';
 
 const plugins = [
   replace({
-    'process.env.DEV': !!process.env.DEV,
+    values: {
+      'process.env.DEV': !!process.env.DEV,
+    },
+    preventAssignment: true,
   }),
   nodeResolve({ preferBuiltins: true }),
   typescript({

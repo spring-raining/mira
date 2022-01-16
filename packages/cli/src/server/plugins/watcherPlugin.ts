@@ -5,18 +5,11 @@ import chokidar, { FSWatcher } from 'chokidar';
 import debounce from 'debounce';
 import { gitignore } from 'globby';
 import picomatch from 'picomatch';
-import { SnowpackConfig } from 'snowpack';
 import { ProjectConfig } from '../../config';
 import { readProjectFileObject } from '../../file';
 import { globFiles, DEFAULT_IGNORE } from '../../util';
 
-export function watcherPlugin({
-  config,
-}: // snowpackConfig,
-{
-  config: ProjectConfig;
-  // snowpackConfig: SnowpackConfig;
-}): Plugin {
+export function watcherPlugin({ config }: { config: ProjectConfig }): Plugin {
   let gitignoreFileWatcher: FSWatcher;
   let workDirWatcher: FSWatcher;
 
@@ -29,15 +22,9 @@ export function watcherPlugin({
     workDirWatcher?.close();
     gitignoreFileWatcher?.close();
 
-    const excludeMatch = picomatch(
-      [
-        ...DEFAULT_IGNORE,
-        // ...snowpackConfig.exclude,
-      ],
-      {
-        dot: true,
-      },
-    );
+    const excludeMatch = picomatch([...DEFAULT_IGNORE], {
+      dot: true,
+    });
     const isIgnored = await gitignore();
     const gitignorePaths = await globFiles({
       includes: ['**/.gitignore'],

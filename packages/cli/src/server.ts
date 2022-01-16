@@ -3,8 +3,6 @@ import { CliArgs } from './commands';
 import { collectProjectConfig } from './config';
 import { createLogger } from './server/logger/createLogger';
 import { vendorFileMiddleware } from './server/middlewares/vendorFileMiddleware';
-import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
-import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
 import { vitePluginFactory } from './server/plugins/vitePlugin';
 import { watcherPlugin } from './server/plugins/watcherPlugin';
 import { webSocketPlugin } from './server/plugins/webSocketPlugin';
@@ -17,9 +15,6 @@ export async function startServer(args: CliArgs) {
     const { vitePlugin, viteMiddleware } = await vitePluginFactory(
       config.server,
     );
-    // const { snowpackPlugin, snowpackConfig } = snowpackPluginFactory(
-    //   config.server,
-    // );
     const { workspaceServerPlugin, workspaceServerMiddleware } =
       await workspaceServerPluginFactory({
         workspaceRepository: getWorkspaceRepository({ config }),
@@ -28,9 +23,7 @@ export async function startServer(args: CliArgs) {
       webSocketPlugin({ config }),
       watcherPlugin({
         config,
-        // snowpackConfig,
       }),
-      // snowpackPlugin,
       vitePlugin,
       workspaceServerPlugin,
     ];
@@ -47,9 +40,6 @@ export async function startServer(args: CliArgs) {
           vendorFileMiddleware,
           viteMiddleware,
           workspaceServerMiddleware,
-          // await workspaceMiddleware({
-          //   workspaceRepository: getWorkspaceRepository({ config }),
-          // }),
         ],
         plugins,
       },

@@ -39,15 +39,10 @@
     "@mirajs/workspace": "1.0.0",
     "@msgpack/msgpack": "2.7.1",
     "@web/dev-server": "^0.1.14",
-    "@web/dev-server-hmr": "^0.1.9",
-    "es-module-lexer": "^0.4.1",
-    "esbuild": "^0.11.9",
-    "esm": "^3.2.25",
     "globby": "^11.0.2",
     "koa-send": "5.0.1",
     "picomatch": "^2.2.2",
     "reflect-metadata": "0.1.13",
-    "snowpack": "3.4.0",
     "vite": "2.7.2"
   }
 }
