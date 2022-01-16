@@ -55,11 +55,9 @@ export const resolveImportSpecifier = ({
   if (isPathImport(specifier)) {
     const basePath = pathJoin(path.replace(/^\/+/, ''), '../');
     const resolvedPath = resolveLocalPath(specifier, basePath);
-    console.log(specifier, path, basePath, resolvedPath);
-
-    return pathJoin('/-', resolvedPath);
+    // import query represents that is imported directly, which affects HMR behavior
+    return `${pathJoin('/-', resolvedPath)}?import`;
   }
-  // set an import query to ensure Vite transforms modules
   return `${pathJoin('/-/node_modules', specifier)}?import`;
 };
 

@@ -1,6 +1,7 @@
 import { Plugin, Middleware, DevServerCoreConfig } from '@web/dev-server-core';
 import { createServer, UserConfig } from 'vite';
 import { MIDDLEWARE_PATH_PREFIX } from '../../constants';
+import { hmrVitePlugin } from './vite/hmrPlugin';
 
 const VITE_BASE = `${MIDDLEWARE_PATH_PREFIX}/-/`;
 
@@ -21,6 +22,7 @@ export async function vitePluginFactory(
     server: {
       middlewareMode: 'html',
     },
+    plugins: [hmrVitePlugin()],
   };
   const viteServer = await createServer(viteConfig);
 

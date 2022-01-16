@@ -54,6 +54,29 @@ export type DependencyUpdateEvent = CustomEvent<
 
 export type ModuleUpdateEvent = CustomEvent<'moduleUpdate', ModuleImportState>;
 
+class ModuleCache {
+  private cacheMap: Map<string, Record<string, unknown>> = new Map();
+  private queryRe = /\?.*$/;
+  private extRe = /\.[^/.]+$/;
+
+  private stripKey(key: string): string {
+    return key.replace(this.queryRe, '').replace(this.extRe, '');
+  }
+
+  get(key: string): Record<string, unknown> | undefined {
+    return this.cacheMap.get(this.stripKey(key));
+  }
+
+  has(key: string): boolean {
+    return this.cacheMap.has(this.stripKey(key));
+  }
+
+  set(key: string, value: Record<string, unknown>): this {
+    this.cacheMap.set(this.stripKey(key), value);
+    return this;
+  }
+}
+
 export class DependencyManager extends EventTarget<{
   dependencyUpdate: DependencyUpdateEvent;
   moduleUpdate: ModuleUpdateEvent;
@@ -75,7 +98,7 @@ export class DependencyManager extends EventTarget<{
   private miraExportVal: Record<string, unknown> = {};
   private miraValDependency: Record<string, Set<string>> = {};
   private miraDefinedValues: Set<string> = new Set();
-  private moduleCache: Map<string, Record<string, unknown>> = new Map();
+  private moduleCache: ModuleCache = new ModuleCache();
   private moduleVal: Record<string, unknown> = {};
   private moduleImportMapping: Record<
     string,
