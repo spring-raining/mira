@@ -14,6 +14,8 @@ export async function vitePluginFactory(
     root: coreConfig.rootDir,
     // base: coreConfig.basePath,
     base: VITE_BASE,
+    // set an another cacheDir to separate with user's own Vite project
+    cacheDir: 'node_modules/.cache/mira/vite',
     mode: 'development',
     clearScreen: false,
     server: {

@@ -1,11 +1,6 @@
 import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
 import { ParsedImportStatement, ASTNode } from '../types';
 
-const getExtname = (path: string): string => {
-  const sp = path.split('.');
-  return sp.length >= 2 ? `.${sp[sp.length - 1]}` : '';
-};
-
 const isPathImport = (spec: string): boolean =>
   spec[0] === '.' || spec[0] === '/';
 
@@ -59,21 +54,13 @@ export const resolveImportSpecifier = ({
   }
   if (isPathImport(specifier)) {
     const basePath = pathJoin(path.replace(/^\/+/, ''), '../');
-    let resolvedPath = resolveLocalPath(specifier, basePath);
+    const resolvedPath = resolveLocalPath(specifier, basePath);
+    console.log(specifier, path, basePath, resolvedPath);
 
-    const importExtname = getExtname(resolvedPath);
-    const isProxyImport =
-      importExtname && importExtname !== '.js' && importExtname !== '.mjs';
-    if (importExtname) {
-      if (isProxyImport) {
-        resolvedPath = `${resolvedPath}.proxy.js`;
-      }
-    } else {
-      resolvedPath = `${resolvedPath}.js`;
-    }
-    return resolvedPath;
+    return pathJoin('/-', resolvedPath);
   }
-  return pathJoin('/-/resolve', specifier);
+  // set an import query to ensure Vite transforms modules
+  return `${pathJoin('/-/node_modules', specifier)}?import`;
 };
 
 export const collectEsmImports = async ({

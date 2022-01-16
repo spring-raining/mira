@@ -4,7 +4,7 @@ export const devServerWatcherUpdateEventName = '__MIRA_WDS_UPDATE__';
 // Refers to @web/dev-server-core
 // https://github.com/modernweb-dev/web/blob/292c567517d846411f6bcdfd1d60b3f50e20a783/packages/dev-server-core/src/web-sockets/webSocketsPlugin.ts
 export const devServerWatcherPreambleCode = `
-import { encode, decode, decodeAsync } from '/_mira/-/node_modules/@msgpack/msgpack/dist.es5+esm/index.mjs';
+import { encode, decode, decodeAsync } from '/_mira/vendor/@msgpack/msgpack/dist.es5+esm/index.mjs';
 
 export let webSocket;
 export let webSocketOpened;

@@ -2,6 +2,7 @@ import { DevServer, Plugin } from '@web/dev-server-core';
 import { CliArgs } from './commands';
 import { collectProjectConfig } from './config';
 import { createLogger } from './server/logger/createLogger';
+import { vendorFileMiddleware } from './server/middlewares/vendorFileMiddleware';
 import { workspaceMiddleware } from './server/middlewares/workspaceMiddleware';
 import { snowpackPluginFactory } from './server/plugins/snowpackPlugin';
 import { vitePluginFactory } from './server/plugins/vitePlugin';
@@ -43,6 +44,7 @@ export async function startServer(args: CliArgs) {
       {
         ...config.server,
         middleware: [
+          vendorFileMiddleware,
           viteMiddleware,
           workspaceServerMiddleware,
           // await workspaceMiddleware({
