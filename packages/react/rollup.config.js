@@ -23,7 +23,7 @@ const output = [
       },
     ],
     external: [
-      ...Object.keys(packageJson.dependencies),
+      // ...Object.keys(packageJson.dependencies),
       ...Object.keys(packageJson.peerDependencies),
     ],
     plugins,

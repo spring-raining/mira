@@ -39,6 +39,7 @@
     "@mirajs/workspace": "1.0.0",
     "@msgpack/msgpack": "2.7.1",
     "@web/dev-server": "^0.1.14",
+    "find-node-modules": "^2.1.2",
     "globby": "^11.0.2",
     "koa-send": "5.0.1",
     "picomatch": "^2.2.2",

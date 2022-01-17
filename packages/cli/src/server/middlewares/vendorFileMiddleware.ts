@@ -1,15 +1,15 @@
 import { createRequire } from 'module';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Middleware } from '@web/dev-server-core';
+import findNodeModules from 'find-node-modules';
 import send from 'koa-send';
 import { VENDOR_PATH } from './../../constants';
 
 const require = createRequire(import.meta.url);
-let serveRoot = path.dirname(require.resolve('@mirajs/cli/package.json'));
-if (process.env.DEV) {
-  // Relocate to workspace root
-  serveRoot = path.resolve(serveRoot, '../..');
-}
+
+const outsideDir = path.resolve(fileURLToPath(import.meta.url), '../../..');
+const serveRoot = findNodeModules({ cwd: outsideDir, relative: false })[0];
 
 export const vendorFileMiddleware: Middleware = async (ctx, next) => {
   if (
