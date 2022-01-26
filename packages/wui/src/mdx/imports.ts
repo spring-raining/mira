@@ -44,16 +44,16 @@ export const getRelativeSpecifier = ({
 
 export const resolveImportSpecifier = ({
   specifier,
-  path,
+  contextPath = '.',
 }: {
   specifier: string;
-  path: string;
+  contextPath?: string;
 }): string => {
   if (isRemoteUrl(specifier)) {
     return specifier;
   }
   if (isPathImport(specifier)) {
-    const basePath = pathJoin(path.replace(/^\/+/, ''), '../');
+    const basePath = pathJoin(contextPath.replace(/^\/+/, ''), '../');
     const resolvedPath = resolveLocalPath(specifier, basePath);
     // import query represents that is imported directly, which affects HMR behavior
     return `${pathJoin('/-', resolvedPath)}?import`;
@@ -63,10 +63,10 @@ export const resolveImportSpecifier = ({
 
 export const collectEsmImports = async ({
   node,
-  path,
+  contextPath,
 }: {
   node: ASTNode[];
-  path: string;
+  contextPath: string;
 }): Promise<ParsedImportStatement[]> => {
   const parseAll = node
     .filter((node) => node.type === 'mdxjsEsm')
@@ -82,23 +82,26 @@ export const collectEsmImports = async ({
 
   const rewrited = importDefs.map((def) => ({
     ...def,
-    specifier: resolveImportSpecifier({ specifier: def.specifier, path }),
+    specifier: resolveImportSpecifier({
+      specifier: def.specifier,
+      contextPath,
+    }),
   }));
   return rewrited;
 };
 
 export const loadModule = async ({
-  definition,
+  specifier,
   moduleLoader,
   depsRootPath,
 }: {
-  definition: ParsedImportStatement;
+  specifier: string;
   moduleLoader: (specifier: string) => Promise<any>;
   depsRootPath: string;
 }): Promise<Record<string, unknown>> => {
-  const actualUrl = isRemoteUrl(definition.specifier)
-    ? definition.specifier
-    : pathJoin(depsRootPath, definition.specifier);
+  const actualUrl = isRemoteUrl(specifier)
+    ? specifier
+    : pathJoin(depsRootPath, specifier);
   const mod = await moduleLoader(actualUrl);
   return mod;
 };

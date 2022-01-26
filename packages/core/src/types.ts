@@ -4,7 +4,7 @@ export interface MiraConfig {
 }
 
 export interface RuntimeScope {
-  $def: (exportVal: Record<string, any>) => void;
+  $def: (exportVal: Map<string, any>) => void;
   $use: (name: string, path: string) => any;
   $render: (element: any, onErrorCaptured: (error: Error) => void) => any;
   $jsxFactory: (...args: any[]) => any;
@@ -12,14 +12,14 @@ export interface RuntimeScope {
 }
 
 export type RuntimeScopeFactory<CustomRuntimeScope = object> = (arg: {
-  scopeVal: Record<string, unknown>;
+  scopeVal: Map<string, unknown>;
   lang?: string | undefined;
   meta?: string | undefined;
 }) => RuntimeScope & CustomRuntimeScope;
 
 export interface RuntimeEnvironment<CustomRuntimeScope = object> {
-  exportVal: Record<string, unknown>;
-  referenceVal: Record<string, unknown>;
+  exportVal: Map<string, unknown>;
+  referenceVal: Map<string, unknown>;
   getRuntimeScope: RuntimeScopeFactory<CustomRuntimeScope>;
 }
 

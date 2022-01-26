@@ -13,7 +13,7 @@ import {
   DependencyUpdateEvent,
   ModuleUpdateEvent,
 } from './dependency';
-import { setupRuntimeEnvironment } from './runtimeEnvironment';
+import { setupRuntime } from './runtime';
 import { transpileCode } from './transpileCode';
 
 export interface Providence {
@@ -54,7 +54,11 @@ export const setupProvidence = ({
   onEvaluatorUpdate: (e: EvaluatedResult) => void;
   onModuleUpdate: (e: ModuleImportState) => void;
 }): Providence => {
-  const { getRuntimeEnvironment } = setupRuntimeEnvironment({ runtime });
+  const _runtime = setupRuntime({
+    runtime,
+    moduleLoader,
+    depsRootPath,
+  });
 
   const run = async ({
     id,
@@ -66,13 +70,13 @@ export const setupProvidence = ({
     id: string;
     code: string;
     environment: RuntimeEnvironment;
-    exportVal: Record<string, unknown>;
-    moduleVal: Record<string, unknown>;
+    exportVal: Map<string, unknown>;
+    moduleVal: Map<string, unknown>;
   }): Promise<EvaluatedResult> => {
-    const scopeVal = { ...moduleVal, ...exportVal };
+    const scopeVal = new Map([...moduleVal, ...exportVal]);
     const transpiledData = await transpileCode({
       code,
-      declaredValues: Object.keys(scopeVal),
+      declaredValues: [...scopeVal.keys()],
     });
     if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
       return {
@@ -115,11 +119,11 @@ export const setupProvidence = ({
     if (typeof runTarget?.code !== 'string') {
       return;
     }
-    const environment = getRuntimeEnvironment();
     // false positive?
     // eslint-disable-next-line prefer-const
     let runId: number;
     const cb = async () => {
+      const environment = (await _runtime).getRuntimeEnvironment();
       const ret = await run({
         id: runTarget.mira.id,
         code: runTarget.code,

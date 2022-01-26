@@ -3,15 +3,15 @@ import { createElement, Fragment } from 'react';
 import { renderElement } from './renderElement';
 
 export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory = () => {
-  const exportVal: Record<string, any> = {};
-  const referenceVal: Record<string, any> = {};
+  const exportVal = new Map<string, unknown>();
+  const referenceVal = new Map<string, unknown>();
   const registerVal = (val: Record<string, any>) => {
     for (const [k, v] of Object.entries(val)) {
       if (k === 'default') {
         // ignore default exports
         continue;
       }
-      exportVal[k] = v;
+      exportVal.set(k, v);
     }
   };
 
@@ -35,11 +35,11 @@ export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory = () => {
       $use: (name) => {
         if (typeof name !== 'string') {
           throw new Error('Invalid $use reference');
-        } else if (!(name in scopeVal)) {
+        } else if (!scopeVal.has(name)) {
           throw new Error(`'${name}' is not defined`);
         }
-        referenceVal[name] = scopeVal[name];
-        return scopeVal[name];
+        referenceVal.set(name, scopeVal.get(name));
+        return scopeVal.get(name);
       },
       $render: renderElement,
       $jsxFactory: createElement,
