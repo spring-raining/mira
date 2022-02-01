@@ -42,6 +42,33 @@ export type Expression =
   | ClassExpression
   | FunctionExpression
   | { type: 'UnknownExpression' };
+export interface ExportAllDeclaration {
+  type: 'ExportAllDeclaration';
+  source: StringLiteral | null;
+  exported: Identifier | null;
+  // assertions: ImportAttribute[];
+}
+export type ExportDeclaration =
+  | ClassDeclaration
+  | ClassExpression
+  | FunctionDeclaration
+  | VariableDeclaration;
+export interface ExportDefaultDeclaration {
+  type: 'ExportDefaultDeclaration';
+  declaration: ExportDeclaration | Expression;
+}
+export interface ExportNamedDeclaration {
+  type: 'ExportNamedDeclaration';
+  declaration: ExportDeclaration | null;
+  specifiers: ExportSpecifier[];
+  source: StringLiteral | null;
+  // assertions: ImportAttribute[];
+}
+export interface ExportSpecifier {
+  type: 'ExportSpecifier';
+  local: Identifier;
+  exported: Identifier;
+}
 export interface FunctionDeclaration extends FunctionDeclarationBase {
   type: 'FunctionDeclaration';
   // body: BlockStatement;
@@ -66,7 +93,7 @@ interface LiteralBase {
   raw: string;
   value: RegExp | bigint | boolean | number | string | null;
 }
-export declare interface NumberLiteral extends LiteralBase {
+export interface NumberLiteral extends LiteralBase {
   value: number;
 }
 export interface ObjectPattern {

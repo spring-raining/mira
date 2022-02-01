@@ -15,6 +15,13 @@ import {
   ArrayPattern,
   DestructuringPattern,
   Expression,
+  ExportAllDeclaration,
+  ExportDeclaration,
+  ExportDefaultDeclaration,
+  ExportNamedDeclaration,
+  ExportSpecifier,
+  StringLiteral,
+  VariableDeclaration,
 } from './types';
 
 const getIdentifier = (name: string | null): Identifier | null =>
@@ -28,6 +35,9 @@ const getIdentifier = (name: string | null): Identifier | null =>
 export class Scanner {
   private tokens: TokenProcessor;
   private binding = new Map<string, DeclarationBinding>();
+  private exportDeclarations: Array<
+    ExportAllDeclaration | ExportDefaultDeclaration | ExportNamedDeclaration
+  > = [];
 
   constructor(source: string, tokens: Token[]) {
     this.tokens = new TokenProcessor(
@@ -47,13 +57,100 @@ export class Scanner {
   processRoot(): void {
     while (!this.tokens.isAtEnd()) {
       const token = this.tokens.currentToken();
-      if (token.type === tt._export) {
-        //
+      if (token.type === tt._export && token.scopeDepth === 0) {
+        this.processExportDeclaration();
       }
       if (token.identifierRole === IdentifierRole.TopLevelDeclaration) {
         this.processTopLevelDeclaration();
       }
       this.tokens.nextToken();
+    }
+  }
+
+  processExportDeclaration() {
+    let index = this.tokens.currentIndex();
+
+    if (this.tokens.matches2AtIndex(index, tt._export, tt._default)) {
+      index += 2;
+      const rawCode1 = this.tokens.identifierNameAtIndex(index);
+      const rawCode2 = this.tokens.identifierNameAtIndex(index + 1);
+      let declaration: ExportDeclaration | Expression;
+      if (
+        rawCode1 === 'function' ||
+        (rawCode1 === 'async' && rawCode2 === 'function')
+      ) {
+        declaration = this.scanFunctionDeclaration(index);
+      } else if (rawCode1 === 'class') {
+        declaration = this.scanClassDeclaration(index);
+      } else {
+        declaration = this.scanAssignmentExpression(index);
+      }
+      this.exportDeclarations.push({
+        type: 'ExportDefaultDeclaration',
+        declaration,
+      });
+    } else if (this.tokens.matches2AtIndex(index, tt._export, tt.braceL)) {
+      index += 2;
+      const ret = this.parseExportsList(index);
+      if (!ret) {
+        return;
+      }
+      const [specifiers] = ret;
+      // Skip braceR
+      index += 1;
+      let source: StringLiteral | null = null;
+      if (
+        this.tokens.matches2AtIndex(index, tt.name, tt.string) &&
+        this.tokens.identifierNameAtIndex(index) === 'from'
+      ) {
+        source = {
+          type: 'Literal',
+          raw: this.tokens.identifierNameAtIndex(index + 1),
+          value: this.tokens.stringValueAtIndex(index + 1),
+        };
+      }
+      this.exportDeclarations.push({
+        type: 'ExportNamedDeclaration',
+        specifiers,
+        declaration: null,
+        source,
+      });
+    } else if (this.tokens.matches2AtIndex(index, tt._export, tt.star)) {
+      index += 2;
+      let exported: Identifier | null = null;
+      if (this.tokens.matches2AtIndex(index, tt._as, tt.name)) {
+        exported = {
+          type: 'Identifier',
+          name: this.tokens.identifierNameAtIndex(index + 1),
+        };
+        index += 2;
+      }
+      if (
+        this.tokens.matches2AtIndex(index, tt.name, tt.string) &&
+        this.tokens.identifierNameAtIndex(index) === 'from'
+      ) {
+        const source = {
+          type: 'Literal',
+          raw: this.tokens.identifierNameAtIndex(index + 1),
+          value: this.tokens.stringValueAtIndex(index + 1),
+        } as const;
+        this.exportDeclarations.push({
+          type: 'ExportAllDeclaration',
+          source,
+          exported,
+        });
+      }
+    } else {
+      index += 1;
+      const declaration = this.parseDeclaration(index);
+      if (declaration) {
+        this.exportDeclarations.push({
+          type: 'ExportNamedDeclaration',
+          specifiers: [],
+          declaration,
+          source: null,
+        });
+      }
     }
   }
 
@@ -213,6 +310,47 @@ export class Scanner {
       } else {
         return unknownExpression;
       }
+    }
+  }
+
+  // Note that it also accepts VariableStatement
+  parseDeclaration(
+    startIndex: number,
+  ): FunctionDeclaration | ClassDeclaration | VariableDeclaration | null {
+    let index = startIndex;
+    const rawCode1 = this.tokens.identifierNameAtIndex(index);
+    const rawCode2 = this.tokens.identifierNameAtIndex(index + 1);
+    if (
+      rawCode1 === 'function' ||
+      (rawCode1 === 'async' && rawCode2 === 'function')
+    ) {
+      return this.scanFunctionDeclaration(index);
+    } else if (this.tokens.matches1AtIndex(index, tt._class)) {
+      return this.scanClassDeclaration(index);
+    } else if (
+      this.tokens.matches1AtIndex(index, tt._const) ||
+      this.tokens.matches1AtIndex(index, tt._let) ||
+      this.tokens.matches1AtIndex(index, tt._var)
+    ) {
+      const kind = this.tokens.identifierNameAtIndex(index) as
+        | 'const'
+        | 'let'
+        | 'var';
+      const declarations: VariableDeclarator[] = [];
+      // Skip const/let/var at the first time,
+      // then repeat scanning LexicalBinding/VariableDeclaration until comma doesn't match
+      do {
+        index += 1;
+        declarations.push(this.scanVariableDeclarator(index));
+        index = this.skipBindingElement(index);
+      } while (this.tokens.matches1AtIndex(index, tt.comma));
+      return {
+        type: 'VariableDeclaration',
+        declarations,
+        kind,
+      };
+    } else {
+      return null;
     }
   }
 
@@ -445,6 +583,52 @@ export class Scanner {
       },
       index,
     ];
+  }
+
+  parseExportsList(startIndex: number): [ExportSpecifier[], number] | null {
+    const exportsList: ExportSpecifier[] = [];
+    let index = startIndex;
+    while (!this.tokens.matches1AtIndex(index, tt.braceR)) {
+      if (this.tokens.matches1AtIndex(index, tt.comma)) {
+        index += 1;
+      } else if (
+        this.tokens.matches3AtIndex(index, tt.name, tt._as, tt.name) ||
+        // 'as' keyword is unintentionally set to 'name'
+        this.tokens.matches3AtIndex(index, tt.name, tt.name, tt.name)
+      ) {
+        if (this.tokens.identifierNameAtIndex(index + 1) !== 'as') {
+          return null;
+        }
+        exportsList.push({
+          type: 'ExportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: this.tokens.identifierNameAtIndex(index),
+          },
+          exported: {
+            type: 'Identifier',
+            name: this.tokens.identifierNameAtIndex(index + 2),
+          },
+        });
+        index += 3;
+      } else if (this.tokens.matches1AtIndex(index, tt.name)) {
+        exportsList.push({
+          type: 'ExportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: this.tokens.identifierNameAtIndex(index),
+          },
+          exported: {
+            type: 'Identifier',
+            name: this.tokens.identifierNameAtIndex(index),
+          },
+        });
+        index += 1;
+      } else {
+        return null;
+      }
+    }
+    return [exportsList, index];
   }
 
   skipInitializer(startIndex: number): number {

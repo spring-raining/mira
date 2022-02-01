@@ -1,4 +1,5 @@
 import { parse } from 'sucrase/dist/parser';
+import { scanExports } from '../src/export-parser';
 import { Scanner } from '../src/export-parser/scanner';
 
 it('scanFunctionDeclaration', async () => {
@@ -418,4 +419,224 @@ it('scanVariableDeclarator', async () => {
       id: null,
     },
   });
+});
+
+it('Scan export declarations', async () => {
+  const source = `
+    export {a, b as c};
+    export class d extends a {}
+    export const e = (y) => {
+    },f,g
+    export async function h(i) {}
+
+    export * from 'x';
+    export * as c from 'y';
+    export {} from 'z';
+
+    export default function* e(a, b, ...c) {}
+    export default class {}
+    export default ({test}) => test;
+  `;
+  const scanner = scanExports(source);
+  expect((scanner as any).exportDeclarations).toMatchObject([
+    {
+      type: 'ExportNamedDeclaration',
+      source: null,
+      specifiers: [
+        {
+          type: 'ExportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'a',
+          },
+          exported: {
+            type: 'Identifier',
+            name: 'a',
+          },
+        },
+        {
+          type: 'ExportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'b',
+          },
+          exported: {
+            type: 'Identifier',
+            name: 'c',
+          },
+        },
+      ],
+      declaration: null,
+    },
+    {
+      type: 'ExportNamedDeclaration',
+      declaration: {
+        type: 'ClassDeclaration',
+        id: {
+          type: 'Identifier',
+          name: 'd',
+        },
+      },
+      specifiers: [],
+      source: null,
+    },
+    {
+      type: 'ExportNamedDeclaration',
+      declaration: {
+        type: 'VariableDeclaration',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'e',
+            },
+            init: {
+              type: 'ArrowFunctionExpression',
+              generator: false,
+              id: null,
+              params: [
+                {
+                  type: 'Identifier',
+                  name: 'y',
+                },
+              ],
+              async: false,
+            },
+          },
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'f',
+            },
+            init: null,
+          },
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'g',
+            },
+            init: null,
+          },
+        ],
+        kind: 'const',
+      },
+    },
+    {
+      type: 'ExportNamedDeclaration',
+      declaration: {
+        type: 'FunctionDeclaration',
+        id: {
+          type: 'Identifier',
+          name: 'h',
+        },
+        generator: false,
+        async: true,
+        params: [
+          {
+            type: 'Identifier',
+            name: 'i',
+          },
+        ],
+      },
+      specifiers: [],
+      source: null,
+    },
+    {
+      type: 'ExportAllDeclaration',
+      source: {
+        type: 'Literal',
+        value: 'x',
+        raw: "'x'",
+      },
+      exported: null,
+    },
+    {
+      type: 'ExportAllDeclaration',
+      source: {
+        type: 'Literal',
+        value: 'y',
+        raw: "'y'",
+      },
+      exported: {
+        type: 'Identifier',
+        name: 'c',
+      },
+    },
+    {
+      type: 'ExportNamedDeclaration',
+      source: {
+        type: 'Literal',
+        value: 'z',
+        raw: "'z'",
+      },
+      specifiers: [],
+      declaration: null,
+    },
+    {
+      type: 'ExportDefaultDeclaration',
+      declaration: {
+        type: 'FunctionDeclaration',
+        id: {
+          type: 'Identifier',
+          name: 'e',
+        },
+        generator: true,
+        async: false,
+        params: [
+          {
+            type: 'Identifier',
+            name: 'a',
+          },
+          {
+            type: 'Identifier',
+            name: 'b',
+          },
+          {
+            type: 'RestElement',
+            argument: {
+              type: 'Identifier',
+              name: 'c',
+            },
+          },
+        ],
+      },
+    },
+    {
+      type: 'ExportDefaultDeclaration',
+      declaration: {
+        type: 'ClassDeclaration',
+        id: null,
+      },
+    },
+    {
+      type: 'ExportDefaultDeclaration',
+      declaration: {
+        type: 'ArrowFunctionExpression',
+        generator: false,
+        id: null,
+        params: [
+          {
+            type: 'ObjectPattern',
+            properties: [
+              {
+                type: 'Property',
+                key: {
+                  type: 'Identifier',
+                  name: 'test',
+                },
+                computed: false,
+                method: false,
+                shorthand: true,
+                kind: 'init',
+              },
+            ],
+          },
+        ],
+        async: false,
+      },
+    },
+  ]);
 });
