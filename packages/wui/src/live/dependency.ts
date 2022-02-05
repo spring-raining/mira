@@ -1,4 +1,9 @@
-import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
+import {
+  parseImportStatement,
+  scanModuleSpecifier,
+  scanDeclarations,
+} from '@mirajs/core';
+import type { ExportDefaultDeclaration } from '@mirajs/core/lib/declaration-parser/types';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 import { EventTarget, Event } from 'event-target-shim';
 import {
@@ -54,6 +59,15 @@ export type DependencyUpdateEvent = CustomEvent<
 
 export type ModuleUpdateEvent = CustomEvent<'moduleUpdate', ModuleImportState>;
 
+export type RenderParamsUpdatePayload = {
+  id: string;
+  params: Map<string, unknown>;
+};
+export type RenderParamsUpdateEvent = CustomEvent<
+  'renderParamsUpdate',
+  RenderParamsUpdatePayload
+>;
+
 class ModuleCache {
   private cacheMap: Map<string, Record<string, unknown>> = new Map();
   private queryRe = /\?.*$/;
@@ -80,12 +94,17 @@ class ModuleCache {
 export class DependencyManager extends EventTarget<{
   dependencyUpdate: DependencyUpdateEvent;
   moduleUpdate: ModuleUpdateEvent;
+  renderParamsUpdate: RenderParamsUpdateEvent;
 }> {
   private mdxPath: string;
   private depsRootPath: string;
   private moduleLoader: (specifier: string) => Promise<unknown>;
   private miraBrickImportDef: Record<string, readonly ImportDefinition[]> = {};
   private miraBrickExportDef: Record<string, readonly string[]> = {};
+  private miraBrickDefaultFunctionParams: Record<
+    string,
+    readonly string[] | null
+  > = {};
   private miraBrickDependencyError: Record<string, Error> = {};
   private miraBrickModuleImportDef: Record<
     string,
@@ -141,6 +160,24 @@ export class DependencyManager extends EventTarget<{
     }
   }
 
+  private effectDefaultFunctionParams(id: string) {
+    const params = new Map<string, unknown>();
+    this.miraBrickDefaultFunctionParams[id]?.forEach((p) => {
+      if (this.miraExportVal.has(p)) {
+        params.set(p, this.miraExportVal.get(p));
+      } else if (this.moduleVal.has(p)) {
+        params.set(p, this.moduleVal.get(p));
+      }
+    });
+    const event = new CustomEvent('renderParamsUpdate', {
+      detail: {
+        id,
+        params: params,
+      },
+    });
+    this.dispatchEvent(event);
+  }
+
   private effectModuleVal() {
     const nextModuleVal = Object.entries(this.moduleImportMapping).reduce(
       (acc, [name, mapping]) => {
@@ -165,6 +202,9 @@ export class DependencyManager extends EventTarget<{
     );
     Object.keys(this.miraBrickImportDef).forEach((id) => {
       this.effectDependency(id);
+    });
+    Object.keys(this.miraBrickDefaultFunctionParams).forEach((id) => {
+      this.effectDefaultFunctionParams(id);
     });
   }
 
@@ -209,6 +249,7 @@ export class DependencyManager extends EventTarget<{
     const prevExports = this.miraBrickExportDef[id] ?? [];
     let nextImports: readonly ImportDefinition[] = [];
     let nextExports: readonly string[] = [];
+    let nextDefaultParams: readonly string[] | null = null;
     try {
       const transformed = await transpileCode({
         code,
@@ -220,7 +261,10 @@ export class DependencyManager extends EventTarget<{
         // Failed to transform
         throw new Error('Failed to parse code');
       }
-      const [imports, exports] = await scanModuleSpecifier(transformedCode);
+      const [declaration, [imports, exports]] = await Promise.all([
+        scanDeclarations(transformedCode),
+        scanModuleSpecifier(transformedCode),
+      ] as const);
       const importDef = imports.flatMap(
         (imp) => parseImportStatement(transformedCode, imp) ?? [],
       );
@@ -242,6 +286,37 @@ export class DependencyManager extends EventTarget<{
       });
       nextImports = importDef;
       nextExports = namedExportVal;
+
+      const defaultExport = declaration.exportDeclarations.find(
+        (e): e is ExportDefaultDeclaration =>
+          e.type === 'ExportDefaultDeclaration',
+      );
+      if (defaultExport) {
+        const { declaration } = defaultExport;
+        if (
+          declaration.type === 'FunctionDeclaration' ||
+          declaration.type === 'FunctionExpression' ||
+          declaration.type === 'ArrowFunctionExpression'
+        ) {
+          const [firstParam] = declaration.params;
+          let defaultParams: string[] = [];
+          if (firstParam) {
+            const properties =
+              firstParam.type === 'ObjectPattern'
+                ? firstParam.properties
+                : firstParam.type === 'AssignmentPattern' &&
+                  firstParam.left.type === 'ObjectPattern'
+                ? firstParam.left.properties
+                : [];
+            defaultParams = properties.flatMap((p) =>
+              p.type === 'Property' && p.key.type === 'Identifier'
+                ? [p.key.name]
+                : [],
+            );
+          }
+          nextDefaultParams = defaultParams;
+        }
+      }
       delete this.miraBrickDependencyError[id];
     } catch (error) {
       this.miraBrickDependencyError[id] =
@@ -256,14 +331,23 @@ export class DependencyManager extends EventTarget<{
     });
     this.miraBrickImportDef[id] = nextImports;
     this.miraBrickExportDef[id] = nextExports;
+    this.miraBrickDefaultFunctionParams[id] = nextDefaultParams;
 
     this.effectDependency(id);
+    this.effectDefaultFunctionParams(id);
     if (removedVal.length > 0) {
       Object.entries(this.miraBrickImportDef).forEach(([id_, imports]) => {
         if (imports.some((def) => checkImportDeps(def, removedVal))) {
           this.effectDependency(id_);
         }
       });
+      Object.entries(this.miraBrickDefaultFunctionParams).forEach(
+        ([id_, params]) => {
+          if (params?.some((p) => removedVal.includes(p))) {
+            this.effectDefaultFunctionParams(id_);
+          }
+        },
+      );
     }
   }
 
@@ -278,6 +362,7 @@ export class DependencyManager extends EventTarget<{
     });
     delete this.miraBrickImportDef[id];
     delete this.miraBrickExportDef[id];
+    delete this.miraBrickDefaultFunctionParams[id];
     delete this.miraBrickDependencyError[id];
 
     Object.entries(this.miraBrickImportDef).forEach(([id_, imports]) => {
@@ -285,6 +370,13 @@ export class DependencyManager extends EventTarget<{
         this.effectDependency(id_);
       }
     });
+    Object.entries(this.miraBrickDefaultFunctionParams).forEach(
+      ([id_, params]) => {
+        if (params?.some((p) => exports.includes(p))) {
+          this.effectDefaultFunctionParams(id_);
+        }
+      },
+    );
   }
 
   updateExports(exportVal: Map<string, unknown>) {
@@ -301,6 +393,13 @@ export class DependencyManager extends EventTarget<{
         this.effectDependency(id);
       }
     });
+    Object.entries(this.miraBrickDefaultFunctionParams).forEach(
+      ([id, params]) => {
+        if (params?.some((p) => changedVal.includes(p))) {
+          this.effectDefaultFunctionParams(id);
+        }
+      },
+    );
   }
 
   upsertScript(id: string, scriptNode: ASTNode[]) {

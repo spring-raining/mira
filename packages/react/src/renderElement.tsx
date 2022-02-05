@@ -30,7 +30,7 @@ export const renderElement = (
 ) => {
   const ErrorBoundary = errorBoundary(errorCallback);
   if (typeof element === 'undefined') {
-    return null;
+    return <></>;
   }
   const Element = typeof element === 'function' ? element : () => element;
   return (

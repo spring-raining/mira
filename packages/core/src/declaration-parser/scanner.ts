@@ -258,9 +258,9 @@ export class Scanner {
   processTopLevelIdentifierDeclaration() {
     const index = this.tokens.currentIndex();
     const identifier = this.tokens.identifierName();
-    const rawCodeB3 = this.tokens.identifierNameAtIndex(index - 3);
-    const rawCodeB2 = this.tokens.identifierNameAtIndex(index - 2);
-    const rawCodeB1 = this.tokens.identifierNameAtIndex(index - 1);
+    const rawCodeB3 = index > 2 && this.tokens.identifierNameAtIndex(index - 3);
+    const rawCodeB2 = index > 1 && this.tokens.identifierNameAtIndex(index - 2);
+    const rawCodeB1 = index > 0 && this.tokens.identifierNameAtIndex(index - 1);
     let declaration: FunctionDeclaration | ClassDeclaration;
     if (
       rawCodeB3 === 'async' &&

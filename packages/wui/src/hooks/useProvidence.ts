@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useRecoilValue, useRecoilCallback } from 'recoil';
 import { useUniverseContext } from '../context';
+import type { RenderParamsUpdatePayload } from '../live/dependency';
 import { setupProvidence, Providence } from '../live/providence';
 import {
   brickModuleImportErrorState,
+  miraRenderParamsDictState,
   miraEvaluatedDataDictState,
 } from '../state/atoms';
 import { codeFragmentsState, scriptFragmentsState } from '../state/code';
@@ -63,6 +65,17 @@ export const ProvidenceObserver = ({
     [],
   );
 
+  const onRenderParamsUpdate = useRecoilCallback(
+    ({ set }) =>
+      ({ id, params }: RenderParamsUpdatePayload) => {
+        set(miraRenderParamsDictState, (prev) => ({
+          ...prev,
+          [id]: params,
+        }));
+      },
+    [],
+  );
+
   useEffect(() => {
     const p = setupProvidence({
       store: providenceRef.current,
@@ -72,6 +85,7 @@ export const ProvidenceObserver = ({
       moduleLoader,
       onEvaluatorUpdate,
       onModuleUpdate,
+      onRenderParamsUpdate,
     });
     providence.current = p;
     return p.teardown;
@@ -83,6 +97,7 @@ export const ProvidenceObserver = ({
     providenceRef,
     onEvaluatorUpdate,
     onModuleUpdate,
+    onRenderParamsUpdate,
   ]);
 
   useEffect(() => {

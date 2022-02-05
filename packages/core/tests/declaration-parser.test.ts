@@ -1,5 +1,5 @@
 import { parse } from 'sucrase/dist/parser';
-import { scanExports } from '../src/declaration-parser';
+import { scanDeclarations } from '../src/declaration-parser';
 import { Scanner } from '../src/declaration-parser/scanner';
 
 it('scanFunctionDeclaration', async () => {
@@ -517,8 +517,8 @@ it('Scan export declarations', async () => {
     export default class {}
     export default ({test}) => test;
   `;
-  const scanner = scanExports(source);
-  expect(scanner.exportDeclarations).toMatchObject([
+  const { exportDeclarations } = await scanDeclarations(source);
+  expect(exportDeclarations).toMatchObject([
     {
       type: 'ExportNamedDeclaration',
       source: null,
@@ -739,8 +739,8 @@ it('Scan import declarations', async () => {
     import e, * as f from 'bar';
     import 'baz';
   `;
-  const scanner = scanExports(source);
-  expect(scanner.importDeclarations).toMatchObject([
+  const { importDeclarations } = await scanDeclarations(source);
+  expect(importDeclarations).toMatchObject([
     {
       type: 'ImportDeclaration',
       source: {

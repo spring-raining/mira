@@ -15,7 +15,11 @@ import {
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
-import { useRenderedData } from '../../state/evaluator';
+import {
+  useEvaluatedData,
+  useRenderParams,
+  useRenderedData,
+} from '../../state/evaluator';
 import { errorPreText } from '../../styles/common.css';
 import { sprinkles } from '../../styles/sprinkles.css';
 import { Mira } from '../../types';
@@ -32,7 +36,10 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
   mira,
 }) => {
   const settledOutput = useRef<ReturnType<typeof useRenderedData>['output']>();
+  const iframeEl = useRef<HTMLIFrameElement>(null);
   const { output } = useRenderedData(mira.id);
+  const { evaluatedData } = useEvaluatedData(mira.id);
+  const { renderParams } = useRenderParams(brickId);
 
   useEffect(() => {
     if (output) {
@@ -42,18 +49,51 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
   useEffect(() => {
     settledOutput.current = undefined;
   }, [brickId]);
+
+  useEffect(() => {
+    if (!evaluatedData) {
+      return;
+    }
+    const { code, scopeVal } = evaluatedData;
+    if (typeof code !== 'string' || !scopeVal) {
+      return;
+    }
+    iframeEl.current?.contentWindow?.postMessage(
+      {
+        type: 'codeChanged',
+        code,
+        scopeVal,
+      },
+      window.location.origin,
+    );
+  }, [evaluatedData]);
+
+  useEffect(() => {
+    if (!renderParams) {
+      return;
+    }
+    iframeEl.current?.contentWindow?.postMessage(
+      {
+        type: 'parameterChanged',
+        params: renderParams,
+      },
+      window.location.origin,
+    );
+  }, [renderParams]);
+
   // Show previous output to avoid a FOIC
   const currentOutput = output ?? settledOutput.current;
   return (
-    <>
-      {currentOutput?.error ? (
+    <div>
+      <iframe ref={iframeEl} src="_mira/-/foo.html"></iframe>
+      {/* {currentOutput?.error ? (
         <div>
           <pre className={errorPreText}>{currentOutput.error.toString()}</pre>
         </div>
       ) : (
         currentOutput?.element
-      )}
-    </>
+      )} */}
+    </div>
   );
 };
 

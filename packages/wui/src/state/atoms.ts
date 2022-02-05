@@ -50,6 +50,13 @@ export const brickTextSwapState = atom<
   default: {},
 });
 
+export const miraRenderParamsDictState = atom<
+  Record<string, Map<string, unknown>>
+>({
+  key: 'miraRenderParamsDictState',
+  default: {},
+});
+
 export const miraEvaluatedDataDictState = atom<Record<string, EvaluatedResult>>(
   {
     key: 'miraEvaluatedDataDictState',

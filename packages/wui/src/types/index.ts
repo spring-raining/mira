@@ -67,6 +67,8 @@ export interface RuntimeEnvironment
 export interface EvaluatedResult {
   id: string;
   environment: RuntimeEnvironment;
+  code?: string;
+  scopeVal?: Map<string, unknown>;
   error?: Error;
   errorMarkers?: MarkerMessage[];
   warnMarkers?: MarkerMessage[];

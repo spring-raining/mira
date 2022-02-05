@@ -12,6 +12,8 @@ import {
   DependencyManager,
   DependencyUpdateEvent,
   ModuleUpdateEvent,
+  RenderParamsUpdateEvent,
+  RenderParamsUpdatePayload,
 } from './dependency';
 import { setupRuntime } from './runtime';
 import { transpileCode } from './transpileCode';
@@ -45,6 +47,7 @@ export const setupProvidence = ({
   moduleLoader,
   onEvaluatorUpdate,
   onModuleUpdate,
+  onRenderParamsUpdate,
 }: {
   store: ProvidenceStore;
   runtime: string;
@@ -53,6 +56,7 @@ export const setupProvidence = ({
   moduleLoader: (specifier: string) => Promise<unknown>;
   onEvaluatorUpdate: (e: EvaluatedResult) => void;
   onModuleUpdate: (e: ModuleImportState) => void;
+  onRenderParamsUpdate: (e: RenderParamsUpdatePayload) => void;
 }): Providence => {
   const _runtime = setupRuntime({
     runtime,
@@ -87,12 +91,15 @@ export const setupProvidence = ({
         warnMarkers: transpiledData.warnings,
       };
     }
+    const transpiledCode = transpiledData.text;
     try {
-      await asyncEval(transpiledData.text, scopeVal, environment);
+      await asyncEval(transpiledCode, scopeVal, environment);
       store.dependency?.updateExports(environment.exportVal);
       return {
         id,
         environment,
+        code: transpiledCode,
+        scopeVal,
         errorMarkers: transpiledData.errors,
         warnMarkers: transpiledData.warnings,
       };
@@ -100,6 +107,8 @@ export const setupProvidence = ({
       return {
         id,
         environment,
+        code: transpiledCode,
+        scopeVal,
         error:
           error instanceof Error
             ? error
@@ -141,6 +150,10 @@ export const setupProvidence = ({
 
   const handleModuleUpdate = ({ detail }: ModuleUpdateEvent) => {
     onModuleUpdate(detail);
+  };
+
+  const handleRenderParamsUpdate = ({ detail }: RenderParamsUpdateEvent) => {
+    onRenderParamsUpdate(detail);
   };
 
   const dispatchCodeUpdates = ({
@@ -189,6 +202,10 @@ export const setupProvidence = ({
   });
   store.dependency.addEventListener('dependencyUpdate', handleDependencyUpdate);
   store.dependency.addEventListener('moduleUpdate', handleModuleUpdate);
+  store.dependency.addEventListener(
+    'renderParamsUpdate',
+    handleRenderParamsUpdate,
+  );
 
   return {
     dispatchCodeUpdates,
@@ -200,6 +217,10 @@ export const setupProvidence = ({
         handleDependencyUpdate,
       );
       store.dependency?.removeEventListener('moduleUpdate', handleModuleUpdate);
+      store.dependency?.removeEventListener(
+        'renderParamsUpdate',
+        handleRenderParamsUpdate,
+      );
       store.dependency = undefined;
     },
   };

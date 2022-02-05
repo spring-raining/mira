@@ -13,7 +13,7 @@ export {
   scanModuleSpecifier,
   importModules,
 } from './ecmaImport';
-export { scanExports } from './declaration-parser';
+export { scanDeclarations } from './declaration-parser';
 export type {
   MiraConfig,
   RuntimeScope,

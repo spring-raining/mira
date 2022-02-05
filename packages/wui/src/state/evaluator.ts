@@ -1,8 +1,13 @@
 import { useRecoilValue, selectorFamily } from 'recoil';
 import { renderLiveElement } from '../live/renderLiveElement';
 import { MarkerMessage } from '../types';
-import { miraEvaluatedDataDictState } from './atoms';
+import { miraRenderParamsDictState, miraEvaluatedDataDictState } from './atoms';
 import { getDictItemSelector } from './helper';
+
+const miraRenderParamsFamily = getDictItemSelector({
+  key: 'miraRenderParamsFamily',
+  state: miraRenderParamsDictState,
+});
 
 const miraEvaluatedDataFamily = getDictItemSelector({
   key: 'miraEvaluatedDataFamily',
@@ -61,6 +66,16 @@ const miraOutputFamily = selectorFamily({
       });
     },
 });
+
+export const useEvaluatedData = (miraId: string) => {
+  const evaluatedData = useRecoilValue(miraEvaluatedDataFamily(miraId));
+  return { evaluatedData };
+};
+
+export const useRenderParams = (brickId: string) => {
+  const renderParams = useRecoilValue(miraRenderParamsFamily(brickId));
+  return { renderParams };
+};
 
 export const useRenderedData = (miraId: string) => {
   const output = useRecoilValue(miraOutputFamily(miraId));
