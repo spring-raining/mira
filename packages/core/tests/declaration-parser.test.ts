@@ -237,187 +237,267 @@ it('scanClassDeclaration', async () => {
   });
 });
 
-it('scanVariableDeclarator', async () => {
+it('scanDeclaration', async () => {
   const source = `
     const a, b=1, c=(\`xxx\`), d=function *({xxx}){};
-    let e = ()=>{};
+    let e = ()=>{}
     var f = xxx =>1,
     g = async ({a},[b=c,...d],...{})=>()=>()=>0,
-    h = class {};
+    h = class {}
+    const {i,j:k,...l}= {i,j:\`}\${({[a]:1})}{\`}, [m,,...n]= [1,2,3]
   `;
   const { tokens } = parse(source, false, false, false);
   const scanner = new Scanner(source, tokens);
 
-  const declarationA = scanner.scanVariableDeclarator(1);
+  const declarationA = scanner.scanDeclaration(0);
   expect(declarationA).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'a',
-    },
-    init: null,
+    type: 'VariableDeclaration',
+    kind: 'const',
+    declarations: [
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'a',
+        },
+        init: null,
+      },
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'b',
+        },
+        init: {
+          type: 'UnknownExpression',
+        },
+      },
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'c',
+        },
+        init: {
+          type: 'UnknownExpression',
+        },
+      },
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'd',
+        },
+        init: {
+          type: 'FunctionExpression',
+          id: null,
+          generator: true,
+          async: false,
+          params: [
+            {
+              type: 'ObjectPattern',
+              properties: [
+                {
+                  type: 'Property',
+                  key: {
+                    type: 'Identifier',
+                    name: 'xxx',
+                  },
+                  computed: false,
+                  method: false,
+                  shorthand: true,
+                  kind: 'init',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
   });
 
-  const declarationB = scanner.scanVariableDeclarator(3);
+  const declarationB = scanner.scanDeclaration(27);
   expect(declarationB).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'b',
-    },
-    init: {
-      type: 'UnknownExpression',
-    },
+    type: 'VariableDeclaration',
+    kind: 'let',
+    declarations: [
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'e',
+        },
+        init: {
+          type: 'ArrowFunctionExpression',
+          id: null,
+          generator: false,
+          async: false,
+          params: [],
+        },
+      },
+    ],
   });
 
-  const declarationC = scanner.scanVariableDeclarator(7);
+  const declarationC = scanner.scanDeclaration(35);
   expect(declarationC).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'c',
-    },
-    init: {
-      type: 'UnknownExpression',
-    },
+    type: 'VariableDeclaration',
+    kind: 'var',
+    declarations: [
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'f',
+        },
+        init: {
+          type: 'ArrowFunctionExpression',
+          id: null,
+          generator: false,
+          async: false,
+          params: [
+            {
+              type: 'Identifier',
+              name: 'xxx',
+            },
+          ],
+        },
+      },
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'g',
+        },
+        init: {
+          type: 'ArrowFunctionExpression',
+          id: null,
+          generator: false,
+          async: true,
+          params: [
+            {
+              type: 'ObjectPattern',
+              properties: [
+                {
+                  type: 'Property',
+                  key: {
+                    type: 'Identifier',
+                    name: 'a',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'ArrayPattern',
+              elements: [
+                {
+                  type: 'AssignmentPattern',
+                  left: {
+                    type: 'Identifier',
+                    name: 'b',
+                  },
+                },
+                {
+                  type: 'RestElement',
+                  argument: {
+                    type: 'Identifier',
+                    name: 'd',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'RestElement',
+              argument: {
+                type: 'ObjectPattern',
+                properties: [],
+              },
+            },
+          ],
+        },
+      },
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'Identifier',
+          name: 'h',
+        },
+        init: {
+          type: 'ClassExpression',
+          id: null,
+        },
+      },
+    ],
   });
 
-  const declarationD = scanner.scanVariableDeclarator(15);
+  const declarationD = scanner.scanDeclaration(77);
   expect(declarationD).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'd',
-    },
-    init: {
-      type: 'FunctionExpression',
-      id: null,
-      generator: true,
-      async: false,
-      params: [
-        {
+    type: 'VariableDeclaration',
+    kind: 'const',
+    declarations: [
+      {
+        type: 'VariableDeclarator',
+        id: {
           type: 'ObjectPattern',
           properties: [
             {
               type: 'Property',
               key: {
                 type: 'Identifier',
-                name: 'xxx',
+                name: 'i',
               },
               computed: false,
               method: false,
               shorthand: true,
               kind: 'init',
             },
-          ],
-        },
-      ],
-    },
-  });
-
-  const declarationE = scanner.scanVariableDeclarator(28);
-  expect(declarationE).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'e',
-    },
-    init: {
-      type: 'ArrowFunctionExpression',
-      id: null,
-      generator: false,
-      async: false,
-      params: [],
-    },
-  });
-
-  const declarationF = scanner.scanVariableDeclarator(37);
-  expect(declarationF).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'f',
-    },
-    init: {
-      type: 'ArrowFunctionExpression',
-      id: null,
-      generator: false,
-      async: false,
-      params: [
-        {
-          type: 'Identifier',
-          name: 'xxx',
-        },
-      ],
-    },
-  });
-
-  const declarationG = scanner.scanVariableDeclarator(43);
-  expect(declarationG).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'g',
-    },
-    init: {
-      type: 'ArrowFunctionExpression',
-      id: null,
-      generator: false,
-      async: true,
-      params: [
-        {
-          type: 'ObjectPattern',
-          properties: [
             {
               type: 'Property',
               key: {
                 type: 'Identifier',
-                name: 'a',
+                name: 'j',
               },
-            },
-          ],
-        },
-        {
-          type: 'ArrayPattern',
-          elements: [
-            {
-              type: 'AssignmentPattern',
-              left: {
-                type: 'Identifier',
-                name: 'b',
-              },
+              computed: false,
+              method: false,
+              shorthand: false,
+              kind: 'init',
             },
             {
               type: 'RestElement',
               argument: {
                 type: 'Identifier',
-                name: 'd',
+                name: 'l',
               },
             },
           ],
         },
-        {
-          type: 'RestElement',
-          argument: {
-            type: 'ObjectPattern',
-            properties: [],
-          },
+        init: {
+          type: 'UnknownExpression',
         },
-      ],
-    },
-  });
-
-  const declarationH = scanner.scanVariableDeclarator(73);
-  expect(declarationH).toMatchObject({
-    type: 'VariableDeclarator',
-    id: {
-      type: 'Identifier',
-      name: 'h',
-    },
-    init: {
-      type: 'ClassExpression',
-      id: null,
-    },
+      },
+      {
+        type: 'VariableDeclarator',
+        id: {
+          type: 'ArrayPattern',
+          elements: [
+            {
+              type: 'Identifier',
+              name: 'm',
+            },
+            null,
+            {
+              type: 'RestElement',
+              argument: {
+                type: 'Identifier',
+                name: 'n',
+              },
+            },
+          ],
+        },
+        init: {
+          type: 'UnknownExpression',
+        },
+      },
+    ],
   });
 });
 
@@ -438,7 +518,7 @@ it('Scan export declarations', async () => {
     export default ({test}) => test;
   `;
   const scanner = scanExports(source);
-  expect((scanner as any).exportDeclarations).toMatchObject([
+  expect(scanner.exportDeclarations).toMatchObject([
     {
       type: 'ExportNamedDeclaration',
       source: null,
@@ -660,7 +740,7 @@ it('Scan import declarations', async () => {
     import 'baz';
   `;
   const scanner = scanExports(source);
-  expect((scanner as any).importDeclarations).toMatchObject([
+  expect(scanner.importDeclarations).toMatchObject([
     {
       type: 'ImportDeclaration',
       source: {

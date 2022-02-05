@@ -1,11 +1,12 @@
 import TokenProcessor from 'sucrase/dist/TokenProcessor';
 import { IdentifierRole, Token } from 'sucrase/dist/parser/tokenizer';
 import { TokenType as tt } from 'sucrase/dist/parser/tokenizer/types';
+import { assignmentExpressionTokens } from './const';
 import {
   Identifier,
-  DeclarationBinding,
   ClassDeclaration,
   FunctionDeclaration,
+  VariableDeclaration,
   VariableDeclarator,
   Parameter,
   BindingName,
@@ -21,7 +22,6 @@ import {
   ExportNamedDeclaration,
   ExportSpecifier,
   StringLiteral,
-  VariableDeclaration,
   ImportClause,
   ImportDeclaration,
   ImportSpecifier,
@@ -37,11 +37,17 @@ const getIdentifier = (name: string | null): Identifier | null =>
 
 export class Scanner {
   private tokens: TokenProcessor;
-  private binding = new Map<string, DeclarationBinding>();
-  private exportDeclarations: Array<
+  binding = new Map<
+    string,
+    VariableDeclarator | FunctionDeclaration | ClassDeclaration
+  >();
+  topLevelDeclarations: Array<
+    VariableDeclaration | FunctionDeclaration | ClassDeclaration
+  > = [];
+  exportDeclarations: Array<
     ExportAllDeclaration | ExportDefaultDeclaration | ExportNamedDeclaration
   > = [];
-  private importDeclarations: ImportDeclaration[] = [];
+  importDeclarations: ImportDeclaration[] = [];
 
   constructor(source: string, tokens: Token[]) {
     this.tokens = new TokenProcessor(
@@ -61,14 +67,23 @@ export class Scanner {
   processRoot(): void {
     while (!this.tokens.isAtEnd()) {
       const token = this.tokens.currentToken();
-      if (token.type === tt._export && token.scopeDepth === 0) {
-        this.processExportDeclaration();
-      }
-      if (token.type === tt._import && token.scopeDepth === 0) {
-        this.processImportDeclaration();
-      }
-      if (token.identifierRole === IdentifierRole.TopLevelDeclaration) {
-        this.processTopLevelDeclaration();
+      if (token.scopeDepth === 0) {
+        if (token.type === tt._export) {
+          this.processExportDeclaration();
+        }
+        if (token.type === tt._import) {
+          this.processImportDeclaration();
+        }
+        if (
+          token.type === tt._var ||
+          token.type === tt._let ||
+          token.type === tt._const
+        ) {
+          this.processTopLevelVariableDeclaration();
+        }
+        if (token.identifierRole === IdentifierRole.TopLevelDeclaration) {
+          this.processTopLevelIdentifierDeclaration();
+        }
       }
       this.tokens.nextToken();
     }
@@ -148,7 +163,7 @@ export class Scanner {
       }
     } else {
       index += 1;
-      const declaration = this.parseDeclaration(index);
+      const declaration = this.scanDeclaration(index);
       if (declaration) {
         this.exportDeclarations.push({
           type: 'ExportNamedDeclaration',
@@ -225,29 +240,49 @@ export class Scanner {
     }
   }
 
-  processTopLevelDeclaration() {
+  processTopLevelVariableDeclaration() {
+    const index = this.tokens.currentIndex();
+    const declaration = this.scanDeclaration(index);
+    if (!declaration || declaration.type !== 'VariableDeclaration') {
+      return;
+    }
+    this.topLevelDeclarations.push(declaration);
+    declaration.declarations.forEach((declarator) => {
+      if (declarator.id.type === 'Identifier') {
+        this.binding.set(declarator.id.name, declarator);
+      }
+      declarator.init;
+    });
+  }
+
+  processTopLevelIdentifierDeclaration() {
     const index = this.tokens.currentIndex();
     const identifier = this.tokens.identifierName();
-
-    let declaration: DeclarationBinding;
+    const rawCodeB3 = this.tokens.identifierNameAtIndex(index - 3);
+    const rawCodeB2 = this.tokens.identifierNameAtIndex(index - 2);
+    const rawCodeB1 = this.tokens.identifierNameAtIndex(index - 1);
+    let declaration: FunctionDeclaration | ClassDeclaration;
     if (
-      this.tokens.matches3AtIndex(index - 3, tt._async, tt._function, tt.star)
+      rawCodeB3 === 'async' &&
+      rawCodeB2 === 'function' &&
+      rawCodeB1 === '*'
     ) {
       declaration = this.scanFunctionDeclaration(index - 3);
     } else if (
-      this.tokens.matches2AtIndex(index - 2, tt._async, tt._function)
+      (rawCodeB2 === 'async' && rawCodeB1 === 'function') ||
+      (rawCodeB2 === 'function' && rawCodeB1 === '*')
     ) {
       declaration = this.scanFunctionDeclaration(index - 2);
-    } else if (this.tokens.matches2AtIndex(index - 2, tt._function, tt.star)) {
-      declaration = this.scanFunctionDeclaration(index - 2);
-    } else if (this.tokens.matches1AtIndex(index - 1, tt._function)) {
+    } else if (rawCodeB1 === 'function') {
       declaration = this.scanFunctionDeclaration(index - 1);
-    } else if (this.tokens.matches1AtIndex(index - 1, tt._class)) {
+    } else if (rawCodeB1 === 'class') {
       declaration = this.scanClassDeclaration(index - 1);
     } else {
-      declaration = this.scanVariableDeclarator(index);
+      // already scanned by TopLevelVariableDeclaration
+      return;
     }
     this.binding.set(identifier, declaration);
+    this.topLevelDeclarations.push(declaration);
   }
 
   scanClassDeclaration(startIndex: number): ClassDeclaration {
@@ -301,23 +336,6 @@ export class Scanner {
       params,
       async,
       generator,
-    };
-  }
-
-  scanVariableDeclarator(startIndex: number): VariableDeclarator {
-    // Left hand can be assumed as an identifier
-    const name = this.tokens.identifierNameAtIndex(startIndex);
-    let init = null;
-    if (this.tokens.matches1AtIndex(startIndex + 1, tt.eq)) {
-      init = this.scanAssignmentExpression(startIndex + 2);
-    }
-    return {
-      type: 'VariableDeclarator',
-      id: {
-        type: 'Identifier',
-        name,
-      },
-      init,
     };
   }
 
@@ -385,7 +403,7 @@ export class Scanner {
   }
 
   // Note that it also accepts VariableStatement
-  parseDeclaration(
+  scanDeclaration(
     startIndex: number,
   ): FunctionDeclaration | ClassDeclaration | VariableDeclaration | null {
     let index = startIndex;
@@ -412,8 +430,13 @@ export class Scanner {
       // then repeat scanning LexicalBinding/VariableDeclaration until comma doesn't match
       do {
         index += 1;
-        declarations.push(this.scanVariableDeclarator(index));
-        index = this.skipBindingElement(index);
+        const ret = this.parseVariableDeclarator(index);
+        if (!ret) {
+          break;
+        }
+        const [declarator] = ret;
+        declarations.push(declarator);
+        [, index] = ret;
       } while (this.tokens.matches1AtIndex(index, tt.comma));
       return {
         type: 'VariableDeclaration',
@@ -476,13 +499,55 @@ export class Scanner {
         [currentBindingName, index] = ret;
       } else if (this.tokens.matches1AtIndex(index, tt.eq)) {
         isAssignment = true;
-        index = this.skipInitializer(index);
+        index = this.skipAssignmentExpression(index);
       } else {
         return null;
       }
     }
     resolveParam();
     return [parameters, index];
+  }
+
+  parseVariableDeclarator(
+    startIndex: number,
+  ): [VariableDeclarator, number] | null {
+    let index = startIndex;
+    let id: BindingName;
+    if (this.tokens.matches1AtIndex(index, tt.braceL)) {
+      const ret = this.parseObjectBindingPattern(index);
+      if (!ret) {
+        return null;
+      }
+      [id, index] = ret;
+    } else if (this.tokens.matches1AtIndex(index, tt.bracketL)) {
+      const ret = this.parseArrayBindingPattern(index);
+      if (!ret) {
+        return null;
+      }
+      [id, index] = ret;
+    } else if (this.tokens.matches1AtIndex(index, tt.name)) {
+      const name = this.tokens.identifierNameAtIndex(index);
+      id = {
+        type: 'Identifier',
+        name,
+      };
+      index += 1;
+    } else {
+      return null;
+    }
+    let init: Expression | null = null;
+    if (this.tokens.matches1AtIndex(index, tt.eq)) {
+      init = this.scanAssignmentExpression(index + 1);
+      index = this.skipAssignmentExpression(index);
+    }
+    return [
+      {
+        type: 'VariableDeclarator',
+        id,
+        init,
+      },
+      index,
+    ];
   }
 
   parseObjectBindingPattern(
@@ -562,12 +627,12 @@ export class Scanner {
       } else if (this.tokens.matches1AtIndex(index, tt.bracketL)) {
         index = this.skipComputedPropertyName(index);
       } else if (this.tokens.matches1AtIndex(index, tt.eq)) {
-        index = this.skipInitializer(index);
+        index = this.skipAssignmentExpression(index);
       } else if (this.tokens.matches1AtIndex(index, tt.colon)) {
         if (currentProperty) {
           currentProperty.shorthand = false;
         }
-        index = this.skipBindingElement(index + 1);
+        index = this.skipAssignmentExpression(index);
       } else {
         return null;
       }
@@ -639,7 +704,7 @@ export class Scanner {
         [currentBindingName, index] = ret;
       } else if (this.tokens.matches1AtIndex(index, tt.eq)) {
         isAssignment = true;
-        index = this.skipInitializer(index);
+        index = this.skipAssignmentExpression(index);
       } else {
         return null;
       }
@@ -738,44 +803,26 @@ export class Scanner {
     return [moduleList, index];
   }
 
-  skipInitializer(startIndex: number): number {
-    let index = startIndex;
-    // Skip eq
-    index += 1;
-    index = this.skipUntil(index, [
-      tt.eq,
-      tt.braceR,
-      tt.parenR,
-      tt.bracketR,
-      tt.comma,
-      tt.semi,
-    ]);
-    return index;
-  }
-
   skipComputedPropertyName(startIndex: number): number {
     let index = startIndex;
     // Skip bracketL
     index += 1;
-    index = this.skipUntil(index, [tt.bracketR, tt.semi]);
+    index = this.skipToken(index, { until: [tt.bracketR] });
     // Skip bracketR
     index += 1;
     return index;
   }
 
-  skipBindingElement(startIndex: number): number {
-    let index = startIndex;
-    index = this.skipUntil(index, [
-      tt.braceR,
-      tt.parenR,
-      tt.bracketR,
-      tt.comma,
-      tt.semi,
-    ]);
-    return index;
+  skipAssignmentExpression(startIndex: number): number {
+    return this.skipToken(startIndex, { accepts: assignmentExpressionTokens });
   }
 
-  skipUntil(startIndex: number, stopTokens: tt[]): number {
+  skipToken(
+    startIndex: number,
+    rule:
+      | { accepts: tt[]; until?: undefined }
+      | { until: tt[]; accepts?: undefined },
+  ): number {
     const { tokens } = this.tokens;
     const startScopeDepth = tokens[startIndex].scopeDepth;
     let index = startIndex;
@@ -786,22 +833,24 @@ export class Scanner {
         index += 1;
         continue;
       }
-      if (stopTokens.includes(tokens[index].type)) {
-        return index;
-      }
       if (this.tokens.matches1AtIndex(index, tt.backQuote)) {
         inTemplate = !inTemplate;
       } else if (
         inTemplate &&
         this.tokens.matches1AtIndex(index, tt.dollarBraceL)
       ) {
-        index = this.skipUntil(index + 1, [tt.braceR]);
+        index = this.skipToken(index + 1, { until: [tt.braceR] });
       } else if (this.tokens.matches1AtIndex(index, tt.braceL)) {
-        index = this.skipUntil(index + 1, [tt.braceR]);
+        index = this.skipToken(index + 1, { until: [tt.braceR] });
       } else if (this.tokens.matches1AtIndex(index, tt.parenL)) {
-        index = this.skipUntil(index + 1, [tt.parenR]);
+        index = this.skipToken(index + 1, { until: [tt.parenR] });
       } else if (this.tokens.matches1AtIndex(index, tt.bracketL)) {
-        index = this.skipUntil(index + 1, [tt.bracketR]);
+        index = this.skipToken(index + 1, { until: [tt.bracketR] });
+      } else if (
+        (rule.accepts && !rule.accepts.includes(tokens[index].type)) ||
+        (rule.until && rule.until.includes(tokens[index].type))
+      ) {
+        return index;
       }
       index += 1;
     }

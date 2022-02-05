@@ -168,8 +168,3 @@ export interface VariableDeclarator {
   id: BindingName;
   init: Expression | null;
 }
-
-export type DeclarationBinding =
-  | ClassDeclaration
-  | FunctionDeclaration
-  | VariableDeclarator;
