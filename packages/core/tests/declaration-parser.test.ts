@@ -1,6 +1,6 @@
 import { parse } from 'sucrase/dist/parser';
-import { scanExports } from '../src/export-parser';
-import { Scanner } from '../src/export-parser/scanner';
+import { scanExports } from '../src/declaration-parser';
+import { Scanner } from '../src/declaration-parser/scanner';
 
 it('scanFunctionDeclaration', async () => {
   const source = `
