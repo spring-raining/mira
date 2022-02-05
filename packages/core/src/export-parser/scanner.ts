@@ -22,6 +22,9 @@ import {
   ExportSpecifier,
   StringLiteral,
   VariableDeclaration,
+  ImportClause,
+  ImportDeclaration,
+  ImportSpecifier,
 } from './types';
 
 const getIdentifier = (name: string | null): Identifier | null =>
@@ -38,6 +41,7 @@ export class Scanner {
   private exportDeclarations: Array<
     ExportAllDeclaration | ExportDefaultDeclaration | ExportNamedDeclaration
   > = [];
+  private importDeclarations: ImportDeclaration[] = [];
 
   constructor(source: string, tokens: Token[]) {
     this.tokens = new TokenProcessor(
@@ -59,6 +63,9 @@ export class Scanner {
       const token = this.tokens.currentToken();
       if (token.type === tt._export && token.scopeDepth === 0) {
         this.processExportDeclaration();
+      }
+      if (token.type === tt._import && token.scopeDepth === 0) {
+        this.processImportDeclaration();
       }
       if (token.identifierRole === IdentifierRole.TopLevelDeclaration) {
         this.processTopLevelDeclaration();
@@ -90,14 +97,13 @@ export class Scanner {
         declaration,
       });
     } else if (this.tokens.matches2AtIndex(index, tt._export, tt.braceL)) {
-      index += 2;
-      const ret = this.parseExportsList(index);
+      index += 1;
+      const ret = this.parseNamedExports(index);
       if (!ret) {
         return;
       }
       const [specifiers] = ret;
-      // Skip braceR
-      index += 1;
+      [, index] = ret;
       let source: StringLiteral | null = null;
       if (
         this.tokens.matches2AtIndex(index, tt.name, tt.string) &&
@@ -151,6 +157,71 @@ export class Scanner {
           source: null,
         });
       }
+    }
+  }
+
+  processImportDeclaration() {
+    const specifiers: ImportClause[] = [];
+    let index = this.tokens.currentIndex();
+    if (this.tokens.matches2AtIndex(index, tt._import, tt.string)) {
+      this.importDeclarations.push({
+        type: 'ImportDeclaration',
+        source: {
+          type: 'Literal',
+          raw: this.tokens.identifierNameAtIndex(index + 1),
+          value: this.tokens.stringValueAtIndex(index + 1),
+        },
+        specifiers: [],
+      });
+      return;
+    } else if (
+      this.tokens.matches3AtIndex(index, tt._import, tt.name, tt.comma)
+    ) {
+      specifiers.push({
+        type: 'ImportDefaultSpecifier',
+        local: {
+          type: 'Identifier',
+          name: this.tokens.identifierNameAtIndex(index + 1),
+        },
+      });
+      index += 2;
+    }
+    index += 1;
+    if (
+      this.tokens.matches3AtIndex(index, tt.star, tt._as, tt.name) ||
+      (this.tokens.matches3AtIndex(index, tt.star, tt.name, tt.name) &&
+        this.tokens.identifierNameAtIndex(index + 1) === 'as')
+    ) {
+      specifiers.push({
+        type: 'ImportNamespaceSpecifier',
+        local: {
+          type: 'Identifier',
+          name: this.tokens.identifierNameAtIndex(index + 2),
+        },
+      });
+      index += 3;
+    } else if (this.tokens.matches1AtIndex(index, tt.braceL)) {
+      const ret = this.parseNamedImports(index);
+      if (!ret) {
+        return;
+      }
+      const [namedImports] = ret;
+      specifiers.push(...namedImports);
+      [, index] = ret;
+    }
+    if (
+      this.tokens.matches2AtIndex(index, tt.name, tt.string) &&
+      this.tokens.identifierNameAtIndex(index) === 'from'
+    ) {
+      this.importDeclarations.push({
+        type: 'ImportDeclaration',
+        source: {
+          type: 'Literal',
+          raw: this.tokens.identifierNameAtIndex(index + 1),
+          value: this.tokens.stringValueAtIndex(index + 1),
+        },
+        specifiers,
+      });
     }
   }
 
@@ -585,9 +656,45 @@ export class Scanner {
     ];
   }
 
-  parseExportsList(startIndex: number): [ExportSpecifier[], number] | null {
-    const exportsList: ExportSpecifier[] = [];
+  parseNamedExports(startIndex: number): [ExportSpecifier[], number] | null {
+    const ret = this.parseNamedModules(startIndex);
+    if (!ret) {
+      return null;
+    }
+    const [moduleList, index] = ret;
+    return [
+      moduleList.map(([local, exported]) => ({
+        type: 'ExportSpecifier',
+        local,
+        exported,
+      })),
+      index,
+    ];
+  }
+
+  parseNamedImports(startIndex: number): [ImportSpecifier[], number] | null {
+    const ret = this.parseNamedModules(startIndex);
+    if (!ret) {
+      return null;
+    }
+    const [moduleList, index] = ret;
+    return [
+      moduleList.map(([local, imported]) => ({
+        type: 'ImportSpecifier',
+        local,
+        imported,
+      })),
+      index,
+    ];
+  }
+
+  parseNamedModules(
+    startIndex: number,
+  ): [[Identifier, Identifier][], number] | null {
+    const moduleList: [Identifier, Identifier][] = [];
     let index = startIndex;
+    // Skip braceL
+    index += 1;
     while (!this.tokens.matches1AtIndex(index, tt.braceR)) {
       if (this.tokens.matches1AtIndex(index, tt.comma)) {
         index += 1;
@@ -599,36 +706,36 @@ export class Scanner {
         if (this.tokens.identifierNameAtIndex(index + 1) !== 'as') {
           return null;
         }
-        exportsList.push({
-          type: 'ExportSpecifier',
-          local: {
+        moduleList.push([
+          {
             type: 'Identifier',
             name: this.tokens.identifierNameAtIndex(index),
           },
-          exported: {
+          {
             type: 'Identifier',
             name: this.tokens.identifierNameAtIndex(index + 2),
           },
-        });
+        ]);
         index += 3;
       } else if (this.tokens.matches1AtIndex(index, tt.name)) {
-        exportsList.push({
-          type: 'ExportSpecifier',
-          local: {
+        moduleList.push([
+          {
             type: 'Identifier',
             name: this.tokens.identifierNameAtIndex(index),
           },
-          exported: {
+          {
             type: 'Identifier',
             name: this.tokens.identifierNameAtIndex(index),
           },
-        });
+        ]);
         index += 1;
       } else {
         return null;
       }
     }
-    return [exportsList, index];
+    // Skip braceR
+    index += 1;
+    return [moduleList, index];
   }
 
   skipInitializer(startIndex: number): number {

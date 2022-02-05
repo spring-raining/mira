@@ -88,6 +88,28 @@ export interface Identifier {
   type: 'Identifier';
   name: string;
 }
+export type ImportClause =
+  | ImportDefaultSpecifier
+  | ImportNamespaceSpecifier
+  | ImportSpecifier;
+export interface ImportDeclaration {
+  type: 'ImportDeclaration';
+  source: StringLiteral;
+  specifiers: ImportClause[];
+}
+export interface ImportDefaultSpecifier {
+  type: 'ImportDefaultSpecifier';
+  local: Identifier;
+}
+export interface ImportNamespaceSpecifier {
+  type: 'ImportNamespaceSpecifier';
+  local: Identifier;
+}
+export interface ImportSpecifier {
+  type: 'ImportSpecifier';
+  local: Identifier;
+  imported: Identifier;
+}
 interface LiteralBase {
   type: 'Literal';
   raw: string;

@@ -431,7 +431,7 @@ it('Scan export declarations', async () => {
 
     export * from 'x';
     export * as c from 'y';
-    export {} from 'z';
+    export {i as j} from 'z';
 
     export default function* e(a, b, ...c) {}
     export default class {}
@@ -572,7 +572,19 @@ it('Scan export declarations', async () => {
         value: 'z',
         raw: "'z'",
       },
-      specifiers: [],
+      specifiers: [
+        {
+          type: 'ExportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'i',
+          },
+          exported: {
+            type: 'Identifier',
+            name: 'j',
+          },
+        },
+      ],
       declaration: null,
     },
     {
@@ -637,6 +649,89 @@ it('Scan export declarations', async () => {
         ],
         async: false,
       },
+    },
+  ]);
+});
+
+it('Scan import declarations', async () => {
+  const source = `
+    import a, { b, c as d } from 'foo';
+    import e, * as f from 'bar';
+    import 'baz';
+  `;
+  const scanner = scanExports(source);
+  expect((scanner as any).importDeclarations).toMatchObject([
+    {
+      type: 'ImportDeclaration',
+      source: {
+        type: 'Literal',
+        value: 'foo',
+        raw: "'foo'",
+      },
+      specifiers: [
+        {
+          type: 'ImportDefaultSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'a',
+          },
+        },
+        {
+          type: 'ImportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'b',
+          },
+          imported: {
+            type: 'Identifier',
+            name: 'b',
+          },
+        },
+        {
+          type: 'ImportSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'c',
+          },
+          imported: {
+            type: 'Identifier',
+            name: 'd',
+          },
+        },
+      ],
+    },
+    {
+      type: 'ImportDeclaration',
+      source: {
+        type: 'Literal',
+        value: 'bar',
+        raw: "'bar'",
+      },
+      specifiers: [
+        {
+          type: 'ImportDefaultSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'e',
+          },
+        },
+        {
+          type: 'ImportNamespaceSpecifier',
+          local: {
+            type: 'Identifier',
+            name: 'f',
+          },
+        },
+      ],
+    },
+    {
+      type: 'ImportDeclaration',
+      source: {
+        type: 'Literal',
+        value: 'baz',
+        raw: "'baz'",
+      },
+      specifiers: [],
     },
   ]);
 });
