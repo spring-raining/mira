@@ -1,6 +1,14 @@
+import { createElement, Fragment } from 'react';
 import { render as ReactDOMRender } from 'react-dom';
 import { renderElement } from './renderElement';
 import { runtimeEnvironmentFactory } from './runtimeEnvironment';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var $jsxFactory: any;
+  // eslint-disable-next-line no-var
+  var $jsxFragmentFactory: any;
+}
 
 // eslint-disable-next-line no-new-func
 const AsyncFunctionShim = new Function(
@@ -8,6 +16,9 @@ const AsyncFunctionShim = new Function(
 )();
 
 export class EvalPresentation extends HTMLElement {
+  static $jsxFactory = createElement;
+  static $jsxFragmentFactory = Fragment;
+
   private mountPoint: HTMLDivElement;
   private evaluatedElement: any = null;
 
@@ -15,6 +26,9 @@ export class EvalPresentation extends HTMLElement {
     super();
     this.mountPoint = document.createElement('div');
     this.attachShadow({ mode: 'open' }).appendChild(this.mountPoint);
+
+    globalThis.$jsxFactory = EvalPresentation.$jsxFactory;
+    globalThis.$jsxFragmentFactory = EvalPresentation.$jsxFragmentFactory;
   }
   // attachedCallback
   // connectedCallback
@@ -44,6 +58,19 @@ export class EvalPresentation extends HTMLElement {
       this.render();
     } catch (error) {
       // noop
+    }
+  }
+
+  async loadScript(src: string) {
+    try {
+      this.evaluatedElement = null;
+      const mod = await import(/* @vite-ignore */ src);
+      if (mod.default) {
+        this.evaluatedElement = mod.default;
+      }
+      this.render();
+    } catch (error) {
+      console.log(error);
     }
   }
 

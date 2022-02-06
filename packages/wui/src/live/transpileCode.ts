@@ -7,12 +7,12 @@ import { MarkerMessage, TranspiledResult } from '../types';
 let transpilerService: TranspilerService;
 export const transpileCode = async ({
   code,
-  declaredValues = [],
+  importModules = [],
   bundle = true,
   sourcemap = true,
 }: {
   code: string;
-  declaredValues?: string[];
+  importModules?: [string, string[]][];
   bundle?: boolean;
   sourcemap?: boolean;
 }): Promise<TranspiledResult> => {
@@ -38,6 +38,15 @@ export const transpileCode = async ({
         {
           name: 'miraResolver',
           setup: (build) => {
+            if (!bundle) {
+              return;
+            }
+            build.onResolve({ filter: /^(blob:)https?:\/\// }, (args) => {
+              return {
+                path: args.path,
+                external: true,
+              };
+            });
             build.onResolve({ filter: /.*/ }, (args) => {
               console.debug('onResolve', args);
               return {
@@ -48,12 +57,12 @@ export const transpileCode = async ({
             build.onLoad({ filter: /.*/, namespace: 'mdx' }, (args) => {
               console.debug('onLoad', args);
               return {
-                contents: declaredValues
+                contents: importModules
                   .map(
-                    (val) =>
-                      `export const ${val} = /* @__PURE__ */ $use('${val}', ${JSON.stringify(
-                        args.path,
-                      )});`,
+                    ([source, vals]) =>
+                      `export {${vals.join(',')}} from ${JSON.stringify(
+                        source,
+                      )};`,
                   )
                   .join('\n'),
                 loader: 'js',
@@ -66,11 +75,8 @@ export const transpileCode = async ({
       write: false,
       sourcemap: sourcemap && 'inline',
       platform: 'browser',
+      format: 'esm',
       target: 'es2020',
-      globalName: '$_exports',
-      footer: bundle
-        ? '$_exports=$_exports||{};$def($_exports);$_default($_exports.default)'
-        : undefined,
       logLevel: 'silent',
       jsxFactory: '$jsxFactory',
       jsxFragment: '$jsxFragmentFactory',

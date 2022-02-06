@@ -50,6 +50,7 @@ type DependencyUpdatePayload = {
   id: string;
   exportVal: Map<string, unknown>;
   moduleVal: Map<string, unknown>;
+  importModules: [string, string[]][];
   dependencyError: Error | undefined;
 };
 export type DependencyUpdateEvent = CustomEvent<
@@ -113,8 +114,10 @@ export class DependencyManager extends EventTarget<{
       importStatement: readonly ParsedImportStatement[];
     }
   > = {};
+  private miraBrickModuleSource: Record<string, string> = {};
   private miraBrickModuleImportError: Record<string, Error> = {};
   private miraExportVal: Map<string, unknown> = new Map();
+  private miraExportModule: Map<string, string> = new Map();
   private miraValDependency: Record<string, Set<string>> = {};
   private miraDefinedValues: Set<string> = new Set();
   private moduleCache: ModuleCache = new ModuleCache();
@@ -145,14 +148,32 @@ export class DependencyManager extends EventTarget<{
   }
 
   private effectDependency(id: string) {
-    const event = new CustomEvent('dependencyUpdate', {
-      detail: {
-        id,
-        exportVal: this.miraExportVal,
-        moduleVal: this.moduleVal,
-        dependencyError: this.miraBrickDependencyError[id],
+    const importModules = Object.entries(
+      [...this.miraExportVal.keys()].reduce((acc, key) => {
+        const source = this.miraExportModule.get(key);
+        if (!source) {
+          return acc;
+        }
+        if (source in acc) {
+          acc[source].push(key);
+        } else {
+          acc[source] = [key];
+        }
+        return acc;
+      }, {} as Record<string, string[]>),
+    );
+    const event = new CustomEvent<'dependencyUpdate', DependencyUpdatePayload>(
+      'dependencyUpdate',
+      {
+        detail: {
+          id,
+          importModules,
+          exportVal: this.miraExportVal,
+          moduleVal: this.moduleVal,
+          dependencyError: this.miraBrickDependencyError[id],
+        },
       },
-    });
+    );
     if (this.blockingEvaluateSemaphore > 0) {
       this.blockingUpdateEvent.push(event);
     } else {
@@ -169,7 +190,10 @@ export class DependencyManager extends EventTarget<{
         params.set(p, this.moduleVal.get(p));
       }
     });
-    const event = new CustomEvent('renderParamsUpdate', {
+    const event = new CustomEvent<
+      'renderParamsUpdate',
+      RenderParamsUpdatePayload
+    >('renderParamsUpdate', {
       detail: {
         id,
         params: params,
@@ -191,15 +215,16 @@ export class DependencyManager extends EventTarget<{
       new Map<string, unknown>(),
     );
     this.moduleVal = nextModuleVal;
-    this.dispatchEvent(
-      new CustomEvent('moduleUpdate', {
-        detail: {
-          mappedVal: { ...nextModuleVal },
-          importDef: { ...this.miraBrickModuleImportDef },
-          importError: { ...this.miraBrickModuleImportError },
-        },
-      }),
-    );
+    // TODO
+    // this.dispatchEvent(
+    //   new CustomEvent<'moduleUpdate', ModuleImportState>('moduleUpdate', {
+    //     detail: {
+    //       mappedVal: { ...nextModuleVal },
+    //       importDef: { ...this.miraBrickModuleImportDef },
+    //       importError: { ...this.miraBrickModuleImportError },
+    //     },
+    //   }),
+    // );
     Object.keys(this.miraBrickImportDef).forEach((id) => {
       this.effectDependency(id);
     });
@@ -327,6 +352,7 @@ export class DependencyManager extends EventTarget<{
     removedVal.forEach((val) => {
       this.miraDefinedValues.delete(val);
       this.miraExportVal.delete(val);
+      this.miraExportModule.delete(val);
       delete this.miraValDependency[val];
     });
     this.miraBrickImportDef[id] = nextImports;
@@ -358,11 +384,17 @@ export class DependencyManager extends EventTarget<{
       dependencySets.forEach((set) => set.delete(val));
       this.miraDefinedValues.delete(val);
       this.miraExportVal.delete(val);
+      this.miraExportModule.delete(val);
       delete this.miraValDependency[val];
     });
+    const source = this.miraBrickModuleSource[id];
+    if (source) {
+      URL.revokeObjectURL(source);
+    }
     delete this.miraBrickImportDef[id];
     delete this.miraBrickExportDef[id];
     delete this.miraBrickDefaultFunctionParams[id];
+    delete this.miraBrickModuleSource[id];
     delete this.miraBrickDependencyError[id];
 
     Object.entries(this.miraBrickImportDef).forEach(([id_, imports]) => {
@@ -379,7 +411,8 @@ export class DependencyManager extends EventTarget<{
     );
   }
 
-  updateExports(exportVal: Map<string, unknown>) {
+  updateExports(id: string, source: string, exportVal: Map<string, unknown>) {
+    this.miraBrickModuleSource[id] = source;
     const changedVal = [...exportVal.entries()]
       .filter(
         ([k, v]) =>
@@ -388,6 +421,9 @@ export class DependencyManager extends EventTarget<{
       .map(([k]) => k);
     const nextExportVal = new Map([...this.miraExportVal, ...exportVal]);
     this.miraExportVal = nextExportVal;
+    exportVal.forEach((_, k) => {
+      this.miraExportModule.set(k, source);
+    });
     Object.entries(this.miraBrickImportDef).forEach(([id, maps]) => {
       if (maps.some((def) => checkImportDeps(def, changedVal))) {
         this.effectDependency(id);

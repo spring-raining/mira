@@ -66,25 +66,29 @@ export const setupProvidence = ({
 
   const run = async ({
     id,
+    miraId,
     code,
     environment,
-    exportVal,
-    moduleVal,
-  }: {
+    importModules,
+  }: // exportVal,
+  // moduleVal,
+  {
     id: string;
+    miraId: string;
     code: string;
     environment: RuntimeEnvironment;
-    exportVal: Map<string, unknown>;
-    moduleVal: Map<string, unknown>;
+    importModules: [string, string[]][];
+    // exportVal: Map<string, unknown>;
+    // moduleVal: Map<string, unknown>;
   }): Promise<EvaluatedResult> => {
-    const scopeVal = new Map([...moduleVal, ...exportVal]);
+    // const scopeVal = new Map([...moduleVal, ...exportVal]);
     const transpiledData = await transpileCode({
       code,
-      declaredValues: [...scopeVal.keys()],
+      importModules,
     });
     if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
       return {
-        id,
+        id: miraId,
         environment,
         error: transpiledData.errorObject,
         errorMarkers: transpiledData.errors,
@@ -92,23 +96,37 @@ export const setupProvidence = ({
       };
     }
     const transpiledCode = transpiledData.text;
+    console.log(transpiledCode, importModules);
     try {
-      await asyncEval(transpiledCode, scopeVal, environment);
-      store.dependency?.updateExports(environment.exportVal);
+      const source = URL.createObjectURL(
+        new Blob([transpiledCode], { type: 'application/javascript' }),
+      );
+      const mod = await import(/* webpackIgnore: true */ source);
+      const exportVal = new Map<string, unknown>();
+      for (const [k, v] of Object.entries(mod)) {
+        if (k === 'default') {
+          // ignore default exports
+          continue;
+        }
+        exportVal.set(k, v);
+      }
+      store.dependency?.updateExports(id, source, exportVal);
+      // await asyncEval(transpiledCode, scopeVal, environment);
+      // store.dependency?.updateExports(environment.exportVal);
       return {
-        id,
+        id: miraId,
         environment,
         code: transpiledCode,
-        scopeVal,
+        source,
         errorMarkers: transpiledData.errors,
         warnMarkers: transpiledData.warnings,
       };
     } catch (error) {
+      console.error(error);
       return {
-        id,
+        id: miraId,
         environment,
         code: transpiledCode,
-        scopeVal,
         error:
           error instanceof Error
             ? error
@@ -134,11 +152,13 @@ export const setupProvidence = ({
     const cb = async () => {
       const environment = (await _runtime).getRuntimeEnvironment();
       const ret = await run({
-        id: runTarget.mira.id,
+        id: detail.id,
+        miraId: runTarget.mira.id,
         code: runTarget.code,
         environment,
-        exportVal: detail.exportVal,
-        moduleVal: detail.moduleVal,
+        importModules: detail.importModules,
+        // exportVal: detail.exportVal,
+        // moduleVal: detail.moduleVal,
       });
       if (store.runTasks[detail.id] === runId) {
         onEvaluatorUpdate(ret);

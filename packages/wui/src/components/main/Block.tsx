@@ -37,15 +37,15 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
 }) => {
   const settledOutput = useRef<ReturnType<typeof useRenderedData>['output']>();
   const iframeEl = useRef<HTMLIFrameElement>(null);
-  const { output } = useRenderedData(mira.id);
+  // const { output } = useRenderedData(mira.id);
   const { evaluatedData } = useEvaluatedData(mira.id);
   const { renderParams } = useRenderParams(brickId);
 
-  useEffect(() => {
-    if (output) {
-      settledOutput.current = output;
-    }
-  }, [output]);
+  // useEffect(() => {
+  //   if (output) {
+  //     settledOutput.current = output;
+  //   }
+  // }, [output]);
   useEffect(() => {
     settledOutput.current = undefined;
   }, [brickId]);
@@ -54,15 +54,14 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
     if (!evaluatedData) {
       return;
     }
-    const { code, scopeVal } = evaluatedData;
-    if (typeof code !== 'string' || !scopeVal) {
+    const { source } = evaluatedData;
+    if (!source) {
       return;
     }
     iframeEl.current?.contentWindow?.postMessage(
       {
         type: 'codeChanged',
-        code,
-        scopeVal,
+        source,
       },
       window.location.origin,
     );
@@ -82,7 +81,7 @@ const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
   }, [renderParams]);
 
   // Show previous output to avoid a FOIC
-  const currentOutput = output ?? settledOutput.current;
+  // const currentOutput = output ?? settledOutput.current;
   return (
     <div>
       <iframe ref={iframeEl} src="_mira/-/foo.html"></iframe>
