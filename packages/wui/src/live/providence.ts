@@ -96,7 +96,6 @@ export const setupProvidence = ({
       };
     }
     const transpiledCode = transpiledData.text;
-    console.log(transpiledCode, importModules);
     try {
       const source = URL.createObjectURL(
         new Blob([transpiledCode], { type: 'application/javascript' }),

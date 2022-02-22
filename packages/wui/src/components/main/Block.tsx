@@ -1,28 +1,15 @@
 import clsx from 'clsx';
-import React, {
-  useCallback,
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useInViewBrickState } from '../../hooks/useInViewState';
-import { useRootContainerQuery } from '../../hooks/useRootContainerQuery';
 import {
   useBrick,
   useBrickManipulator,
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
-import {
-  useEvaluatedData,
-  useRenderParams,
-  useRenderedData,
-} from '../../state/evaluator';
 import { errorPreText } from '../../styles/common.css';
 import { sprinkles } from '../../styles/sprinkles.css';
-import { Mira } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
 import { IconButton } from '../atomic/button';
@@ -30,71 +17,7 @@ import { PlusIcon } from '../icon/plus';
 import * as style from './Block.css';
 import { BlockToolbar } from './BlockToolbar';
 import { MarkdownPreview } from './MarkdownProvider';
-
-const EvalPresentation: React.VFC<{ brickId: string; mira: Mira }> = ({
-  brickId,
-  mira,
-}) => {
-  const settledOutput = useRef<ReturnType<typeof useRenderedData>['output']>();
-  const iframeEl = useRef<HTMLIFrameElement>(null);
-  // const { output } = useRenderedData(mira.id);
-  const { evaluatedData } = useEvaluatedData(mira.id);
-  const { renderParams } = useRenderParams(brickId);
-
-  // useEffect(() => {
-  //   if (output) {
-  //     settledOutput.current = output;
-  //   }
-  // }, [output]);
-  useEffect(() => {
-    settledOutput.current = undefined;
-  }, [brickId]);
-
-  useEffect(() => {
-    if (!evaluatedData) {
-      return;
-    }
-    const { source } = evaluatedData;
-    if (!source) {
-      return;
-    }
-    iframeEl.current?.contentWindow?.postMessage(
-      {
-        type: 'codeChanged',
-        source,
-      },
-      window.location.origin,
-    );
-  }, [evaluatedData]);
-
-  useEffect(() => {
-    if (!renderParams) {
-      return;
-    }
-    iframeEl.current?.contentWindow?.postMessage(
-      {
-        type: 'parameterChanged',
-        params: renderParams,
-      },
-      window.location.origin,
-    );
-  }, [renderParams]);
-
-  // Show previous output to avoid a FOIC
-  // const currentOutput = output ?? settledOutput.current;
-  return (
-    <div>
-      <iframe ref={iframeEl} src="_mira/-/foo.html"></iframe>
-      {/* {currentOutput?.error ? (
-        <div>
-          <pre className={errorPreText}>{currentOutput.error.toString()}</pre>
-        </div>
-      ) : (
-        currentOutput?.element
-      )} */}
-    </div>
-  );
-};
+import { Presentation } from './Presentation';
 
 export const Block: React.FC<{
   id: string;
@@ -174,10 +97,7 @@ export const Block: React.FC<{
           <div className={style.topSticky}>
             <div className={style.livePreviewContainer}>
               <React.Suspense fallback={null}>
-                <EvalPresentation
-                  brickId={id}
-                  mira={swap?.mira || brick.mira}
-                />
+                <Presentation brickId={id} mira={swap?.mira || brick.mira} />
               </React.Suspense>
             </div>
           </div>

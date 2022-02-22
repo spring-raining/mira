@@ -1,5 +1,5 @@
-import { EvalPresentation } from './evalPresentation';
 import { runtimeEnvironmentFactory } from './runtimeEnvironment';
 
-export { EvalPresentation, runtimeEnvironmentFactory };
+export type { RuntimeEnvironmentConfig } from './types';
+export { runtimeEnvironmentFactory };
 export default runtimeEnvironmentFactory;

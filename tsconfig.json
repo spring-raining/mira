@@ -14,7 +14,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": false,
+    "useDefineForClassFields": false,
     "incremental": true
   },
   "exclude": ["node_modules"]

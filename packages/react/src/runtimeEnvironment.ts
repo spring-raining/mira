@@ -1,8 +1,10 @@
 import type { RuntimeEnvironmentFactory } from '@mirajs/core';
 import { createElement, Fragment } from 'react';
-import { renderElement } from './renderElement';
+import { RuntimeEnvironmentConfig } from './types';
 
-export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory = () => {
+export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory<
+  RuntimeEnvironmentConfig
+> = () => {
   const exportVal = new Map<string, unknown>();
   const referenceVal = new Map<string, unknown>();
   const registerVal = (val: Record<string, any>) => {
@@ -41,7 +43,9 @@ export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory = () => {
         referenceVal.set(name, scopeVal.get(name));
         return scopeVal.get(name);
       },
-      $render: renderElement,
+      $render: () => {
+        //
+      },
       $jsxFactory: createElement,
       $jsxFragmentFactory: Fragment,
     }),
