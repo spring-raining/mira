@@ -56,12 +56,8 @@ export interface TranspiledResult {
   errorObject?: Error;
 }
 
-export interface RuntimeEnvironment
-  extends CoreRuntimeEnvironment<{
-    $_default: (element: any) => void;
-  }> {
+export interface RuntimeEnvironment extends CoreRuntimeEnvironment {
   envId: string;
-  render?: (errorCallback: (error: Error) => void) => React.ReactNode;
 }
 
 export interface EvaluatedResult {

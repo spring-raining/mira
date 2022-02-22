@@ -1,7 +1,7 @@
 import { ReactiveElement, PropertyValues } from '@lit/reactive-element';
 import { customElement } from '@lit/reactive-element/decorators/custom-element.js';
 import { property } from '@lit/reactive-element/decorators/property.js';
-import { render as ReactDOMRender, unmountComponentAtNode } from 'react-dom';
+import { RuntimeScope } from '@mirajs/core';
 import { renderElement } from './renderElement';
 import { runtimeEnvironmentFactory } from './runtimeEnvironment';
 import { RuntimeEnvironmentConfig } from './types';
@@ -10,6 +10,7 @@ import { RuntimeEnvironmentConfig } from './types';
 export class EvalPresentation extends ReactiveElement {
   private mountPoint: HTMLDivElement;
   private evaluatedElement: any = null;
+  private runtimeScope: RuntimeScope | undefined;
 
   @property({
     attribute: false,
@@ -29,7 +30,7 @@ export class EvalPresentation extends ReactiveElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    unmountComponentAtNode(this.mountPoint);
+    this.runtimeScope?.$unmount(null, this.mountPoint);
   }
 
   protected update(changedProperties: PropertyValues): void {
@@ -42,8 +43,8 @@ export class EvalPresentation extends ReactiveElement {
 
   async loadScript(src: string) {
     const env = runtimeEnvironmentFactory({ config: this.config });
-    const runtimeScope = env.getRuntimeScope({ scopeVal: new Map() });
-    for (const [k, v] of Object.entries(runtimeScope)) {
+    this.runtimeScope = env.getRuntimeScope({});
+    for (const [k, v] of Object.entries(this.runtimeScope)) {
       (globalThis as any)[k] = v;
     }
 
@@ -60,7 +61,7 @@ export class EvalPresentation extends ReactiveElement {
   }
 
   private render() {
-    ReactDOMRender(
+    this.runtimeScope?.$mount(
       renderElement(this.evaluatedElement, this.props, this, this.handleError),
       this.mountPoint,
     );

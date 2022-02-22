@@ -22,28 +22,14 @@ export const setupRuntime = async ({
     moduleLoader,
     depsRootPath,
   })) as any;
-  const { exportVal, referenceVal, getRuntimeScope } = (
+  const { getRuntimeScope } = (
     runtimeModule.runtimeEnvironmentFactory as RuntimeEnvironmentFactory
   )();
 
   return {
-    getRuntimeEnvironment: () => {
-      const environment: RuntimeEnvironment = {
-        envId: nanoid(),
-        exportVal,
-        referenceVal,
-        getRuntimeScope: ({ scopeVal }) => {
-          const scope = getRuntimeScope({ scopeVal });
-          return {
-            ...scope,
-            $_default: (element) => {
-              environment.render = (errorCallback) =>
-                scope.$render(element, errorCallback);
-            },
-          };
-        },
-      };
-      return environment;
-    },
+    getRuntimeEnvironment: () => ({
+      envId: nanoid(),
+      getRuntimeScope,
+    }),
   };
 };

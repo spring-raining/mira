@@ -7,7 +7,6 @@ import {
   ModuleImportState,
   RefreshModuleEvent,
 } from '../types';
-import { asyncEval } from './asyncEval';
 import {
   DependencyManager,
   DependencyUpdateEvent,
@@ -70,18 +69,13 @@ export const setupProvidence = ({
     code,
     environment,
     importModules,
-  }: // exportVal,
-  // moduleVal,
-  {
+  }: {
     id: string;
     miraId: string;
     code: string;
     environment: RuntimeEnvironment;
     importModules: [string, string[]][];
-    // exportVal: Map<string, unknown>;
-    // moduleVal: Map<string, unknown>;
   }): Promise<EvaluatedResult> => {
-    // const scopeVal = new Map([...moduleVal, ...exportVal]);
     const transpiledData = await transpileCode({
       code,
       importModules,
@@ -110,8 +104,6 @@ export const setupProvidence = ({
         exportVal.set(k, v);
       }
       store.dependency?.updateExports(id, source, exportVal);
-      // await asyncEval(transpiledCode, scopeVal, environment);
-      // store.dependency?.updateExports(environment.exportVal);
       return {
         id: miraId,
         environment,
@@ -156,8 +148,6 @@ export const setupProvidence = ({
         code: runTarget.code,
         environment,
         importModules: detail.importModules,
-        // exportVal: detail.exportVal,
-        // moduleVal: detail.moduleVal,
       });
       if (store.runTasks[detail.id] === runId) {
         onEvaluatorUpdate(ret);
