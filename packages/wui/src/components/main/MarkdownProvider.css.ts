@@ -4,6 +4,7 @@ export const markdownStyling = defineStyle(
   css({
     d: 'flex',
     flexDir: 'column',
+    my: -4,
   }),
 );
 const mapSelector = (s: string) => s.replace(/&/g, markdownStyling);

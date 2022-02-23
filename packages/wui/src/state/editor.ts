@@ -1,6 +1,7 @@
 import type { editor } from 'monaco-editor';
 import { useCallback } from 'react';
 import { useRecoilCallback } from 'recoil';
+import { BrickId } from '../types';
 import { activeBrickIdState, brickOrderState } from './atoms';
 import { useBrick } from './brick';
 
@@ -17,7 +18,7 @@ const hasIntersect = (
   );
 };
 
-export const useEditorCallbacks = ({ brickId }: { brickId: string }) => {
+export const useEditorCallbacks = ({ brickId }: { brickId: BrickId }) => {
   const { setSwap, applySwap } = useBrick(brickId);
 
   const onEditorUpdate = useCallback(

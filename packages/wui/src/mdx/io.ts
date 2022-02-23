@@ -1,9 +1,9 @@
 import { createCompiler } from '@mirajs/core';
 import mdxMarkdownExt from 'mdast-util-mdx/to-markdown';
 import toMarkdown from 'mdast-util-to-markdown';
-import { nanoid } from 'nanoid/non-secure';
 import type { Parent, Node } from 'unist';
 import { ASTNode, Brick, NoteBrick, SnippetBrick, ScriptBrick } from '../types';
+import { genBrickId, genMiraId } from './../util';
 
 const scriptTypes = [
   'mdxFlowExpression',
@@ -35,7 +35,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
   const chunk = (parsed as Parent).children.reduce((acc, _node): Chunk[] => {
     // set identical id for each node
     const node: ASTNode = {
-      id: nanoid(),
+      id: genBrickId(),
       ..._node,
     };
 
@@ -45,7 +45,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       return [
         ...acc,
         {
-          id: nanoid(),
+          id: genBrickId(),
           type: 'script',
           children: [node],
         },
@@ -53,13 +53,13 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
     } else if (node.type === 'code') {
       const miraMetaMatch = node.meta?.match(miraMetaRe);
       const chunk: SnippetChunk = {
-        id: nanoid(),
+        id: genBrickId(),
         type: 'snippet',
         language: node.lang ?? '',
         children: [node],
         ...(miraMetaMatch && {
           mira: {
-            id: node.id,
+            id: genMiraId(),
             isLived: true,
           },
         }),
@@ -72,7 +72,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       (node.type === 'heading' && node.depth <= 3)
     ) {
       const chunk: NoteChunk = {
-        id: nanoid(),
+        id: genBrickId(),
         type: 'note',
         children: [node],
       };

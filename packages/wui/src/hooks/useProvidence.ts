@@ -6,14 +6,15 @@ import { setupProvidence, Providence } from '../live/providence';
 import {
   brickModuleImportErrorState,
   miraRenderParamsDictState,
-  miraEvaluatedDataDictState,
+  miraEvaluateStateDictState,
 } from '../state/atoms';
 import { codeFragmentsState, scriptFragmentsState } from '../state/code';
 import {
-  EvaluatedResult,
+  EvaluateState,
   MiraWuiConfig,
   ModuleImportState,
   RefreshModuleEvent,
+  BrickId,
 } from '../types';
 import { useProvidenceRef } from './providence/context';
 
@@ -29,7 +30,7 @@ export const ProvidenceObserver = ({
   mdxPath,
   depsRootPath,
   moduleLoader,
-  config: { runtime },
+  config: { runtime, inputDebounce },
 }: {
   mdxPath: string;
   depsRootPath: string;
@@ -48,8 +49,8 @@ export const ProvidenceObserver = ({
 
   const onEvaluatorUpdate = useRecoilCallback(
     ({ set }) =>
-      (evaluated: EvaluatedResult) => {
-        set(miraEvaluatedDataDictState, (prev) => ({
+      (evaluated: EvaluateState) => {
+        set(miraEvaluateStateDictState, (prev) => ({
           ...prev,
           [evaluated.id]: evaluated,
         }));
@@ -67,7 +68,7 @@ export const ProvidenceObserver = ({
 
   const onRenderParamsUpdate = useRecoilCallback(
     ({ set }) =>
-      ({ id, params }: RenderParamsUpdatePayload) => {
+      ({ id, params }: RenderParamsUpdatePayload<BrickId>) => {
         set(miraRenderParamsDictState, (prev) => ({
           ...prev,
           [id]: params,
@@ -80,6 +81,7 @@ export const ProvidenceObserver = ({
     const p = setupProvidence({
       store: providenceRef.current,
       runtime,
+      inputDebounce,
       mdxPath,
       depsRootPath,
       moduleLoader,
@@ -91,6 +93,7 @@ export const ProvidenceObserver = ({
     return p.teardown;
   }, [
     runtime,
+    inputDebounce,
     mdxPath,
     depsRootPath,
     moduleLoader,

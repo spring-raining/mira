@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useRef } from 'react';
 import { DependencyManager } from '../../live/dependency';
-import { Mira } from '../../types';
+import { BrickId, EvaluatedResult, Mira } from '../../types';
 
 export interface ProvidenceStore {
   queue: (() => void)[];
-  runTasks: Record<string, number>;
-  runTarget: Record<string, { code: string; mira: Mira }>;
-  dependency?: DependencyManager | undefined;
+  runTasks: Record<BrickId, [number, Promise<EvaluatedResult>]>;
+  runTarget: Record<BrickId, { code: string; mira: Mira }>;
+  dependency?: DependencyManager<BrickId> | undefined;
 }
 
 const defaultProvidenceStore: ProvidenceStore = {

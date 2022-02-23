@@ -34,6 +34,7 @@ defineGlobalStyle(
 
 export const editorArea = defineStyle({
   ...css({
+    position: 'relative',
     maxW: 'xl',
   }),
   selectors: {
@@ -47,6 +48,9 @@ export const editorArea = defineStyle({
 });
 
 export const notePreviewArea = defineStyle({
+  ...css({
+    position: 'relative',
+  }),
   selectors: {
     [`${displayColumn.oneColumn} &`]: css({
       gridArea: '2 / 2 / span 2 / auto',
@@ -59,6 +63,7 @@ export const notePreviewArea = defineStyle({
 
 export const livePreviewArea = defineStyle({
   ...css({
+    position: 'relative',
     pointerEvents: 'none',
   }),
   selectors: {
@@ -79,6 +84,7 @@ defineGlobalStyle(
 
 export const topToolbarArea = defineStyle({
   ...css({
+    position: 'relative',
     borderBottom: '2px',
     borderColor: 'gray.200',
     d: 'flex',
@@ -96,6 +102,7 @@ export const topToolbarArea = defineStyle({
 
 export const contentLeftHandleArea = defineStyle({
   ...css({
+    position: 'relative',
     d: 'flex',
     alignItems: 'stretch',
     justifyContent: 'center',
@@ -121,6 +128,7 @@ export const contentLeftHandleArea = defineStyle({
 
 export const topLeftArea = defineStyle({
   ...css({
+    position: 'relative',
     gridArea: '1 / 1',
     d: 'flex',
     justifyContent: 'center',
@@ -138,6 +146,7 @@ export const topLeftArea = defineStyle({
 
 export const bottomLeftArea = defineStyle({
   ...css({
+    position: 'relative',
     gridArea: '3 / 1',
     d: 'flex',
     justifyContent: 'center',
@@ -254,8 +263,8 @@ defineGlobalStyle(
 
 export const markdownPreviewContainer = defineStyle(
   css({
-    my: -2,
     px: 4,
+    py: 4,
     minH: 16,
     maxW: 'xl',
     d: 'flex',
@@ -295,5 +304,41 @@ export const toolbarHolder = defineStyle(
   css({
     pos: 'relative',
     top: -7,
+  }),
+);
+
+export const errorPreText = defineRecipe({
+  base: css({
+    fontFamily: 'mono',
+    fontSize: 'xs',
+    color: 'red.500',
+    whiteSpace: 'pre-wrap',
+  }),
+  variants: {
+    errorType: {
+      scriptError: css({
+        color: 'red.500',
+      }),
+      parseError: css({
+        color: 'cyan.700',
+      }),
+    },
+  },
+});
+
+export const debuggerContainer = defineStyle(
+  css({
+    position: 'absolute',
+    zIndex: 1000,
+    bottom: 0,
+    right: 0,
+    width: 64,
+    padding: 2,
+    fontSize: '9px',
+    backgroundColor: 'whiteAlpha.700',
+    border: '1px',
+    borderColor: 'gray.300',
+    borderRadius: 2,
+    pointerEvents: 'none',
   }),
 );

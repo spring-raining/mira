@@ -8,8 +8,9 @@ import {
   createNewBrick,
 } from '../../state/brick';
 import { useEditorCallbacks } from '../../state/editor';
-import { errorPreText } from '../../styles/common.css';
+import { useEvaluatedResultLoadable } from '../../state/evaluator';
 import { sprinkles } from '../../styles/sprinkles.css';
+import { BrickId } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor, EditorLoaderConfig } from '../Editor';
 import { IconButton } from '../atomic/button';
@@ -20,14 +21,15 @@ import { MarkdownPreview } from './MarkdownProvider';
 import { Presentation } from './Presentation';
 
 export const Block: React.FC<{
-  id: string;
+  id: BrickId;
   editorLoaderConfig?: EditorLoaderConfig;
 }> = ({ id, editorLoaderConfig }) => {
   const {
     brick,
-    syntaxError,
+    parseError,
     moduleImportError,
     swap,
+    literalBrickData,
     isActive,
     isFocused,
     setActive,
@@ -35,6 +37,9 @@ export const Block: React.FC<{
   } = useBrick(id);
   const { insertBrick } = useBrickManipulator();
   const editorCallbacks = useEditorCallbacks({ brickId: id });
+  const { evaluatedResultLoadable } = useEvaluatedResultLoadable(
+    literalBrickData?.mira?.id,
+  );
 
   const editorLanguage = useMemo(() => {
     const language =
@@ -88,27 +93,30 @@ export const Block: React.FC<{
   useEffect(() => {
     updateInViewState(id, inView);
   }, [id, inView, updateInViewState]);
-  const displayingError = syntaxError?.error || moduleImportError;
 
   return (
     <div className={style.blockContainer} {...containerCallbacks}>
       <div className={style.livePreviewArea}>
-        {brick.type === 'snippet' && brick.mira?.isLived && (
-          <div className={style.topSticky}>
-            <div className={style.livePreviewContainer}>
-              <React.Suspense fallback={null}>
-                <Presentation brickId={id} mira={swap?.mira || brick.mira} />
-              </React.Suspense>
-            </div>
+        <div className={style.topSticky}>
+          <div className={style.livePreviewContainer}>
+            {parseError ? (
+              <pre className={style.errorPreText({ errorType: 'parseError' })}>
+                {String(parseError.error)}
+              </pre>
+            ) : moduleImportError ? (
+              <pre className={style.errorPreText({ errorType: 'scriptError' })}>
+                {String(moduleImportError)}
+              </pre>
+            ) : (
+              literalBrickData &&
+              literalBrickData.mira?.isLived && (
+                <React.Suspense fallback={null}>
+                  <Presentation brickId={id} mira={literalBrickData.mira} />
+                </React.Suspense>
+              )
+            )}
           </div>
-        )}
-        {displayingError && (
-          <div className={style.topSticky}>
-            <div className={style.livePreviewContainer}>
-              <pre className={errorPreText}>{String(displayingError)}</pre>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
       <div ref={observerRef} className={style.editorArea}>
         <div
@@ -125,9 +133,30 @@ export const Block: React.FC<{
               language={editorLanguage}
               padding={{ top: 16, bottom: 16 }}
               code={brick.text}
+              errorMarkers={
+                evaluatedResultLoadable.state === 'hasValue'
+                  ? evaluatedResultLoadable.contents.errorMarkers
+                  : []
+              }
+              warnMarkers={
+                evaluatedResultLoadable.state === 'hasValue'
+                  ? evaluatedResultLoadable.contents.warnMarkers
+                  : []
+              }
               {...{ editorLoaderConfig, onContentHeightChange }}
               {...editorCallbacks}
             />
+          </div>
+        </div>
+        <div className={style.debuggerContainer}>
+          <div>
+            <code>brick: {brick.id}</code>
+          </div>
+          <div>
+            <code>mira: {brick.type === 'snippet' && brick.mira?.id}</code>
+          </div>
+          <div>
+            <code>swap: {swap?.mira?.id}</code>
           </div>
         </div>
       </div>
@@ -139,10 +168,10 @@ export const Block: React.FC<{
           )}
         >
           <div className={style.markdownPreviewContainer} onClick={setActive}>
-            {syntaxError?.parsedText ? (
+            {parseError?.parsedText ? (
               <pre>
                 <code className={style.scriptPreviewCode}>
-                  {syntaxError.parsedText}
+                  <div>{parseError.parsedText}</div>
                 </code>
               </pre>
             ) : brick.text.trim() ? (
@@ -165,7 +194,7 @@ export const Block: React.FC<{
               <pre>
                 <code className={style.scriptPreviewCode}>
                   <CodePreview
-                    code={syntaxError?.parsedText || brick.text}
+                    code={parseError?.parsedText || brick.text}
                     language="jsx"
                   />
                 </code>

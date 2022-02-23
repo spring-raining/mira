@@ -1,5 +1,6 @@
-import { useRecoilValue } from 'recoil';
-import { miraRenderParamsDictState, miraEvaluatedDataDictState } from './atoms';
+import { selectorFamily, useRecoilValue, useRecoilValueLoadable } from 'recoil';
+import { MiraId, BrickId } from '../types';
+import { miraRenderParamsDictState, miraEvaluateStateDictState } from './atoms';
 import { getDictItemSelector } from './helper';
 
 const miraRenderParamsFamily = getDictItemSelector({
@@ -7,17 +8,25 @@ const miraRenderParamsFamily = getDictItemSelector({
   state: miraRenderParamsDictState,
 });
 
-const miraEvaluatedDataFamily = getDictItemSelector({
-  key: 'miraEvaluatedDataFamily',
-  state: miraEvaluatedDataDictState,
+const miraEvaluateResultFamily = selectorFamily({
+  key: 'miraEvaluateResultFamily',
+  get:
+    (miraId: MiraId | undefined) =>
+    async ({ get }) => {
+      // Can throw reference error
+      const evaluateState = get(miraEvaluateStateDictState)[miraId!];
+      return await evaluateState.result;
+    },
 });
 
-export const useEvaluatedData = (miraId: string) => {
-  const evaluatedData = useRecoilValue(miraEvaluatedDataFamily(miraId));
-  return { evaluatedData };
+export const useEvaluatedResultLoadable = (miraId?: MiraId) => {
+  const evaluatedResultLoadable = useRecoilValueLoadable(
+    miraEvaluateResultFamily(miraId),
+  );
+  return { evaluatedResultLoadable };
 };
 
-export const useRenderParams = (brickId: string) => {
+export const useRenderParams = (brickId: BrickId) => {
   const renderParams = useRecoilValue(miraRenderParamsFamily(brickId));
   return { renderParams };
 };

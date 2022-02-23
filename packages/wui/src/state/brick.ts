@@ -1,22 +1,22 @@
-import { nanoid } from 'nanoid/non-secure';
 import { useEffect } from 'react';
 import {
   useRecoilValue,
   useRecoilCallback,
   useRecoilState,
   selector,
+  selectorFamily,
 } from 'recoil';
 import { dehydrateBrick } from '../mdx/io';
 import { updateBrickByText, updateBrickTrait } from '../mdx/update';
-import { Brick } from '../types';
-import { cancellable, debounce, noop } from '../util';
+import { Brick, BrickId } from '../types';
+import { cancellable, genBrickId, genMiraId, noop } from '../util';
 import {
   activeBrickIdState,
   focusedBrickIdState,
   selectedBrickIdsState,
   brickDictState,
   brickOrderState,
-  brickSyntaxErrorState,
+  brickParseErrorState,
   brickModuleImportErrorState,
   brickTextSwapState,
 } from './atoms';
@@ -28,9 +28,9 @@ export const brickStateFamily = getDictItemSelector({
   state: brickDictState,
 });
 
-const brickSyntaxErrorStateFamily = getDictItemSelector({
-  key: 'brickSyntaxErrorStateFamily',
-  state: brickSyntaxErrorState,
+const brickParseErrorStateFamily = getDictItemSelector({
+  key: 'brickParseErrorStateFamily',
+  state: brickParseErrorState,
 });
 
 const brickModuleImportErrorStateFamily = getDictItemSelector({
@@ -49,6 +49,25 @@ const bricksState = selector({
     get(brickOrderState)
       .map((brickId) => get(brickDictState)[brickId])
       .filter((brick) => !!brick),
+});
+
+const literalBrickDataFamily = selectorFamily({
+  key: 'literalBrickDataFamily',
+  get:
+    (brickId: BrickId) =>
+    ({ get }) => {
+      const brick = get(brickStateFamily(brickId));
+      const swap = get(brickTextSwapStateFamily(brickId));
+      return (
+        swap ||
+        (brick && {
+          text: brick.text,
+          ...(brick.type === 'snippet' && brick.mira
+            ? { mira: brick.mira }
+            : {}),
+        })
+      );
+    },
 });
 
 import { editorRefs } from './editor';
@@ -118,7 +137,7 @@ export const useBricks = ({
   );
   const updateBrickOrder = useRecoilCallback(
     ({ set }) =>
-      (newBrickOrder: string[]) => {
+      (newBrickOrder: BrickId[]) => {
         set(brickOrderState, newBrickOrder);
       },
     [],
@@ -153,9 +172,9 @@ export const useBricks = ({
   };
 };
 
-export const useBrick = (brickId: string) => {
+export const useBrick = (brickId: BrickId) => {
   const brick = useRecoilValue(brickStateFamily(brickId));
-  const brickSyntaxError = useRecoilValue(brickSyntaxErrorStateFamily(brickId));
+  const brickParseError = useRecoilValue(brickParseErrorStateFamily(brickId));
   const brickModuleImportError = useRecoilValue(
     brickModuleImportErrorStateFamily(brickId),
   );
@@ -163,6 +182,7 @@ export const useBrick = (brickId: string) => {
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
   const swap = useRecoilValue(brickTextSwapStateFamily(brickId));
+  const literalBrickData = useRecoilValue(literalBrickDataFamily(brickId));
   const setActive = useRecoilCallback(
     ({ set }) =>
       () => {
@@ -181,23 +201,21 @@ export const useBrick = (brickId: string) => {
   );
   const updateText = useRecoilCallback(
     ({ set, snapshot }) =>
-      debounce(({ hasCancelled }) => async (text: string) => {
+      async (text: string) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
         if (!brick) {
           return;
         }
         const { newBrick, syntaxError } = updateBrickByText(brick, text);
-        if (hasCancelled()) {
-          return;
-        }
-        if (syntaxError) {
-          set(brickSyntaxErrorStateFamily(brickId), {
-            error: syntaxError,
-            parsedText: text,
-          });
-        } else {
-          set(brickSyntaxErrorStateFamily(brickId), undefined);
-        }
+        set(brickParseErrorState, (prev) => ({
+          ...prev,
+          [brickId]: syntaxError
+            ? {
+                error: syntaxError,
+                parsedText: text,
+              }
+            : undefined,
+        }));
         if (Array.isArray(newBrick)) {
           set(brickDictState, (prevState) => ({
             ...prevState,
@@ -221,55 +239,50 @@ export const useBrick = (brickId: string) => {
         } else {
           set(brickStateFamily(brickId), newBrick);
         }
-      }),
+      },
     [brickId],
   );
   const updateTrait = useRecoilCallback(
     ({ set, snapshot }) =>
-      debounce(
-        ({ hasCancelled }) =>
-          async (trait: { type?: Brick['type']; language?: string }) => {
-            const brick = await snapshot.getPromise(brickStateFamily(brickId));
-            if (!brick) {
-              return;
-            }
-            const { newBrick, syntaxError } = updateBrickTrait(brick, trait);
-            if (hasCancelled()) {
-              return;
-            }
-            if (syntaxError) {
-              set(brickSyntaxErrorStateFamily(brickId), {
+      async (trait: { type?: Brick['type']; language?: string }) => {
+        const brick = await snapshot.getPromise(brickStateFamily(brickId));
+        if (!brick) {
+          return;
+        }
+        const { newBrick, syntaxError } = updateBrickTrait(brick, trait);
+        set(brickParseErrorState, (prev) => ({
+          ...prev,
+          [brickId]: syntaxError
+            ? {
                 error: syntaxError,
                 parsedText: brick.text,
-              });
-            } else {
-              set(brickSyntaxErrorStateFamily(brickId), undefined);
-            }
-            if (Array.isArray(newBrick)) {
-              set(brickDictState, (prevState) => ({
-                ...prevState,
-                ...newBrick.reduce(
-                  (acc, brick) => ({
-                    ...acc,
-                    [brick.id]: brick,
-                  }),
-                  {},
-                ),
-              }));
-              set(brickOrderState, (prevState) => {
-                const arr = [...prevState];
-                arr.splice(
-                  prevState.indexOf(brick.id),
-                  1,
-                  ...newBrick.map(({ id }) => id),
-                );
-                return arr;
-              });
-            } else {
-              set(brickStateFamily(brickId), newBrick);
-            }
-          },
-      ),
+              }
+            : undefined,
+        }));
+        if (Array.isArray(newBrick)) {
+          set(brickDictState, (prevState) => ({
+            ...prevState,
+            ...newBrick.reduce(
+              (acc, brick) => ({
+                ...acc,
+                [brick.id]: brick,
+              }),
+              {},
+            ),
+          }));
+          set(brickOrderState, (prevState) => {
+            const arr = [...prevState];
+            arr.splice(
+              prevState.indexOf(brick.id),
+              1,
+              ...newBrick.map(({ id }) => id),
+            );
+            return arr;
+          });
+        } else {
+          set(brickStateFamily(brickId), newBrick);
+        }
+      },
     [brickId],
   );
   const setSwap = useRecoilCallback(
@@ -286,7 +299,7 @@ export const useBrick = (brickId: string) => {
                   mira: mira
                     ? {
                         ...mira,
-                        id: nanoid(),
+                        id: genMiraId(),
                       }
                     : undefined,
                 }
@@ -313,9 +326,10 @@ export const useBrick = (brickId: string) => {
 
   return {
     brick: brick!,
-    syntaxError: brickSyntaxError,
+    parseError: brickParseError,
     moduleImportError: brickModuleImportError,
     swap,
+    literalBrickData,
     updateText,
     updateTrait,
     isActive: brickId === activeBrickId,
@@ -337,7 +351,7 @@ export const useBrickManipulator = () => {
         offset = 0,
       }: {
         newBrick: Brick;
-        targetBrickId?: string;
+        targetBrickId?: BrickId;
         offset?: number;
       }) => {
         const brickDict = { ...(await snapshot.getPromise(brickDictState)) };
@@ -359,7 +373,7 @@ export const useBrickManipulator = () => {
 
   const cleanup = useRecoilCallback(
     ({ set }) =>
-      async (brickId: string) => {
+      async (brickId: BrickId) => {
         set(brickOrderState, (brickOrder) =>
           brickOrder.filter((id) => id !== brickId),
         );
@@ -387,27 +401,27 @@ export const createNewBrick = ({
 }): Brick => {
   if (type === 'snippet') {
     return {
-      id: nanoid(),
+      id: genBrickId(),
       type,
       language: language ?? '',
       text: '',
       children: null,
       ...(isLived && {
         mira: {
-          id: nanoid(),
+          id: genMiraId(),
           isLived,
         },
       }),
     };
   }
   return {
-    id: nanoid(),
+    id: genBrickId(),
     type,
     text: '',
     children: null,
     ...(isLived && {
       mira: {
-        id: nanoid(),
+        id: genMiraId(),
         isLived,
       },
     }),

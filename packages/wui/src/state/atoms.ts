@@ -1,65 +1,70 @@
 import { atom } from 'recoil';
-import { Brick, Mira, EvaluatedResult, MiraWuiConfig } from '../types';
+import {
+  Brick,
+  LiteralBrickData,
+  EvaluateState,
+  MiraWuiConfig,
+  BrickId,
+  MiraId,
+} from '../types';
 
 export const wuiConfigState = atom<MiraWuiConfig>({
   key: 'wuiConfigState',
   default: {} as MiraWuiConfig, // Should be initialized
 });
 
-export const brickDictState = atom<Record<string, Brick>>({
+export const brickDictState = atom<Record<BrickId, Brick>>({
   key: 'brickDictState',
   default: {},
 });
 
-export const brickOrderState = atom<string[]>({
+export const brickOrderState = atom<BrickId[]>({
   key: 'brickOrderState',
   default: [],
 });
 
-export const activeBrickIdState = atom<string | null>({
+export const activeBrickIdState = atom<BrickId | null>({
   key: 'activeBrickIdState',
   default: null,
 });
 
-export const focusedBrickIdState = atom<string | null>({
+export const focusedBrickIdState = atom<BrickId | null>({
   key: 'focusedBrickIdState',
   default: null,
 });
 
-export const selectedBrickIdsState = atom<string[]>({
+export const selectedBrickIdsState = atom<BrickId[]>({
   key: 'selectedBrickIdsState',
   default: [],
 });
 
-export const brickSyntaxErrorState = atom<
-  Record<Brick['id'], { error: Error; parsedText: string }>
+export const brickParseErrorState = atom<
+  Record<BrickId, { error: Error; parsedText: string }>
 >({
-  key: 'brickSyntaxErrorState',
+  key: 'brickParseErrorState',
   default: {},
 });
 
-export const brickModuleImportErrorState = atom<Record<Brick['id'], Error>>({
+export const brickModuleImportErrorState = atom<Record<string, Error>>({
   key: 'brickModuleImportErrorState',
   default: {},
 });
 
 export const brickTextSwapState = atom<
-  Record<Brick['id'], { text: string; mira?: Mira } | undefined>
+  Record<BrickId, LiteralBrickData | undefined>
 >({
   key: 'brickTextSwapState',
   default: {},
 });
 
 export const miraRenderParamsDictState = atom<
-  Record<string, Map<string, unknown>>
+  Record<BrickId, Map<string, unknown>>
 >({
   key: 'miraRenderParamsDictState',
   default: {},
 });
 
-export const miraEvaluatedDataDictState = atom<Record<string, EvaluatedResult>>(
-  {
-    key: 'miraEvaluatedDataDictState',
-    default: {},
-  },
-);
+export const miraEvaluateStateDictState = atom<Record<MiraId, EvaluateState>>({
+  key: 'miraEvaluateStateDictState',
+  default: {},
+});

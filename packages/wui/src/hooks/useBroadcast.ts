@@ -1,5 +1,5 @@
-import { nanoid } from 'nanoid/non-secure';
 import { useRef, useState, useCallback, useEffect } from 'react';
+import { genCalleeId } from './../util';
 
 const isBroadcastChannelSupported = 'BroadcastChannel' in globalThis;
 
@@ -166,7 +166,7 @@ export const useBroadcast = <
 
   const pseudoFunctionRef = useRef(new Map<string, CallableFunction>());
   const getPseudoFunction = useCallback((fn: CallableFunction) => {
-    const key = `fn#${nanoid()}`;
+    const key = genCalleeId();
     pseudoFunctionRef.current.set(key, fn);
     return {
       __callee: key,

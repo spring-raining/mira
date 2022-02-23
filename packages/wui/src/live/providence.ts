@@ -2,10 +2,13 @@ import { ProvidenceStore } from '../hooks/providence/context';
 import {
   Mira,
   EvaluatedResult,
+  EvaluateState,
   RuntimeEnvironment,
   ASTNode,
   ModuleImportState,
   RefreshModuleEvent,
+  BrickId,
+  MiraId,
 } from '../types';
 import {
   DependencyManager,
@@ -23,7 +26,7 @@ export interface Providence {
     code,
     mira,
   }: {
-    id: string;
+    id: BrickId;
     code: string | undefined;
     mira: Mira | undefined;
   }) => void;
@@ -31,7 +34,7 @@ export interface Providence {
     id,
     scriptNode,
   }: {
-    id: string;
+    id: BrickId;
     scriptNode: ASTNode[] | undefined;
   }) => void;
   refreshModule: (event: RefreshModuleEvent) => void;
@@ -41,6 +44,7 @@ export interface Providence {
 export const setupProvidence = ({
   store,
   runtime,
+  inputDebounce = 66,
   mdxPath,
   depsRootPath,
   moduleLoader,
@@ -50,12 +54,13 @@ export const setupProvidence = ({
 }: {
   store: ProvidenceStore;
   runtime: string;
+  inputDebounce?: number;
   mdxPath: string;
   depsRootPath: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
-  onEvaluatorUpdate: (e: EvaluatedResult) => void;
+  onEvaluatorUpdate: (e: EvaluateState) => void;
   onModuleUpdate: (e: ModuleImportState) => void;
-  onRenderParamsUpdate: (e: RenderParamsUpdatePayload) => void;
+  onRenderParamsUpdate: (e: RenderParamsUpdatePayload<BrickId>) => void;
 }): Providence => {
   const _runtime = setupRuntime({
     runtime,
@@ -70,8 +75,8 @@ export const setupProvidence = ({
     environment,
     importModules,
   }: {
-    id: string;
-    miraId: string;
+    id: BrickId;
+    miraId: MiraId;
     code: string;
     environment: RuntimeEnvironment;
     importModules: [string, string[]][];
@@ -84,6 +89,7 @@ export const setupProvidence = ({
       return {
         id: miraId,
         environment,
+        hasDefaultExport: false,
         error: transpiledData.errorObject,
         errorMarkers: transpiledData.errors,
         warnMarkers: transpiledData.warnings,
@@ -96,9 +102,11 @@ export const setupProvidence = ({
       );
       const mod = await import(/* webpackIgnore: true */ source);
       const exportVal = new Map<string, unknown>();
+      let hasDefaultExport = false;
       for (const [k, v] of Object.entries(mod)) {
         if (k === 'default') {
           // ignore default exports
+          hasDefaultExport = true;
           continue;
         }
         exportVal.set(k, v);
@@ -107,6 +115,7 @@ export const setupProvidence = ({
       return {
         id: miraId,
         environment,
+        hasDefaultExport,
         code: transpiledCode,
         source,
         errorMarkers: transpiledData.errors,
@@ -117,6 +126,7 @@ export const setupProvidence = ({
       return {
         id: miraId,
         environment,
+        hasDefaultExport: false,
         code: transpiledCode,
         error:
           error instanceof Error
@@ -128,49 +138,109 @@ export const setupProvidence = ({
     }
   };
 
-  const handleDependencyUpdate = ({ detail }: DependencyUpdateEvent) => {
-    if (detail.id in store.runTasks) {
-      window.cancelAnimationFrame(store.runTasks[detail.id]);
-      delete store.runTasks[detail.id];
+  const transpileAndFail = async ({
+    miraId,
+    code,
+    environment,
+    importModules,
+    dependencyError,
+  }: {
+    miraId: MiraId;
+    code: string;
+    environment: RuntimeEnvironment;
+    importModules: [string, string[]][];
+    dependencyError: Error;
+  }): Promise<EvaluatedResult> => {
+    const transpiledData = await transpileCode({
+      code,
+      importModules,
+    });
+    if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
+      return {
+        id: miraId,
+        environment,
+        hasDefaultExport: false,
+        error: transpiledData.errorObject,
+        errorMarkers: transpiledData.errors,
+        warnMarkers: transpiledData.warnings,
+      };
+    } else {
+      return {
+        id: miraId,
+        environment,
+        hasDefaultExport: false,
+        error: dependencyError,
+        errorMarkers: [],
+      };
     }
+  };
+
+  const handleDependencyUpdate = ({
+    detail,
+  }: DependencyUpdateEvent<BrickId>) => {
     const runTarget = store.runTarget[detail.id];
     if (typeof runTarget?.code !== 'string') {
       return;
     }
+    if (detail.id in store.runTasks) {
+      window.cancelAnimationFrame(store.runTasks[detail.id][0]);
+    }
+    const miraId = runTarget.mira.id;
+    const code = runTarget.code;
     // false positive?
     // eslint-disable-next-line prefer-const
     let runId: number;
     const cb = async () => {
-      const environment = (await _runtime).getRuntimeEnvironment();
-      const ret = await run({
-        id: detail.id,
-        miraId: runTarget.mira.id,
-        code: runTarget.code,
-        environment,
-        importModules: detail.importModules,
+      const result = (async () => {
+        const [runtime] = await Promise.all([
+          _runtime,
+          new Promise((res) => setTimeout(res, inputDebounce)),
+        ] as const);
+        const environment = runtime.getRuntimeEnvironment();
+        const ret = detail.dependencyError
+          ? await transpileAndFail({
+              miraId,
+              code,
+              environment,
+              importModules: detail.importModules,
+              dependencyError: detail.dependencyError,
+            })
+          : await run({
+              id: detail.id,
+              miraId,
+              code,
+              environment,
+              importModules: detail.importModules,
+            });
+        return store.runTasks[detail.id][0] === runId
+          ? ret
+          : store.runTasks[detail.id][1];
+      })();
+      onEvaluatorUpdate({
+        id: miraId,
+        result,
       });
-      if (store.runTasks[detail.id] === runId) {
-        onEvaluatorUpdate(ret);
-      }
+      store.runTasks[detail.id] = [runId, result];
     };
     runId = window.requestAnimationFrame(cb);
-    store.runTasks[detail.id] = runId;
   };
 
   const handleModuleUpdate = ({ detail }: ModuleUpdateEvent) => {
     onModuleUpdate(detail);
   };
 
-  const handleRenderParamsUpdate = ({ detail }: RenderParamsUpdateEvent) => {
+  const handleRenderParamsUpdate = ({
+    detail,
+  }: RenderParamsUpdateEvent<BrickId>) => {
     onRenderParamsUpdate(detail);
   };
 
-  const dispatchCodeUpdates = ({
+  const dispatchCodeUpdates = async ({
     id,
     code,
     mira,
   }: {
-    id: string;
+    id: BrickId;
     code: string | undefined;
     mira: Mira | undefined;
   }) => {
@@ -186,11 +256,11 @@ export const setupProvidence = ({
     }
   };
 
-  const dispatchScriptUpdates = ({
+  const dispatchScriptUpdates = async ({
     id,
     scriptNode,
   }: {
-    id: string;
+    id: BrickId;
     scriptNode: ASTNode[] | undefined;
   }) => {
     if (scriptNode) {
@@ -204,7 +274,7 @@ export const setupProvidence = ({
     store.dependency?.refreshModule(event);
   };
 
-  store.dependency = new DependencyManager({
+  store.dependency = new DependencyManager<BrickId>({
     mdxPath,
     depsRootPath,
     moduleLoader,

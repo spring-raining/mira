@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useBrick, useBrickManipulator } from '../../state/brick';
-import { Brick } from '../../types';
+import { BrickId } from '../../types';
 import { IconButton } from '../atomic/button';
 import { Menu, MenuButton, MenuList, MenuItem } from '../atomic/menu';
 import { CodeIcon } from '../icon/code';
@@ -10,7 +10,7 @@ import * as style from './BlockToolbar.css';
 import { LanguageCompletionForm } from './LanguageCompletionForm';
 
 export const BlockToolbar: React.VFC<{
-  id: string;
+  id: BrickId;
 }> = ({ id }) => {
   const { brick, updateTrait, setActive, isActive } = useBrick(id);
   const { cleanup } = useBrickManipulator();

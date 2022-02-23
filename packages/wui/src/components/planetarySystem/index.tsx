@@ -4,6 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useUniverseContext } from '../../context';
 import { getMarkdownSubject } from '../../mdx/util';
 import { useBricks, useBrick } from '../../state/brick';
+import { BrickId } from '../../types';
 import * as style from './planetarySystem.css';
 
 const useScrollAdjustSystem = () => {
@@ -41,20 +42,20 @@ const useScrollAdjustSystem = () => {
 };
 
 interface ListItemDragObject {
-  brickIds: string[];
+  brickIds: BrickId[];
 }
 
 const PlanetaryListItem: React.FC<{
-  brickId: string;
+  brickId: BrickId;
   index: number;
   hasInsertGutter?: boolean;
   isLarge?: boolean;
   onHoverDragItem: (index: number) => void;
   onDropItem: (obj: ListItemDragObject) => void;
   onDragEnd: () => void;
-  onSelect: (brickId: string) => void;
-  onRangeSelect: (brickId: string) => void;
-  onMultipleSelect: (brickId: string) => void;
+  onSelect: (brickId: BrickId) => void;
+  onRangeSelect: (brickId: BrickId) => void;
+  onMultipleSelect: (brickId: BrickId) => void;
 }> = ({
   children,
   brickId,
@@ -184,14 +185,14 @@ export const PlanetarySystem: React.VFC = () => {
   }, []);
   const [lastSelectId, setLastSelectId] = useState<string | null>(null);
   const onSelect = useCallback(
-    (brickId: string) => {
+    (brickId: BrickId) => {
       setLastSelectId(brickId);
       setSelectedBrickIds([brickId]);
     },
     [setSelectedBrickIds],
   );
   const onRangeSelect = useCallback(
-    (brickId: string) => {
+    (brickId: BrickId) => {
       const a = bricks.findIndex((b) => b.id === lastSelectId);
       const b = bricks.findIndex((b) => b.id === brickId);
       const selectedIds = bricks
@@ -202,7 +203,7 @@ export const PlanetarySystem: React.VFC = () => {
     [bricks, lastSelectId, setSelectedBrickIds],
   );
   const onMultipleSelect = useCallback(
-    (brickId: string) => {
+    (brickId: BrickId) => {
       setSelectedBrickIds((selectedIds) =>
         selectedIds.includes(brickId)
           ? selectedIds.filter((id) => id !== brickId)

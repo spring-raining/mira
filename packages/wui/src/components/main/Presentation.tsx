@@ -1,17 +1,33 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useBroadcast } from '../../hooks/useBroadcast';
-import { useEvaluatedData, useRenderParams } from '../../state/evaluator';
-import { Mira } from '../../types';
+import {
+  useEvaluatedResultLoadable,
+  useRenderParams,
+} from '../../state/evaluator';
+import { sprinkles } from '../../styles/sprinkles.css';
+import { BrickId, Mira } from '../../types';
+import * as style from './Block.css';
 
-export const Presentation: React.VFC<{ brickId: string; mira: Mira }> = ({
+export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   brickId,
   mira,
 }) => {
   const iframeEl = useRef<HTMLIFrameElement>(null);
-  const { evaluatedData } = useEvaluatedData(mira.id);
+  const { evaluatedResultLoadable: result } = useEvaluatedResultLoadable(
+    mira.id,
+  );
   const { renderParams } = useRenderParams(brickId);
   const [, postCode] = useBroadcast<{ source: string }>(brickId, 'code');
   const [, postParameter] = useBroadcast(brickId, 'parameter');
+
+  const [showIframe, setShowIframe] = useState(false);
+  const [iframeHeight, setIframeHeight] = useState(32);
+  const resizeIframeHeight = useCallback(() => {
+    const body = iframeEl.current?.contentWindow?.document?.body;
+    if (body) {
+      setIframeHeight(body.scrollHeight + 32);
+    }
+  }, []);
 
   useEffect(() => {
     const iframe = iframeEl.current;
@@ -35,12 +51,17 @@ export const Presentation: React.VFC<{ brickId: string; mira: Mira }> = ({
   }, [brickId]);
 
   useEffect(() => {
-    const source = evaluatedData?.source;
-    if (!source) {
+    if (result.state !== 'hasValue') {
+      return;
+    }
+    const { source, hasDefaultExport } = result.contents;
+    setShowIframe(hasDefaultExport);
+    if (!source || !hasDefaultExport) {
       return;
     }
     postCode({ source });
-  }, [evaluatedData, postCode]);
+    resizeIframeHeight();
+  }, [result, postCode, resizeIframeHeight]);
 
   useEffect(() => {
     if (!renderParams) {
@@ -51,11 +72,47 @@ export const Presentation: React.VFC<{ brickId: string; mira: Mira }> = ({
       obj[k] = v;
     }
     postParameter(obj);
-  }, [renderParams, postParameter]);
+    resizeIframeHeight();
+  }, [renderParams, postParameter, resizeIframeHeight]);
+
+  const [displayingError, setDisplayingError] = useState<Error>();
+  useEffect(() => {
+    if (result.state === 'hasValue') {
+      setDisplayingError(result.contents.error);
+    }
+  }, [result]);
 
   return (
-    <div>
-      <iframe ref={iframeEl} src="_mira/-/foo.html"></iframe>
-    </div>
+    <>
+      <iframe
+        ref={iframeEl}
+        src="/_mira/-/foo.html"
+        className={sprinkles({
+          display: showIframe && !displayingError ? 'flex' : 'none',
+        })}
+        style={{ width: '100%', height: iframeHeight, minHeight: '4rem' }}
+      ></iframe>
+      {displayingError && (
+        <pre className={style.errorPreText({ errorType: 'scriptError' })}>
+          {String(displayingError)}
+        </pre>
+      )}
+      <div className={style.debuggerContainer}>
+        <div>
+          <code>
+            {result.state} {mira.id}
+          </code>
+        </div>
+        <div>
+          <code>id: {result?.contents?.id}</code>
+        </div>
+        <div>
+          <code>envId: {result?.contents?.environment?.envId}</code>
+        </div>
+        <div>
+          <code>{result?.contents?.source}</code>
+        </div>
+      </div>
+    </>
   );
 };

@@ -1,5 +1,5 @@
-import { nanoid } from 'nanoid/non-secure';
 import { Brick, Mira } from '../types';
+import { genMiraId } from './../util';
 import { hydrateMdx } from './io';
 
 const liveLanguage = ['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'];
@@ -66,7 +66,7 @@ export const updateBrickTrait = (
         language: newLanguage ?? ('language' in brick ? brick.language : ''),
       };
       if (liveLanguage.includes(newBrick.language.toLowerCase())) {
-        (newBrick as { mira?: Mira }).mira = { id: nanoid(), isLived: true };
+        (newBrick as { mira?: Mira }).mira = { id: genMiraId(), isLived: true };
       } else {
         delete (newBrick as { mira?: Mira }).mira;
       }
@@ -90,7 +90,7 @@ export const updateBrickTrait = (
       language: newLanguage,
     };
     if (liveLanguage.includes(newBrick.language.toLowerCase())) {
-      newBrick.mira = { id: nanoid(), isLived: true };
+      newBrick.mira = { id: genMiraId(), isLived: true };
     } else {
       delete newBrick.mira;
     }

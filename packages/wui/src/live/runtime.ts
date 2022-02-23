@@ -1,7 +1,7 @@
 import type { RuntimeEnvironmentFactory } from '@mirajs/core';
-import { nanoid } from 'nanoid';
 import { loadModule, resolveImportSpecifier } from '../mdx/imports';
 import { RuntimeEnvironment } from '../types';
+import { genRunEnvId } from './../util';
 
 export type Runtime = { getRuntimeEnvironment: () => RuntimeEnvironment };
 
@@ -28,7 +28,7 @@ export const setupRuntime = async ({
 
   return {
     getRuntimeEnvironment: () => ({
-      envId: nanoid(),
+      envId: genRunEnvId(),
       getRuntimeScope,
     }),
   };
