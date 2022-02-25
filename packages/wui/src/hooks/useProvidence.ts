@@ -1,18 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { useRecoilValue, useRecoilCallback } from 'recoil';
 import { useUniverseContext } from '../context';
-import type { RenderParamsUpdatePayload } from '../live/dependency';
 import { setupProvidence, Providence } from '../live/providence';
 import {
   brickModuleImportErrorState,
   miraRenderParamsDictState,
   miraEvaluateStateDictState,
+  evaluatePausedState,
 } from '../state/atoms';
 import { codeFragmentsState, scriptFragmentsState } from '../state/code';
 import {
   EvaluateState,
   MiraWuiConfig,
-  ModuleImportState,
+  ModuleImportInfo,
+  RenderParamsUpdateInfo,
   RefreshModuleEvent,
   BrickId,
 } from '../types';
@@ -40,6 +41,7 @@ export const ProvidenceObserver = ({
   const providenceRef = useProvidenceRef();
   const codeFragments = useRecoilValue(codeFragmentsState);
   const scriptFragments = useRecoilValue(scriptFragmentsState);
+  const evaluatePaused = useRecoilValue(evaluatePausedState);
   const codeFragmentsWithPrev = usePrevState(codeFragments);
   const scriptFragmentsWithPrev = usePrevState(scriptFragments);
   const providence = useRef<Providence>();
@@ -60,7 +62,7 @@ export const ProvidenceObserver = ({
 
   const onModuleUpdate = useRecoilCallback(
     ({ set }) =>
-      (module: ModuleImportState) => {
+      (module: ModuleImportInfo<BrickId>) => {
         set(brickModuleImportErrorState, module.importError);
       },
     [],
@@ -68,7 +70,7 @@ export const ProvidenceObserver = ({
 
   const onRenderParamsUpdate = useRecoilCallback(
     ({ set }) =>
-      ({ id, params }: RenderParamsUpdatePayload<BrickId>) => {
+      ({ id, params }: RenderParamsUpdateInfo<BrickId>) => {
         set(miraRenderParamsDictState, (prev) => ({
           ...prev,
           [id]: params,
@@ -151,6 +153,14 @@ export const ProvidenceObserver = ({
       providence.current?.dispatchScriptUpdates(changed);
     });
   }, [providence, scriptFragmentsWithPrev]);
+
+  useEffect(() => {
+    if (evaluatePaused) {
+      providence.current?.pauseCodeUpdates();
+    } else {
+      providence.current?.resumeCodeUpdates();
+    }
+  }, [providence, evaluatePaused]);
 
   return null;
 };

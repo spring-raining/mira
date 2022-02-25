@@ -2,17 +2,44 @@ import {
   init as initTranspiler,
   Service as TranspilerService,
 } from '@mirajs/transpiler';
-import { MarkerMessage, TranspiledResult } from '../types';
+import { MarkerMessage, TranspiledResult, ImportDefinition } from '../types';
+
+const stringifyImportDefinition = (def: ImportDefinition) => {
+  let statement = 'import';
+  if (def.all) {
+    statement += ` ${JSON.stringify(def.specifier)};`;
+  } else {
+    const defaultBinding = def.default && def.importBinding['default'];
+    if (defaultBinding) {
+      statement += ` ${defaultBinding}`;
+    }
+    if (def.namespaceImport) {
+      statement += `${defaultBinding ? ',' : ''} * as ${def.namespaceImport}`;
+    }
+    const importList = def.named.map((name) =>
+      name !== def.importBinding[name]
+        ? `${name} as ${def.importBinding[name]}`
+        : name,
+    );
+    if (importList.length > 0) {
+      statement += `${defaultBinding ? ',' : ''} { ${importList.join(', ')} }`;
+    }
+    statement += ` from ${JSON.stringify(def.specifier)};`;
+  }
+  return statement;
+};
 
 let transpilerService: TranspilerService;
 export const transpileCode = async ({
   code,
-  importModules = [],
+  resolvedValues = [],
+  importDefinitions = [],
   bundle = true,
   sourcemap = true,
 }: {
   code: string;
-  importModules?: [string, string[]][];
+  resolvedValues?: readonly [string, string[]][];
+  importDefinitions?: readonly ImportDefinition[];
   bundle?: boolean;
   sourcemap?: boolean;
 }): Promise<TranspiledResult> => {
@@ -57,7 +84,7 @@ export const transpileCode = async ({
             build.onLoad({ filter: /.*/, namespace: 'mdx' }, (args) => {
               console.debug('onLoad', args);
               return {
-                contents: importModules
+                contents: resolvedValues
                   .map(
                     ([source, vals]) =>
                       `export {${vals.join(',')}} from ${JSON.stringify(
@@ -76,6 +103,8 @@ export const transpileCode = async ({
       sourcemap: sourcemap && 'inline',
       platform: bundle ? 'browser' : 'neutral',
       format: bundle ? 'esm' : undefined,
+      // Insert import statements at the top of code
+      banner: importDefinitions.map(stringifyImportDefinition).join('\n'),
       target: 'es2020',
       logLevel: 'silent',
       jsxFactory: '$jsxFactory',

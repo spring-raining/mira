@@ -5,7 +5,9 @@ import {
   EvaluateState,
   RuntimeEnvironment,
   ASTNode,
-  ModuleImportState,
+  ImportDefinition,
+  ModuleImportInfo,
+  RenderParamsUpdateInfo,
   RefreshModuleEvent,
   BrickId,
   MiraId,
@@ -15,7 +17,6 @@ import {
   DependencyUpdateEvent,
   ModuleUpdateEvent,
   RenderParamsUpdateEvent,
-  RenderParamsUpdatePayload,
 } from './dependency';
 import { setupRuntime } from './runtime';
 import { transpileCode } from './transpileCode';
@@ -38,6 +39,8 @@ export interface Providence {
     scriptNode: ASTNode[] | undefined;
   }) => void;
   refreshModule: (event: RefreshModuleEvent) => void;
+  pauseCodeUpdates: () => void;
+  resumeCodeUpdates: () => void;
   teardown: () => void;
 }
 
@@ -59,8 +62,8 @@ export const setupProvidence = ({
   depsRootPath: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
   onEvaluatorUpdate: (e: EvaluateState) => void;
-  onModuleUpdate: (e: ModuleImportState) => void;
-  onRenderParamsUpdate: (e: RenderParamsUpdatePayload<BrickId>) => void;
+  onModuleUpdate: (e: ModuleImportInfo<BrickId>) => void;
+  onRenderParamsUpdate: (e: RenderParamsUpdateInfo<BrickId>) => void;
 }): Providence => {
   const _runtime = setupRuntime({
     runtime,
@@ -73,17 +76,20 @@ export const setupProvidence = ({
     miraId,
     code,
     environment,
-    importModules,
+    resolvedValues,
+    importDefinitions,
   }: {
     id: BrickId;
     miraId: MiraId;
     code: string;
     environment: RuntimeEnvironment;
-    importModules: [string, string[]][];
+    resolvedValues: readonly [string, string[]][];
+    importDefinitions: readonly ImportDefinition[];
   }): Promise<EvaluatedResult> => {
     const transpiledData = await transpileCode({
       code,
-      importModules,
+      resolvedValues,
+      importDefinitions,
     });
     if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
       return {
@@ -96,6 +102,10 @@ export const setupProvidence = ({
       };
     }
     const transpiledCode = transpiledData.text;
+    const runtimeScope = environment.getRuntimeScope({});
+    for (const [k, v] of Object.entries(runtimeScope)) {
+      (globalThis as any)[k] = v;
+    }
     try {
       const source = URL.createObjectURL(
         new Blob([transpiledCode], { type: 'application/javascript' }),
@@ -111,7 +121,7 @@ export const setupProvidence = ({
         }
         exportVal.set(k, v);
       }
-      store.dependency?.updateExports(id, source, exportVal);
+      store.dependency?.updateSnippetExports(id, source, exportVal);
       return {
         id: miraId,
         environment,
@@ -142,18 +152,21 @@ export const setupProvidence = ({
     miraId,
     code,
     environment,
-    importModules,
+    resolvedValues,
+    importDefinitions,
     dependencyError,
   }: {
     miraId: MiraId;
     code: string;
     environment: RuntimeEnvironment;
-    importModules: [string, string[]][];
+    resolvedValues: readonly [string, string[]][];
+    importDefinitions: readonly ImportDefinition[];
     dependencyError: Error;
   }): Promise<EvaluatedResult> => {
     const transpiledData = await transpileCode({
       code,
-      importModules,
+      resolvedValues,
+      importDefinitions,
     });
     if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
       return {
@@ -202,7 +215,8 @@ export const setupProvidence = ({
               miraId,
               code,
               environment,
-              importModules: detail.importModules,
+              resolvedValues: detail.resolvedValues,
+              importDefinitions: detail.importDefinitions,
               dependencyError: detail.dependencyError,
             })
           : await run({
@@ -210,7 +224,8 @@ export const setupProvidence = ({
               miraId,
               code,
               environment,
-              importModules: detail.importModules,
+              resolvedValues: detail.resolvedValues,
+              importDefinitions: detail.importDefinitions,
             });
         return store.runTasks[detail.id][0] === runId
           ? ret
@@ -225,7 +240,7 @@ export const setupProvidence = ({
     runId = window.requestAnimationFrame(cb);
   };
 
-  const handleModuleUpdate = ({ detail }: ModuleUpdateEvent) => {
+  const handleModuleUpdate = ({ detail }: ModuleUpdateEvent<BrickId>) => {
     onModuleUpdate(detail);
   };
 
@@ -250,9 +265,9 @@ export const setupProvidence = ({
       delete store.runTarget[id];
     }
     if (typeof code === 'string') {
-      store.dependency?.upsertCode(id, code);
+      store.dependency?.upsertSnippet(id, code);
     } else {
-      store.dependency?.deleteCode(id);
+      store.dependency?.deleteSnippet(id);
     }
   };
 
@@ -274,6 +289,22 @@ export const setupProvidence = ({
     store.dependency?.refreshModule(event);
   };
 
+  let isPaused = false;
+
+  const pauseCodeUpdates = () => {
+    if (!isPaused) {
+      isPaused = true;
+      store.dependency?.pauseUpdateEvent();
+    }
+  };
+
+  const resumeCodeUpdates = () => {
+    if (isPaused) {
+      isPaused = false;
+      store.dependency?.resumeUpdateEvent();
+    }
+  };
+
   store.dependency = new DependencyManager<BrickId>({
     mdxPath,
     depsRootPath,
@@ -290,6 +321,8 @@ export const setupProvidence = ({
     dispatchCodeUpdates,
     dispatchScriptUpdates,
     refreshModule,
+    pauseCodeUpdates,
+    resumeCodeUpdates,
     teardown: () => {
       store.dependency?.removeEventListener(
         'dependencyUpdate',

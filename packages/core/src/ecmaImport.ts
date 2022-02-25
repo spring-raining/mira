@@ -67,6 +67,7 @@ export const parseImportClause = (
   } else if (namespaceImportMatch) {
     const defaultImport = namespaceImportMatch[1];
     if (defaultImport) {
+      hasDefaultImport = true;
       importBinding.default = defaultImport;
     }
     hasNamespaceImport = true;

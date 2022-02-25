@@ -1,11 +1,10 @@
 import { parseImportStatement, scanModuleSpecifier } from '@mirajs/core';
-import { ParsedImportStatement, ASTNode } from '../types';
+import { ParsedImportStatement, ASTNode, ImportDefinition } from '../types';
 
 const isPathImport = (spec: string): boolean =>
   spec[0] === '.' || spec[0] === '/';
 
-const isRemoteUrl = (spec: string): boolean =>
-  spec.startsWith('//') || /^https?:\/\//.test(spec);
+const isRemoteUrl = (spec: string): boolean => /^https?:\/\//.test(spec);
 
 const pathJoin = (...args: string[]): string => {
   let str = args[0];
@@ -24,31 +23,16 @@ const resolveLocalPath = (specifier: string, basePath: string): string => {
   return targetUrl.pathname;
 };
 
-export const getRelativeSpecifier = ({
-  url,
-  depsRootPath,
-}: {
-  url: string;
-  depsRootPath: string;
-}): string => {
-  const assetUrl = new URL(url);
-  if (assetUrl.origin !== window.location.origin) {
-    return url;
-  }
-  let targetPath = assetUrl.pathname;
-  if (targetPath.startsWith(depsRootPath)) {
-    targetPath = targetPath.substring(depsRootPath.length);
-  }
-  return new URL(targetPath, window.location.origin).pathname;
-};
-
 export const resolveImportSpecifier = ({
   specifier,
+  depsRootPath,
   contextPath = '.',
 }: {
   specifier: string;
+  depsRootPath: string;
   contextPath?: string;
 }): string => {
+  const origin = window.location.origin;
   if (isRemoteUrl(specifier)) {
     return specifier;
   }
@@ -56,16 +40,23 @@ export const resolveImportSpecifier = ({
     const basePath = pathJoin(contextPath.replace(/^\/+/, ''), '../');
     const resolvedPath = resolveLocalPath(specifier, basePath);
     // import query represents that is imported directly, which affects HMR behavior
-    return `${pathJoin('/-', resolvedPath)}?import`;
+    return `${pathJoin(origin, depsRootPath, '/-', resolvedPath)}?import`;
   }
-  return `${pathJoin('/-/node_modules', specifier)}?import`;
+  return `${pathJoin(
+    origin,
+    depsRootPath,
+    '/-/node_modules',
+    specifier,
+  )}?import`;
 };
 
 export const collectEsmImports = async ({
   node,
+  depsRootPath,
   contextPath,
 }: {
   node: ASTNode[];
+  depsRootPath: string;
   contextPath: string;
 }): Promise<ParsedImportStatement[]> => {
   const parseAll = node
@@ -84,6 +75,7 @@ export const collectEsmImports = async ({
     ...def,
     specifier: resolveImportSpecifier({
       specifier: def.specifier,
+      depsRootPath,
       contextPath,
     }),
   }));
@@ -93,30 +85,25 @@ export const collectEsmImports = async ({
 export const loadModule = async ({
   specifier,
   moduleLoader,
-  depsRootPath,
 }: {
   specifier: string;
   moduleLoader: (specifier: string) => Promise<any>;
-  depsRootPath: string;
 }): Promise<Record<string, unknown>> => {
-  const actualUrl = isRemoteUrl(specifier)
-    ? specifier
-    : pathJoin(depsRootPath, specifier);
-  const mod = await moduleLoader(actualUrl);
+  const mod = await moduleLoader(specifier);
   return mod;
 };
 
 export const mapModuleValues = ({
-  mod,
+  moduleProperties,
   definition,
 }: {
-  mod: Record<string, unknown>;
-  definition: ParsedImportStatement;
+  moduleProperties: Set<string>;
+  definition: ImportDefinition;
 }): Record<string, { specifier: string; name: string | null }> => {
   const { specifier } = definition;
   const importValues = Object.entries(definition.importBinding).reduce(
     (acc, [name, binding]) => {
-      if (!(name in mod)) {
+      if (!moduleProperties.has(name)) {
         throw new ReferenceError(
           `Module '${definition.specifier}' has no exported member '${name}'`,
         );

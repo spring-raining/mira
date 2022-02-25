@@ -68,3 +68,8 @@ export const miraEvaluateStateDictState = atom<Record<MiraId, EvaluateState>>({
   key: 'miraEvaluateStateDictState',
   default: {},
 });
+
+export const evaluatePausedState = atom<boolean>({
+  key: 'evaluatePausedState',
+  default: false,
+});

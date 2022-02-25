@@ -19,6 +19,7 @@ import {
   brickParseErrorState,
   brickModuleImportErrorState,
   brickTextSwapState,
+  evaluatePausedState,
 } from './atoms';
 
 const transpiledMdxCache = new WeakMap<Brick, string>();
@@ -83,6 +84,8 @@ export const useBricks = ({
   const [selectedBrickIds, setSelectedBrickIds] = useRecoilState(
     selectedBrickIdsState,
   );
+  const [evaluatePaused, setEvaluatePaused] =
+    useRecoilState(evaluatePausedState);
   const pushBrick = useRecoilCallback(
     ({ set }) =>
       async (newBrick: Brick) => {
@@ -109,8 +112,10 @@ export const useBricks = ({
   const importBricks = useRecoilCallback(
     ({ set }) =>
       async (bricks: Brick[]) => {
-        flushAll();
-        set(
+        // wait for setting evaluatePausedState to effect before updating bricks
+        await setEvaluatePaused(true);
+        await flushAll();
+        await set(
           brickDictState,
           bricks.reduce(
             (acc, brick) => ({
@@ -120,10 +125,11 @@ export const useBricks = ({
             {},
           ),
         );
-        set(
+        await set(
           brickOrderState,
           bricks.map(({ id }) => id),
         );
+        await setEvaluatePaused(false);
       },
     [flushAll],
   );
@@ -146,6 +152,9 @@ export const useBricks = ({
   useEffect(
     () =>
       cancellable(() => {
+        if (evaluatePaused) {
+          return;
+        }
         const mdx = bricks
           .map((brick) => {
             if (transpiledMdxCache.has(brick)) {
@@ -156,7 +165,7 @@ export const useBricks = ({
           .join('\n');
         onUpdateMdx(mdx);
       }),
-    [bricks, onUpdateMdx],
+    [bricks, onUpdateMdx, evaluatePaused],
   );
 
   return {

@@ -16,11 +16,11 @@ export const setupRuntime = async ({
 }): Promise<Runtime> => {
   const runtimeSpecifier = resolveImportSpecifier({
     specifier: runtime,
+    depsRootPath,
   });
   const runtimeModule = (await loadModule({
     specifier: runtimeSpecifier,
     moduleLoader,
-    depsRootPath,
   })) as any;
   const { getRuntimeScope } = (
     runtimeModule.runtimeEnvironmentFactory as RuntimeEnvironmentFactory

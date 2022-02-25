@@ -1,6 +1,8 @@
 import { RuntimeEnvironment as CoreRuntimeEnvironment } from '@mirajs/core';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
 
+export type { ImportDefinition };
+
 export type MiraWuiConfig = {
   runtime: string;
   inputDebounce?: number;
@@ -84,16 +86,38 @@ export interface EvaluateState {
   result: Promise<EvaluatedResult>;
 }
 
-export interface ModuleImportState {
-  mappedVal: Record<string, unknown>;
-  importDef: Record<string, readonly string[]>;
-  importError: Record<string, Error>;
-}
+export type ModuleImportDefinition = {
+  mappedName: readonly string[];
+  importDefinition: readonly ImportDefinition[];
+};
+
+export type ModuleImportMapping = {
+  specifier: string;
+  url: string;
+  name: string | null;
+};
+
+export type ModuleImportInfo<ID extends string> = {
+  importMapping: Record<string, ModuleImportMapping>;
+  importDef: Record<ID, ModuleImportDefinition>;
+  importError: Record<ID, Error>;
+};
+
+export type DependencyUpdateInfo<ID extends string> = {
+  id: ID;
+  resolvedValues: readonly [string, string[]][];
+  importDefinitions: readonly ImportDefinition[];
+  dependencyError: Error | undefined;
+};
+
+export type RenderParamsUpdateInfo<ID extends string> = {
+  id: ID;
+  params: Map<string, unknown>;
+};
 
 export interface RefreshModuleEvent {
   module: unknown;
   url: string;
-  bubbled: boolean;
 }
 
 export type CalleeId = `fn.${string}`;
