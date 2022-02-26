@@ -556,9 +556,30 @@ export class DependencyManager<ID extends string> extends EventTarget<{
     });
   }
 
-  refreshModule({ url: nextSpecifier, module }: RefreshModuleEvent) {
+  refreshModule({
+    url: refreshedModuleUrl,
+    module,
+    viteUpdate,
+  }: RefreshModuleEvent) {
     this.deferUpdateEvent(async () => {
-      const url = stripUrlParam(nextSpecifier);
+      const url = stripUrlParam(refreshedModuleUrl);
+      const nextSpecifier = (() => {
+        const { origin, pathname, search, hash } = new URL(refreshedModuleUrl);
+        let s = search;
+        const newTimestampQuery = `t=${viteUpdate.timestamp}`;
+        const timestampQueryMatch = s.match(/(t=\d+)/);
+        if (timestampQueryMatch) {
+          const { index, 1: str } = timestampQueryMatch;
+          s =
+            s.slice(0, index ?? 0) +
+            newTimestampQuery +
+            s.slice((index ?? 0) + str.length);
+        } else {
+          s += (s ? '&' : '?') + newTimestampQuery;
+        }
+        return `${origin}${pathname}${s}${hash}`;
+      })();
+
       const affectedModuleImportDef = (
         Object.entries(this.miraBrickModuleImportDef) as [
           ID,
@@ -624,11 +645,7 @@ export class DependencyManager<ID extends string> extends EventTarget<{
       this.moduleImportMapping = nextImportMapping;
       this.effectModuleUpdate();
 
-      (
-        Object.keys(
-          this.miraBrickSnippetSource,
-        ) as (keyof typeof this.miraBrickSnippetSource)[]
-      ).forEach((id) => {
+      (Object.keys(this.miraBrickSnippetSource) as ID[]).forEach((id) => {
         this.effectDependency(id);
       });
     });

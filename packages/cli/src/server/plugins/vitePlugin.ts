@@ -22,7 +22,11 @@ export async function vitePluginFactory(
     server: {
       middlewareMode: 'html',
     },
-    plugins: [hmrVitePlugin()],
+    plugins: [
+      hmrVitePlugin({
+        base: VITE_BASE,
+      }),
+    ],
   };
   const viteServer = await createServer(viteConfig);
 

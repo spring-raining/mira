@@ -1,5 +1,6 @@
 import { RuntimeEnvironment as CoreRuntimeEnvironment } from '@mirajs/core';
 import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
+import { Update } from 'vite';
 
 export type { ImportDefinition };
 
@@ -117,6 +118,7 @@ export type RenderParamsUpdateInfo<ID extends string> = {
 
 export interface RefreshModuleEvent {
   module: unknown;
+  viteUpdate: Update;
   url: string;
 }
 
