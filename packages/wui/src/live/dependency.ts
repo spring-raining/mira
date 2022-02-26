@@ -210,6 +210,20 @@ export class DependencyManager<ID extends string> extends EventTarget<{
     );
   }
 
+  private clearBrickItem(id: ID) {
+    const disposableSource = this.miraBrickSnippetSource[id];
+    delete this.miraBrickImportDef[id];
+    delete this.miraBrickExportDef[id];
+    delete this.miraBrickDefaultFunctionParams[id];
+    delete this.miraBrickSnippetSource[id];
+    delete this.miraBrickDependencyError[id];
+    delete this.miraBrickModuleImportDef[id];
+    delete this.miraBrickModuleImportError[id];
+    if (disposableSource) {
+      URL.revokeObjectURL(disposableSource);
+    }
+  }
+
   async deferUpdateEvent(fn: () => Promise<void>) {
     this.blockingEvaluateSemaphore += 1;
     try {
@@ -382,15 +396,7 @@ export class DependencyManager<ID extends string> extends EventTarget<{
       this.miraExportSource.delete(val);
       delete this.miraValDependency[val];
     });
-    const source = this.miraBrickSnippetSource[id];
-    if (source) {
-      URL.revokeObjectURL(source);
-    }
-    delete this.miraBrickImportDef[id];
-    delete this.miraBrickExportDef[id];
-    delete this.miraBrickDefaultFunctionParams[id];
-    delete this.miraBrickSnippetSource[id];
-    delete this.miraBrickDependencyError[id];
+    this.clearBrickItem(id);
 
     (
       Object.entries(this.miraBrickImportDef) as [
@@ -534,13 +540,16 @@ export class DependencyManager<ID extends string> extends EventTarget<{
         );
       }
       this.effectModuleUpdate();
+
+      (Object.keys(this.miraBrickSnippetSource) as ID[]).forEach((id) => {
+        this.effectDependency(id);
+      });
     });
   }
 
   deleteScript(id: ID) {
     this.deferUpdateEvent(async () => {
       const mappedName = this.miraBrickModuleImportDef[id]?.mappedName ?? [];
-      const disposableSource = this.miraBrickSnippetSource[id];
       if (mappedName.every((name) => !(name in this.moduleImportMapping))) {
         return;
       }
@@ -549,10 +558,12 @@ export class DependencyManager<ID extends string> extends EventTarget<{
         delete nextImportMapping[name];
       });
       this.moduleImportMapping = nextImportMapping;
+      this.clearBrickItem(id);
       this.effectModuleUpdate();
-      if (disposableSource) {
-        URL.revokeObjectURL(disposableSource);
-      }
+
+      (Object.keys(this.miraBrickSnippetSource) as ID[]).forEach((id) => {
+        this.effectDependency(id);
+      });
     });
   }
 
