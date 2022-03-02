@@ -6,6 +6,7 @@ import {
   selector,
   selectorFamily,
 } from 'recoil';
+import { useHistory } from '../hooks/useHistory';
 import { dehydrateBrick } from '../mdx/io';
 import { updateBrickByText, updateBrickTrait } from '../mdx/update';
 import { Brick, BrickId } from '../types';
@@ -14,6 +15,7 @@ import {
   activeBrickIdState,
   focusedBrickIdState,
   selectedBrickIdsState,
+  unsavedBrickIdsState,
   brickDictState,
   brickOrderState,
   brickParseErrorState,
@@ -84,8 +86,10 @@ export const useBricks = ({
   const [selectedBrickIds, setSelectedBrickIds] = useRecoilState(
     selectedBrickIdsState,
   );
+  const unsavedBrickIds = useRecoilValue(unsavedBrickIdsState);
   const [evaluatePaused, setEvaluatePaused] =
     useRecoilState(evaluatePausedState);
+
   const pushBrick = useRecoilCallback(
     ({ set }) =>
       async (newBrick: Brick) => {
@@ -103,6 +107,7 @@ export const useBricks = ({
         reset(activeBrickIdState);
         reset(focusedBrickIdState);
         reset(selectedBrickIdsState);
+        reset(unsavedBrickIdsState);
         reset(brickOrderState);
         reset(brickDictState);
         reset(brickTextSwapState);
@@ -172,6 +177,7 @@ export const useBricks = ({
     bricks,
     brickOrder,
     selectedBrickIds,
+    unsavedBrickIds,
     pushBrick,
     flushAll,
     importBricks,
@@ -182,6 +188,7 @@ export const useBricks = ({
 };
 
 export const useBrick = (brickId: BrickId) => {
+  const { commit } = useHistory();
   const brick = useRecoilValue(brickStateFamily(brickId));
   const brickParseError = useRecoilValue(brickParseErrorStateFamily(brickId));
   const brickModuleImportError = useRecoilValue(
@@ -190,8 +197,10 @@ export const useBrick = (brickId: BrickId) => {
   const activeBrickId = useRecoilValue(activeBrickIdState);
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
+  const unsavedBrickIds = useRecoilValue(unsavedBrickIdsState);
   const swap = useRecoilValue(brickTextSwapStateFamily(brickId));
   const literalBrickData = useRecoilValue(literalBrickDataFamily(brickId));
+
   const setActive = useRecoilCallback(
     ({ set }) =>
       () => {
@@ -248,8 +257,9 @@ export const useBrick = (brickId: BrickId) => {
         } else {
           set(brickStateFamily(brickId), newBrick);
         }
+        commit();
       },
-    [brickId],
+    [brickId, commit],
   );
   const updateTrait = useRecoilCallback(
     ({ set, snapshot }) =>
@@ -291,8 +301,9 @@ export const useBrick = (brickId: BrickId) => {
         } else {
           set(brickStateFamily(brickId), newBrick);
         }
+        commit();
       },
-    [brickId],
+    [brickId, commit],
   );
   const setSwap = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -329,8 +340,9 @@ export const useBrick = (brickId: BrickId) => {
           return;
         }
         updateText(swap.text);
+        commit();
       },
-    [brickId, updateText],
+    [brickId, updateText, commit],
   );
 
   return {
@@ -344,6 +356,7 @@ export const useBrick = (brickId: BrickId) => {
     isActive: brickId === activeBrickId,
     isFocused: brickId === focusedBrickId,
     isSelected: selectedBrickIds.includes(brickId),
+    isUnsaved: unsavedBrickIds.includes(brickId),
     setActive,
     setFocused,
     setSwap,
@@ -352,6 +365,8 @@ export const useBrick = (brickId: BrickId) => {
 };
 
 export const useBrickManipulator = () => {
+  const { commit } = useHistory();
+
   const insertBrick = useRecoilCallback(
     ({ snapshot, set }) =>
       async ({
@@ -376,8 +391,9 @@ export const useBrickManipulator = () => {
         );
         set(brickDictState, brickDict);
         set(brickOrderState, brickOrder);
+        commit();
       },
-    [],
+    [commit],
   );
 
   const cleanup = useRecoilCallback(
@@ -392,8 +408,9 @@ export const useBrickManipulator = () => {
         set(brickStateFamily(brickId), undefined);
         set(brickTextSwapStateFamily(brickId), undefined);
         delete editorRefs[brickId];
+        commit();
       },
-    [],
+    [commit],
   );
 
   return { insertBrick, cleanup };

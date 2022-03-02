@@ -1,8 +1,10 @@
 import { ServiceOptions } from '@mirajs/transpiler';
 import clsx from 'clsx';
 import React, { useEffect, useMemo } from 'react';
+import { GlobalHotKeys } from 'react-hotkeys';
 import { RecoilRoot } from 'recoil';
 import { HistoryObserver } from '../hooks/useHistory';
+import { useKeyEvent } from '../hooks/useKeyEvent';
 import { ProvidenceObserver } from '../hooks/useProvidence';
 import {
   RootContainerQueryProvider,
@@ -41,6 +43,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   });
   const config = useConfig();
   const rootContainerQuery = useRootContainerQuery();
+  const { keyMap, keyEventHandlers } = useKeyEvent();
   const displayColumnClass = useMemo(
     () =>
       config.layout === 'oneColumn'
@@ -75,6 +78,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
 
   return (
     <div className={clsx(style.universeContainer, displayColumnClass)}>
+      <GlobalHotKeys keyMap={keyMap} handlers={keyEventHandlers} />
       <main className={style.mainPane}>
         <div className={style.mainSticky}>
           {bricks.map((brick) => (

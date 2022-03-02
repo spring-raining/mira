@@ -10,7 +10,7 @@ import {
 } from '../state/atoms';
 import { useHistoryRef } from './history/context';
 
-const recordableAtoms: Readonly<RecoilState<any>[]> = [
+const recordingAtoms: Readonly<RecoilState<any>[]> = [
   brickDictState,
   brickOrderState,
   activeBrickIdState,
@@ -20,7 +20,15 @@ export const HistoryObserver = () => {
   const historyRef = useHistoryRef();
   useRecoilTransactionObserver_UNSTABLE(({ snapshot }) => {
     const prev = historyRef.current.stack;
-    historyRef.current.stack = [...prev.slice(0, prev.length - 1), snapshot];
+    const purged = prev.slice(prev.length - 1);
+    historyRef.current.stack = [
+      ...prev.slice(0, prev.length - 1),
+      {
+        snapshot,
+        release: snapshot.retain(),
+      },
+    ];
+    purged.forEach(({ release }) => release());
   });
   return null;
 };
@@ -32,10 +40,18 @@ export const useHistory = () => {
     ({ snapshot }) =>
       async () => {
         const { stack, depth } = historyRef.current;
+        const purged = stack.slice(depth + 1);
         historyRef.current = {
-          stack: [...stack.slice(0, depth + 1), snapshot],
+          stack: [
+            ...stack.slice(0, depth + 1),
+            {
+              snapshot,
+              release: snapshot.retain(),
+            },
+          ],
           depth: depth + 1,
         };
+        purged.forEach(({ release }) => release());
       },
     [],
   );
@@ -47,15 +63,18 @@ export const useHistory = () => {
         if (depth + step < 0 || depth + step >= stack.length - 1) {
           return;
         }
-        const restoreSnapshot = stack[depth + step];
+        const restoreSnapshot = stack[depth + step].snapshot;
         const newSnapshot = await snapshot.asyncMap(async ({ set }) => {
-          for (const state of recordableAtoms) {
+          for (const state of recordingAtoms) {
             const val = await restoreSnapshot.getPromise(state);
             set(state, val);
           }
         });
         historyRef.current = {
-          stack: depth < stack.length - 1 ? stack : [...stack, snapshot],
+          stack:
+            depth < stack.length - 1
+              ? stack
+              : [...stack, { snapshot, release: snapshot.retain() }],
           depth: depth + step,
         };
         gotoSnapshot(newSnapshot);

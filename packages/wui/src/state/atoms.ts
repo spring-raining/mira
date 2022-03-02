@@ -38,6 +38,11 @@ export const selectedBrickIdsState = atom<BrickId[]>({
   default: [],
 });
 
+export const unsavedBrickIdsState = atom<BrickId[]>({
+  key: 'unsavedBrickIdsState',
+  default: [],
+});
+
 export const brickParseErrorState = atom<
   Record<BrickId, { error: Error; parsedText: string }>
 >({

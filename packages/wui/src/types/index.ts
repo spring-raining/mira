@@ -4,10 +4,15 @@ import { Update } from 'vite';
 
 export type { ImportDefinition };
 
+export type KeyActions = 'UNDO' | 'REDO';
+export type KeySequence = string | Array<string>;
+export type KeyMap = { [k in KeyActions]: KeySequence };
+
 export type MiraWuiConfig = {
   runtime: string;
   inputDebounce?: number;
   layout?: 'oneColumn' | 'twoColumn';
+  keyMap?: Partial<KeyMap>;
 };
 
 export type ParsedImportStatement = ImportDefinition & {

@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useRef } from 'react';
 import { Snapshot } from 'recoil';
 
+interface HistoryStep {
+  snapshot: Snapshot;
+  release: () => void;
+}
+
 export interface HistoryStore {
-  stack: Snapshot[];
+  stack: HistoryStep[];
   depth: number;
 }
 const defaultHistoryStore: HistoryStore = {
