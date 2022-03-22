@@ -7,24 +7,26 @@ import {
 import { vars } from '../../styles/themes.css';
 import { displayColumn } from './../Universe.css';
 
-export const blockContainer = defineStyle({
-  ...css({
+export const blockContainer = defineStyle([
+  css({
     pos: 'relative',
     my: -10,
     pointerEvents: 'none',
     d: 'grid',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridTemplateColumns: `${vars.sizes['8']} 1fr`,
-      gridTemplateRows: `${vars.sizes['10']} auto auto ${vars.sizes['10']}`,
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridTemplateColumns: `${vars.sizes['8']} 1fr 1fr`,
-      gridTemplateRows: `${vars.sizes['10']} auto ${vars.sizes['10']}`,
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridTemplateColumns: `${vars.sizes['8']} 1fr`,
+        gridTemplateRows: `${vars.sizes['10']} auto auto ${vars.sizes['10']}`,
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridTemplateColumns: `${vars.sizes['8']} 1fr 1fr`,
+        gridTemplateRows: `${vars.sizes['10']} auto ${vars.sizes['10']}`,
+      }),
+    },
   },
-});
+]);
 defineGlobalStyle(
   `${blockContainer} > *`,
   css({
@@ -32,49 +34,55 @@ defineGlobalStyle(
   }),
 );
 
-export const editorArea = defineStyle({
-  ...css({
+export const editorArea = defineStyle([
+  css({
     position: 'relative',
     maxW: 'xl',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '2 / 2',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '2 / 2',
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '2 / 2',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '2 / 2',
+      }),
+    },
   },
-});
+]);
 
-export const notePreviewArea = defineStyle({
-  ...css({
+export const notePreviewArea = defineStyle([
+  css({
     position: 'relative',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '2 / 2 / span 2 / auto',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '2 / 2 / auto / span 2',
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '2 / 2 / span 2 / auto',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '2 / 2 / auto / span 2',
+      }),
+    },
   },
-});
+]);
 
-export const livePreviewArea = defineStyle({
-  ...css({
+export const livePreviewArea = defineStyle([
+  css({
     position: 'relative',
     pointerEvents: 'none',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '3 / 2',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '2 / 3',
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '3 / 2',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '2 / 3',
+      }),
+    },
   },
-});
+]);
 defineGlobalStyle(
   `${livePreviewArea} > *`,
   css({
@@ -82,85 +90,93 @@ defineGlobalStyle(
   }),
 );
 
-export const topToolbarArea = defineStyle({
-  ...css({
+export const topToolbarArea = defineStyle([
+  css({
     position: 'relative',
     borderBottom: '2px',
     borderColor: 'gray.200',
     d: 'flex',
     alignItems: 'flex-end',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '1 / 2',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '1 / 2 / auto / span 2',
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '1 / 2',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '1 / 2 / auto / span 2',
+      }),
+    },
   },
-});
+]);
 
-export const contentLeftHandleArea = defineStyle({
-  ...css({
+export const contentLeftHandleArea = defineStyle([
+  css({
     position: 'relative',
     d: 'flex',
     alignItems: 'stretch',
     justifyContent: 'center',
   }),
-  ':before': {
-    content: '""',
-    ...css({
-      d: 'block',
-      w: 0,
-      borderLeft: '4px dashed',
-      borderColor: 'gray.200',
-    }),
+  {
+    ':before': {
+      content: '""',
+      ...css({
+        d: 'block',
+        w: 0,
+        borderLeft: '4px dashed',
+        borderColor: 'gray.200',
+      }),
+    },
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '2 / 1 / span 2',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '2 / 1',
+      }),
+    },
   },
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '2 / 1 / span 2',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '2 / 1',
-    }),
-  },
-});
+]);
 
-export const topLeftArea = defineStyle({
-  ...css({
+export const topLeftArea = defineStyle([
+  css({
     position: 'relative',
     gridArea: '1 / 1',
     d: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '1 / 1',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '1 / 1',
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '1 / 1',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '1 / 1',
+      }),
+    },
   },
-});
+]);
 
-export const bottomLeftArea = defineStyle({
-  ...css({
+export const bottomLeftArea = defineStyle([
+  css({
     position: 'relative',
     gridArea: '3 / 1',
     d: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   }),
-  selectors: {
-    [`${displayColumn.oneColumn} &`]: css({
-      gridArea: '4 / 1',
-    }),
-    [`${displayColumn.twoColumn} &`]: css({
-      gridArea: '3 / 1',
-    }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '4 / 1',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '3 / 1',
+      }),
+    },
   },
-});
+]);
 
 export const topSticky = defineStyle(
   css({

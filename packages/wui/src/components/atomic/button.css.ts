@@ -3,8 +3,8 @@ import { css, defineRecipe } from '../../styles/system.css';
 const buttonColors = ['blue', 'red'] as const;
 
 export const button = defineRecipe({
-  base: {
-    ...css({
+  base: [
+    css({
       d: 'inline-flex',
       appearance: 'none',
       alignItems: 'center',
@@ -18,10 +18,12 @@ export const button = defineRecipe({
       borderRadius: 'md',
       fontWeight: 'semibold',
     }),
-    ':focus': {
-      boxShadow: 'outline',
+    {
+      ':focus': css({
+        boxShadow: 'outline',
+      }),
     },
-  },
+  ],
   variants: {
     variant: {
       ghost: css({
@@ -33,17 +35,19 @@ export const button = defineRecipe({
         bg: 'transparent',
       }),
       solid: css({}),
-      link: {
-        ...css({
+      link: [
+        css({
           p: 0,
           h: 'auto',
           lineHeight: 'normal',
           verticalAlign: 'baseline',
         }),
-        ':hover': css({
-          textDecoration: 'underline',
-        }),
-      },
+        {
+          ':hover': css({
+            textDecoration: 'underline',
+          }),
+        },
+      ],
     },
     colorScheme: {
       blue: {},
@@ -98,49 +102,55 @@ export const button = defineRecipe({
         variant: 'outline',
         colorScheme: color,
       },
-      style: {
-        ...css({
+      style: [
+        css({
           color: `${color}.600`,
         }),
-        ':hover': css({
-          bg: `${color}.50`,
-        }),
-        ':active': css({
-          bg: `${color}.100`,
-        }),
-      },
+        {
+          ':hover': css({
+            bg: `${color}.50`,
+          }),
+          ':active': css({
+            bg: `${color}.100`,
+          }),
+        },
+      ],
     },
     {
       variants: {
         variant: 'solid',
         colorScheme: color,
       },
-      style: {
-        ...css({
+      style: [
+        css({
           bg: `${color}.500`,
           color: 'white',
         }),
-        ':hover': css({
-          bg: `${color}.600`,
-        }),
-        ':active': css({
-          bg: `${color}.700`,
-        }),
-      },
+        {
+          ':hover': css({
+            bg: `${color}.600`,
+          }),
+          ':active': css({
+            bg: `${color}.700`,
+          }),
+        },
+      ],
     },
     {
       variants: {
         variant: 'link',
         colorScheme: color,
       },
-      style: {
-        ...css({
+      style: [
+        css({
           color: `${color}.500`,
         }),
-        ':active': css({
-          color: `${color}.700`,
-        }),
-      },
+        {
+          ':active': css({
+            color: `${color}.700`,
+          }),
+        },
+      ],
     },
   ]),
 });

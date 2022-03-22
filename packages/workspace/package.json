@@ -8,7 +8,6 @@
   "types": "./lib/module/index.d.ts",
   "scripts": {
     "prebuild": "shx rm -rf lib",
-    "dev": "next dev",
     "build": "run-s build:*",
     "build:next": "next build",
     "build:module": "run-p build:module:*",

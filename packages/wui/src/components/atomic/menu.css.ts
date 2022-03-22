@@ -21,8 +21,8 @@ export const menuList = defineStyle(
   }),
 );
 
-export const menuItem = defineStyle({
-  ...css({
+export const menuItem = defineStyle([
+  css({
     textDecoration: 'none',
     color: 'inherit',
     userSelect: 'none',
@@ -36,13 +36,15 @@ export const menuItem = defineStyle({
     py: '0.2rem',
     px: 4,
   }),
-  ':focus': css({
-    bg: 'gray.100',
-  }),
-  ':active': css({
-    bg: 'gray.200',
-  }),
-});
+  {
+    ':focus': css({
+      bg: 'gray.100',
+    }),
+    ':active': css({
+      bg: 'gray.200',
+    }),
+  },
+]);
 
 export const menuIcon = defineStyle(
   css({

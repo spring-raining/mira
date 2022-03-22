@@ -11,6 +11,7 @@
     "build": "run-p build:*",
     "build:rollup": "rollup -c",
     "build:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
+    "dev": "rollup -c -w --no-watch.clearScreen --environment DEV",
     "test": "jest",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
