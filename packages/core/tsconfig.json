@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "include": ["global.d.ts", "src/**/*.ts"],
-  "compilerOptions": {
-    "noEmit": false,
-    "declaration": true
-  }
-}

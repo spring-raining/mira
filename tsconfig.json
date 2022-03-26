@@ -7,16 +7,17 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "declaration": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
     "useDefineForClassFields": false
   },
+  "include": ["src/**/*.ts", "module/**/*.ts"],
   "exclude": ["node_modules"]
 }

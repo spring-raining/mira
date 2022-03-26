@@ -1,9 +1,1 @@
-{
-  "extends": "../../tsconfig.json",
-  "include": ["module/**/*.ts"],
-  "compilerOptions": {
-    "emitDecoratorMetadata": true,
-    "noEmit": false,
-    "declaration": true
-  }
-}
+../../tsconfig.json

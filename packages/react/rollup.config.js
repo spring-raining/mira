@@ -1,16 +1,6 @@
 import path from 'path';
-import commonjs from '@rollup/plugin-commonjs';
-import nodeResolve from '@rollup/plugin-node-resolve';
-import typescript from '@rollup/plugin-typescript';
-
-const plugins = [
-  commonjs(),
-  nodeResolve(),
-  typescript({
-    tsconfig: './tsconfig.json',
-    declaration: false,
-  }),
-];
+import { commonPlugins } from '../../rollup.config';
+import * as packageJson from './package.json';
 
 const output = [
   {
@@ -28,8 +18,8 @@ const output = [
         sourcemap: true,
       },
     ],
-    external: ['react', 'react-dom'],
-    plugins,
+    external: Object.keys(packageJson.peerDependencies),
+    plugins: commonPlugins,
   },
 ];
 
