@@ -1,6 +1,7 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2019",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -15,8 +16,7 @@
     "jsx": "preserve",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
-    "useDefineForClassFields": false,
-    "incremental": true
+    "useDefineForClassFields": false
   },
   "exclude": ["node_modules"]
 }

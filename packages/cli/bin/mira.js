@@ -4,6 +4,6 @@
 import 'reflect-metadata';
 
 (async () => {
-  const { main } = await import('../lib/cli.mjs');
+  const { main } = await import('../dist/cli.js');
   main();
 })();

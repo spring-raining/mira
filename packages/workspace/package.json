@@ -2,17 +2,21 @@
   "name": "@mirajs/workspace",
   "version": "1.0.0",
   "private": true,
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "exports": {
-    ".": "./lib/index.mjs"
+    ".": {
+      "default": "./dist/index.mjs"
+    }
   },
-  "types": "./lib/module/index.d.ts",
+  "types": "./dist/module/index.d.ts",
   "scripts": {
-    "prebuild": "shx rm -rf lib",
+    "prebuild": "shx rm -rf dist",
     "build": "run-s build:*",
     "build:next": "next build",
     "build:module": "run-p build:module:*",
     "build:module:rollup": "rollup -c",
-    "build:module:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir lib",
+    "build:module:types": "tsc -p tsconfig.module.json --emitDeclarationOnly --outDir dist",
     "start": "next start",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"

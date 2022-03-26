@@ -11,7 +11,7 @@ export default defineConfig({
       formats: ['es'],
       fileName: (format) => `index.${format}.js`,
     },
-    outDir: path.resolve(__dirname, 'lib'),
+    outDir: path.resolve(__dirname, 'dist'),
     // avoid deleting type directory on development
     emptyOutDir: false,
     rollupOptions: {

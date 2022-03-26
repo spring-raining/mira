@@ -1,22 +1,23 @@
 {
   "name": "@mirajs/wui",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
+  "main": "./dist/index.es.js",
+  "module": "./dist/index.es.js",
   "exports": {
     ".": {
-      "import": "./lib/index.es.js"
+      "default": "./dist/index.es.js"
     },
-    "./styles.css": "./lib/style.css"
+    "./styles.css": "./dist/style.css"
   },
-  "types": "./lib/module/index.d.ts",
+  "types": "./dist/module/index.d.ts",
   "scripts": {
-    "prebuild": "shx rm -rf dist lib",
+    "prebuild": "shx rm -rf dist",
     "dev": "vite build -w",
     "dev:server": "vite",
     "build": "run-s build:module:vite build:module:types",
     "build:module:vite": "vite build",
-    "build:module:types": "tsc -p tsconfig.module.json --emitDeclarationOnly",
+    "build:module:types": "tsc -p tsconfig.types.json --emitDeclarationOnly --outDir dist",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"

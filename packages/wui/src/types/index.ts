@@ -1,5 +1,5 @@
 import { RuntimeEnvironment as CoreRuntimeEnvironment } from '@mirajs/core';
-import { ImportDefinition } from '@mirajs/core/lib/ecmaImport';
+import { ImportDefinition } from '@mirajs/core/dist/ecmaImport';
 import { Update } from 'vite';
 
 export type { ImportDefinition };

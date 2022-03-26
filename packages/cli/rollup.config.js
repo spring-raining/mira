@@ -13,7 +13,7 @@ const plugins = [
   }),
   nodeResolve({ preferBuiltins: true }),
   typescript({
-    tsconfig: './tsconfig.module.json',
+    tsconfig: './tsconfig.json',
     declaration: false,
   }),
 ];
@@ -25,19 +25,13 @@ const nodeOutput = {
   ],
   output: [
     {
-      dir: path.resolve(__dirname, 'lib'),
-      entryFileNames: '[name].mjs',
-      chunkFileNames: '[name]-[hash].mjs',
+      dir: path.resolve(__dirname, 'dist'),
+      entryFileNames: '[name].js',
+      chunkFileNames: '[name]-[hash].js',
       format: 'module',
       exports: 'named',
       sourcemap: true,
     },
-    // {
-    //   dir: path.resolve(__dirname, 'dist'),
-    //   format: 'cjs',
-    //   exports: 'named',
-    //   sourcemap: true,
-    // },
   ],
   external: [
     ...Object.keys(packageJson.dependencies),

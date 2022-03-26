@@ -8,7 +8,7 @@ const plugins = [
   commonjs(),
   nodeResolve(),
   typescript({
-    tsconfig: './tsconfig.module.json',
+    tsconfig: './tsconfig.json',
     declaration: false,
   }),
 ];
@@ -18,9 +18,9 @@ const output = [
     input: [path.resolve(__dirname, 'src/index.ts')],
     output: [
       {
-        dir: path.resolve(__dirname, 'lib'),
-        entryFileNames: '[name].mjs',
-        chunkFileNames: '[name]-[hash].mjs',
+        dir: path.resolve(__dirname, 'dist'),
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name]-[hash].js',
         format: 'module',
         exports: 'named',
         sourcemap: true,

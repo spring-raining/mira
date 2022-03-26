@@ -3,7 +3,7 @@ import {
   scanModuleSpecifier,
   scanDeclarations,
 } from '@mirajs/core';
-import type { ExportDefaultDeclaration } from '@mirajs/core/lib/declaration-parser/types';
+import type { ExportDefaultDeclaration } from '@mirajs/core/dist/declaration-parser/types';
 import { EventTarget, Event } from 'event-target-shim';
 import { collectEsmImports, loadModule, mapModuleValues } from '../mdx/imports';
 import {
