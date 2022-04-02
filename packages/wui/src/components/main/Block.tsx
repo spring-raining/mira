@@ -11,7 +11,7 @@ import { useEvaluatedResultLoadable } from '../../state/evaluator';
 import { sprinkles } from '../../styles/sprinkles.css';
 import { BrickId } from '../../types';
 import { CodePreview } from '../CodePreview';
-import { Editor as NewEditor } from '../NewEditor';
+import { Editor } from '../Editor';
 import { IconButton } from '../atomic/button';
 import { PlusIcon } from '../icon/plus';
 import * as style from './Block.css';
@@ -120,7 +120,7 @@ export const Block: React.FC<{
           )}
         >
           <div className={style.editorContainer({ isActive })}>
-            <NewEditor
+            <Editor
               brickId={id}
               language={editorLanguage}
               errorMarkers={
