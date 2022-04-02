@@ -27,6 +27,7 @@ module.exports = {
     'sort-imports': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-unnecessary-type-constraint': 'off',
     'import/order': ['warn', { alphabetize: { order: 'asc' } }],
     'import/no-unresolved': 'off',
   },

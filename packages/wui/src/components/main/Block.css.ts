@@ -219,9 +219,7 @@ export const middleToolContainer = defineRecipe({
 
 export const editorContainer = defineRecipe({
   base: css({
-    pos: 'absolute',
-    top: 0,
-    insetX: 0,
+    w: 'full',
     borderBottomRadius: 'md',
     bgColor: 'gray.50',
   }),

@@ -1,35 +1,29 @@
-import type { editor } from 'monaco-editor';
-import { useCallback } from 'react';
-import { useRecoilCallback } from 'recoil';
+import { history, undo, redo } from '@codemirror/history';
+import { EditorState } from '@codemirror/state';
+import { EditorView, ViewUpdate, keymap } from '@codemirror/view';
+import { useCallback, useMemo, useEffect } from 'react';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { BrickId } from '../types';
+import { useDebouncedCallback } from './../hooks/useDebouncedCallback';
 import { activeBrickIdState, brickOrderState } from './atoms';
-import { useBrick } from './brick';
+import { useBrick, brickStateFamily } from './brick';
 
-// Setting to recoil atoms seems to occur errors
-export const editorRefs: Record<string, editor.IStandaloneCodeEditor> = {};
-
-const hasIntersect = (
-  el: HTMLElement,
-  { top = 0, bottom = 0 }: { top?: number; bottom?: number } = {},
-): boolean => {
-  const rect = el.getBoundingClientRect();
-  return (
-    rect.top <= window.innerHeight + bottom && rect.top + rect.height >= top
-  );
+const editorStates: Record<BrickId, EditorState> = {};
+const stateToViewMap = new WeakMap<EditorState, EditorView>();
+export const destroyEditorState = (id: BrickId) => {
+  const state = editorStates[id];
+  if (state) {
+    stateToViewMap.delete(state);
+    delete editorStates[id];
+  }
 };
 
-export const useEditorCallbacks = ({ brickId }: { brickId: BrickId }) => {
+export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
+  const brick = useRecoilValue(brickStateFamily(brickId));
   const { setSwap, applySwap } = useBrick(brickId);
 
-  const onEditorUpdate = useCallback(
-    (editor: editor.IStandaloneCodeEditor) => {
-      editorRefs[brickId] = editor;
-    },
-    [brickId],
-  );
-
   const onMoveForwardCommand = useRecoilCallback(
-    ({ snapshot }) =>
+    ({ snapshot, set }) =>
       async () => {
         const brickOrder = await snapshot.getPromise(brickOrderState);
         const idx = brickOrder.findIndex((id) => id === brickId);
@@ -38,22 +32,27 @@ export const useEditorCallbacks = ({ brickId }: { brickId: BrickId }) => {
         }
         const nextBrickId = brickOrder
           .slice(idx + 1)
-          .find((id) => !!editorRefs[id]);
-        if (!nextBrickId) {
+          .find((id) => !!editorStates[id]);
+        const view =
+          nextBrickId && stateToViewMap.get(editorStates[nextBrickId]);
+        if (!view) {
           return;
         }
-        editorRefs[nextBrickId].focus();
-        editorRefs[nextBrickId].setPosition({ lineNumber: 1, column: 0 });
-        const containerDom = editorRefs[nextBrickId].getContainerDomNode();
-        if (containerDom && !hasIntersect(containerDom)) {
-          containerDom.scrollIntoView(false);
-        }
+        set(activeBrickIdState, nextBrickId);
+        view.focus();
+        view.dispatch(
+          view.state.update({
+            selection: { anchor: 0 },
+            scrollIntoView: true,
+            userEvent: 'select',
+          }),
+        );
       },
     [brickId],
   );
 
   const onMoveBackwardCommand = useRecoilCallback(
-    ({ snapshot }) =>
+    ({ snapshot, set }) =>
       async () => {
         const brickOrder = await snapshot.getPromise(brickOrderState);
         const idx = brickOrder.findIndex((id) => id === brickId);
@@ -63,53 +62,112 @@ export const useEditorCallbacks = ({ brickId }: { brickId: BrickId }) => {
         const prevBrickId = brickOrder
           .slice(0, idx)
           .reverse()
-          .find((id) => !!editorRefs[id]);
-        if (!prevBrickId) {
+          .find((id) => !!editorStates[id]);
+        const view =
+          prevBrickId && stateToViewMap.get(editorStates[prevBrickId]);
+        if (!view) {
           return;
         }
-        editorRefs[prevBrickId].focus();
-        editorRefs[prevBrickId].setPosition({
-          lineNumber: Infinity,
-          column: Infinity,
-        });
-        const containerDom = editorRefs[prevBrickId].getContainerDomNode();
-        if (containerDom && !hasIntersect(containerDom, { top: 100 })) {
-          containerDom.scrollIntoView(true);
-          // scroll downward by header height
-          window.scrollBy(0, -100);
+        set(activeBrickIdState, prevBrickId);
+        view.focus();
+        view.dispatch(
+          view.state.update({
+            selection: { anchor: view.state.doc.length },
+            scrollIntoView: true,
+            userEvent: 'select',
+          }),
+        );
+      },
+    [brickId],
+  );
+
+  const viewUpdateListener = useRecoilCallback(
+    ({ set }) =>
+      (update: ViewUpdate) => {
+        const doc = update.state.doc.toString();
+        if (update.docChanged) {
+          setSwap(doc);
+        }
+        if (update.focusChanged) {
+          if (update.view.hasFocus) {
+            set(activeBrickIdState, brickId);
+          } else {
+            applySwap();
+          }
         }
       },
-    [brickId],
+    [brickId, setSwap, applySwap],
+  );
+  const debouncedViewUpdateListener = useDebouncedCallback(
+    viewUpdateListener,
+    66,
   );
 
-  const onChange = useRecoilCallback(
-    () => async (code: string) => {
-      setSwap(code);
-    },
-    [setSwap],
-  );
+  const editorState = useMemo((): EditorState => {
+    let state = editorStates[brickId];
+    if (!state) {
+      const handleCursorPageUp = ({ state }: EditorView) => {
+        if (state.selection.main.anchor === 0) {
+          onMoveBackwardCommand();
+          return true;
+        }
+        return false;
+      };
+      const handleCursorPageDown = ({ state }: EditorView) => {
+        if (state.selection.main.anchor === state.doc.length) {
+          onMoveForwardCommand();
+          return true;
+        }
+        return false;
+      };
 
-  const onFocus = useRecoilCallback(
-    ({ set }) =>
-      () => {
-        set(activeBrickIdState, brickId);
-      },
-    [brickId],
-  );
-
-  const onBlur = useRecoilCallback(
-    () => async () => {
-      applySwap();
-    },
-    [applySwap],
-  );
-
-  return {
-    onEditorUpdate,
+      state = EditorState.create({
+        doc: brick?.text,
+        extensions: [
+          history(),
+          keymap.of([
+            { key: 'Mod-z', run: undo, preventDefault: true },
+            {
+              key: 'Mod-y',
+              mac: 'Mod-Shift-z',
+              run: redo,
+              preventDefault: true,
+            },
+            {
+              key: 'Mod-ArrowUp',
+              run: handleCursorPageUp,
+            },
+            {
+              key: 'Mod-ArrowDown',
+              run: handleCursorPageDown,
+            },
+          ]),
+          EditorView.updateListener.of(debouncedViewUpdateListener),
+        ],
+      });
+      editorStates[brickId] = state;
+    }
+    return state;
+  }, [
+    brickId,
+    brick,
+    debouncedViewUpdateListener,
     onMoveForwardCommand,
     onMoveBackwardCommand,
-    onChange,
-    onFocus,
-    onBlur,
-  };
+  ]);
+
+  const setEditorView = useCallback(
+    (editorView: EditorView) => {
+      stateToViewMap.set(editorState, editorView);
+    },
+    [editorState],
+  );
+  useEffect(
+    () => () => {
+      stateToViewMap.delete(editorState);
+    },
+    [editorState],
+  );
+
+  return { editorState, setEditorView };
 };

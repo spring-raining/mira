@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useInViewBrickState } from '../../hooks/useInViewState';
 import {
@@ -7,12 +7,11 @@ import {
   useBrickManipulator,
   createNewBrick,
 } from '../../state/brick';
-import { useEditorCallbacks } from '../../state/editor';
 import { useEvaluatedResultLoadable } from '../../state/evaluator';
 import { sprinkles } from '../../styles/sprinkles.css';
 import { BrickId } from '../../types';
 import { CodePreview } from '../CodePreview';
-import { Editor, EditorLoaderConfig } from '../Editor';
+import { Editor as NewEditor } from '../NewEditor';
 import { IconButton } from '../atomic/button';
 import { PlusIcon } from '../icon/plus';
 import * as style from './Block.css';
@@ -22,8 +21,7 @@ import { Presentation } from './Presentation';
 
 export const Block: React.FC<{
   id: BrickId;
-  editorLoaderConfig?: EditorLoaderConfig;
-}> = ({ id, editorLoaderConfig }) => {
+}> = ({ id }) => {
   const {
     brick,
     parseError,
@@ -36,7 +34,6 @@ export const Block: React.FC<{
     setFocused,
   } = useBrick(id);
   const { insertBrick } = useBrickManipulator();
-  const editorCallbacks = useEditorCallbacks({ brickId: id });
   const { evaluatedResultLoadable } = useEvaluatedResultLoadable(
     literalBrickData?.mira?.id,
   );
@@ -83,11 +80,6 @@ export const Block: React.FC<{
     }, []),
   };
 
-  const [editorHeight, setEditorHeight] = useState(0);
-  const onContentHeightChange = useCallback((height) => {
-    setEditorHeight(height);
-  }, []);
-
   const [observerRef, inView] = useInView({ threshold: 0 });
   const { updateInViewState } = useInViewBrickState();
   useEffect(() => {
@@ -126,13 +118,11 @@ export const Block: React.FC<{
               !isActive &&
               sprinkles({ visibility: 'hidden' }),
           )}
-          style={{ height: editorHeight }}
         >
           <div className={style.editorContainer({ isActive })}>
-            <Editor
+            <NewEditor
+              brickId={id}
               language={editorLanguage}
-              padding={{ top: 16, bottom: 16 }}
-              code={brick.text}
               errorMarkers={
                 evaluatedResultLoadable.state === 'hasValue'
                   ? evaluatedResultLoadable.contents.errorMarkers
@@ -143,8 +133,6 @@ export const Block: React.FC<{
                   ? evaluatedResultLoadable.contents.warnMarkers
                   : []
               }
-              {...{ editorLoaderConfig, onContentHeightChange }}
-              {...editorCallbacks}
             />
           </div>
         </div>

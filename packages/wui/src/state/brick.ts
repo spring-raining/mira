@@ -23,6 +23,8 @@ import {
   brickTextSwapState,
   evaluatePausedState,
 } from './atoms';
+import { destroyEditorState } from './editor';
+import { getDictItemSelector } from './helper';
 
 const transpiledMdxCache = new WeakMap<Brick, string>();
 
@@ -72,9 +74,6 @@ const literalBrickDataFamily = selectorFamily({
       );
     },
 });
-
-import { editorRefs } from './editor';
-import { getDictItemSelector } from './helper';
 
 export const useBricks = ({
   onUpdateMdx = noop,
@@ -149,7 +148,12 @@ export const useBricks = ({
   const updateBrickOrder = useRecoilCallback(
     ({ set }) =>
       (newBrickOrder: BrickId[]) => {
-        set(brickOrderState, newBrickOrder);
+        set(brickOrderState, (prev) =>
+          prev.length !== newBrickOrder.length ||
+          prev.some((v, i) => v !== newBrickOrder[i])
+            ? newBrickOrder
+            : prev,
+        );
       },
     [],
   );
@@ -407,7 +411,7 @@ export const useBrickManipulator = () => {
         );
         set(brickStateFamily(brickId), undefined);
         set(brickTextSwapStateFamily(brickId), undefined);
-        delete editorRefs[brickId];
+        destroyEditorState(brickId);
         commit();
       },
     [commit],

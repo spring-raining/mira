@@ -28,7 +28,6 @@
     "@mirajs/transpiler": "1.0.0",
     "hast-to-hyperscript": "9.0.1",
     "mdast-util-mdx": "0.1.1",
-    "monaco-editor": "0.21.2",
     "nanoid": "3.1.20",
     "react-dnd": "14.0.3",
     "react-dnd-html5-backend": "14.0.1",
@@ -36,7 +35,7 @@
   },
   "devDependencies": {
     "@chakra-ui/react": "1.6.0",
-    "@monaco-editor/react": "^4.0.10",
+    "@codemirror/basic-setup": "0.19.1",
     "@popperjs/core": "2.10.2",
     "@types/cssesc": "3.0.0",
     "@types/react": "^17.0.0",

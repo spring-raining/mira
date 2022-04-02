@@ -38,11 +38,6 @@ export const Mira: React.VFC<{
         wasmURL: '/_mira/vendor/esbuild-wasm/esbuild.wasm',
         worker: true,
       }}
-      editorLoaderConfig={{
-        paths: {
-          vs: '/_mira/vendor/monaco-editor/min/vs',
-        },
-      }}
       config={{
         runtime: '@mirajs/react',
       }}

@@ -16,7 +16,6 @@ import { useBricks } from '../state/brick';
 import { useConfig } from '../state/config';
 import { MiraWuiConfig } from '../types';
 import { noop, noopAsync } from '../util';
-import { EditorLoaderConfig } from './Editor';
 import * as style from './Universe.css';
 import { Block } from './main/Block';
 import { PlanetarySystem } from './planetarySystem';
@@ -28,7 +27,6 @@ export interface UniverseProps {
   moduleLoader?: (specifier: string) => Promise<any>;
   onUpdate?: (mdx: string) => void;
   transpilerConfig?: ServiceOptions;
-  editorLoaderConfig?: EditorLoaderConfig;
   config: MiraWuiConfig;
 }
 
@@ -36,7 +34,6 @@ const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
   onUpdate = noop,
   transpilerConfig,
-  editorLoaderConfig,
 }) => {
   const { bricks, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
@@ -55,8 +52,6 @@ const UniverseView: React.VFC<UniverseProps> = ({
         : style.displayColumn.twoColumn,
     [config, rootContainerQuery],
   );
-
-  // const history = useHistory();
 
   useEffect(() => {
     (async () => {
@@ -82,11 +77,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
       <main className={style.mainPane}>
         <div className={style.mainSticky}>
           {bricks.map((brick) => (
-            <Block
-              key={brick.id}
-              {...{ transpilerConfig, editorLoaderConfig }}
-              {...brick}
-            />
+            <Block key={brick.id} {...{ transpilerConfig }} {...brick} />
           ))}
         </div>
       </main>
