@@ -1,5 +1,7 @@
 import { EditorView } from '@codemirror/view';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { getLanguageExtension } from '../editor/language';
+import { useBrick } from '../state/brick';
 import { useEditorState } from '../state/editor';
 import { BrickId } from '../types';
 
@@ -22,20 +24,22 @@ export interface MarkerMessage {
 
 export interface EditorProps {
   brickId: BrickId;
-  language?: string;
   errorMarkers?: MarkerMessage[];
   warnMarkers?: MarkerMessage[];
 }
 
 export const Editor: React.VFC<EditorProps> = ({
   brickId,
-  language,
   errorMarkers,
   warnMarkers,
 }) => {
-  const { editorState, setEditorView } = useEditorState({ brickId });
+  const { brick } = useBrick(brickId);
+  const { editorState, languageCompartment, setEditorViewSingleton } =
+    useEditorState({
+      brickId,
+    });
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const editorViewRef = useRef<EditorView | undefined>();
+  const [editorView, setEditorView] = useState<EditorView>();
 
   useEffect(() => {
     if (!editorContainerRef.current) {
@@ -45,13 +49,29 @@ export const Editor: React.VFC<EditorProps> = ({
       state: editorState,
       parent: editorContainerRef.current,
     });
-    editorViewRef.current = editorView;
     setEditorView(editorView);
+    setEditorViewSingleton(editorView);
     return () => {
-      editorViewRef.current?.destroy();
-      editorViewRef.current = undefined;
+      editorView.destroy();
     };
-  }, [editorState, setEditorView]);
+  }, [editorState, setEditorViewSingleton]);
+
+  useEffect(() => {
+    if (!editorView || !languageCompartment) {
+      return;
+    }
+    const language =
+      brick?.type === 'snippet'
+        ? brick.language
+        : brick?.type === 'note'
+        ? 'markdown'
+        : brick?.type === 'script'
+        ? 'jsx'
+        : '';
+    editorView.dispatch({
+      effects: languageCompartment.reconfigure(getLanguageExtension(language)),
+    });
+  }, [brick, editorView, languageCompartment]);
 
   return <div ref={editorContainerRef} />;
 };

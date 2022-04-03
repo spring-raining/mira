@@ -35,7 +35,9 @@
   },
   "devDependencies": {
     "@chakra-ui/react": "1.6.0",
-    "@codemirror/basic-setup": "0.19.1",
+    "@codemirror/basic-setup": "0.19.3",
+    "@codemirror/lang-javascript": "0.19.7",
+    "@codemirror/lang-markdown": "0.19.6",
     "@popperjs/core": "2.10.2",
     "@types/cssesc": "3.0.0",
     "@types/react": "^17.0.0",
@@ -55,7 +57,7 @@
     "react-intersection-observer": "^8.32.0",
     "requestidlecallback-polyfill": "^1.0.2",
     "rollup-plugin-postcss": "^4.0.0",
-    "vite": "2.7.2"
+    "vite": "2.9.0"
   },
   "peerDependencies": {
     "react": ">=16.9.0",

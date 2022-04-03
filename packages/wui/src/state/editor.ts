@@ -1,19 +1,26 @@
-import { history, undo, redo } from '@codemirror/history';
-import { EditorState } from '@codemirror/state';
+import { undo, redo } from '@codemirror/history';
+import { EditorState, Compartment } from '@codemirror/state';
 import { EditorView, ViewUpdate, keymap } from '@codemirror/view';
 import { useCallback, useMemo, useEffect } from 'react';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { editorExtension } from '../editor/extension';
 import { BrickId } from '../types';
+import { editorKeymap } from './../editor/keymap';
 import { useDebouncedCallback } from './../hooks/useDebouncedCallback';
 import { activeBrickIdState, brickOrderState } from './atoms';
 import { useBrick, brickStateFamily } from './brick';
 
-const editorStates: Record<BrickId, EditorState> = {};
+export interface MiraBrickEditorData {
+  editorState: EditorState;
+  languageCompartment: Compartment;
+}
+
+const editorStates: Record<BrickId, MiraBrickEditorData> = {};
 const stateToViewMap = new WeakMap<EditorState, EditorView>();
 export const destroyEditorState = (id: BrickId) => {
   const state = editorStates[id];
   if (state) {
-    stateToViewMap.delete(state);
+    stateToViewMap.delete(state.editorState);
     delete editorStates[id];
   }
 };
@@ -34,7 +41,8 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
           .slice(idx + 1)
           .find((id) => !!editorStates[id]);
         const view =
-          nextBrickId && stateToViewMap.get(editorStates[nextBrickId]);
+          nextBrickId &&
+          stateToViewMap.get(editorStates[nextBrickId]?.editorState);
         if (!view) {
           return;
         }
@@ -64,7 +72,8 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
           .reverse()
           .find((id) => !!editorStates[id]);
         const view =
-          prevBrickId && stateToViewMap.get(editorStates[prevBrickId]);
+          prevBrickId &&
+          stateToViewMap.get(editorStates[prevBrickId]?.editorState);
         if (!view) {
           return;
         }
@@ -103,9 +112,12 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
     66,
   );
 
-  const editorState = useMemo((): EditorState => {
-    let state = editorStates[brickId];
-    if (!state) {
+  const { editorState, languageCompartment } =
+    useMemo((): MiraBrickEditorData => {
+      if (editorStates[brickId]) {
+        return editorStates[brickId];
+      }
+
       const handleCursorPageUp = ({ state }: EditorView) => {
         if (state.selection.main.anchor === 0) {
           onMoveBackwardCommand();
@@ -121,10 +133,12 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
         return false;
       };
 
-      state = EditorState.create({
+      const languageCompartment = new Compartment();
+      const editorState = EditorState.create({
         doc: brick?.text,
         extensions: [
-          history(),
+          editorExtension,
+          languageCompartment.of([]),
           keymap.of([
             { key: 'Mod-z', run: undo, preventDefault: true },
             {
@@ -141,22 +155,24 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
               key: 'Mod-ArrowDown',
               run: handleCursorPageDown,
             },
+            ...editorKeymap,
           ]),
           EditorView.updateListener.of(debouncedViewUpdateListener),
         ],
       });
-      editorStates[brickId] = state;
-    }
-    return state;
-  }, [
-    brickId,
-    brick,
-    debouncedViewUpdateListener,
-    onMoveForwardCommand,
-    onMoveBackwardCommand,
-  ]);
+      return (editorStates[brickId] = {
+        languageCompartment,
+        editorState,
+      });
+    }, [
+      brickId,
+      brick,
+      debouncedViewUpdateListener,
+      onMoveForwardCommand,
+      onMoveBackwardCommand,
+    ]);
 
-  const setEditorView = useCallback(
+  const setEditorViewSingleton = useCallback(
     (editorView: EditorView) => {
       stateToViewMap.set(editorState, editorView);
     },
@@ -169,5 +185,5 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
     [editorState],
   );
 
-  return { editorState, setEditorView };
+  return { editorState, languageCompartment, setEditorViewSingleton };
 };

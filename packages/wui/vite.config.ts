@@ -14,6 +14,7 @@ export default defineConfig({
     outDir: path.resolve(__dirname, 'dist'),
     // avoid deleting type directory on development
     emptyOutDir: false,
+    sourcemap: true,
     rollupOptions: {
       external: [
         ...Object.keys(packageJson.dependencies),

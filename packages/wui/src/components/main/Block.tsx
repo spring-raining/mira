@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useInViewBrickState } from '../../hooks/useInViewState';
 import {
@@ -38,17 +38,6 @@ export const Block: React.FC<{
     literalBrickData?.mira?.id,
   );
 
-  const editorLanguage = useMemo(() => {
-    const language =
-      brick.type === 'snippet'
-        ? brick.language
-        : brick.type === 'note'
-        ? 'markdown'
-        : brick.type === 'script'
-        ? 'jsx'
-        : '';
-    return language.toLowerCase().split(/[^\w-]/)[0];
-  }, [brick]);
   const prependBrick = useCallback(() => {
     insertBrick({
       newBrick: createNewBrick({
@@ -122,7 +111,6 @@ export const Block: React.FC<{
           <div className={style.editorContainer({ isActive })}>
             <Editor
               brickId={id}
-              language={editorLanguage}
               errorMarkers={
                 evaluatedResultLoadable.state === 'hasValue'
                   ? evaluatedResultLoadable.contents.errorMarkers
