@@ -13,6 +13,8 @@ import {
 import { useHistoryRef } from './history/context';
 import { useDebouncedCallback } from './useDebouncedCallback';
 
+const MAX_HISTORY_LENGTH = 100 as const;
+
 const recordingAtoms: Readonly<RecoilState<any>[]> = [
   brickDictState,
   brickOrderState,
@@ -30,23 +32,23 @@ export const useHistory = () => {
   const effect = useRecoilCallback(
     ({ snapshot }) =>
       () => {
-        const { history } = historyRef.current;
-        history.release?.();
+        const { head } = historyRef.current;
+        head.release?.();
         const release = snapshot.retain();
         const newHistory = {
-          id: history.id,
+          id: head.id,
           snapshot,
           release,
-          prev: history.prev,
-          next: history.next,
+          prev: head.prev,
+          next: head.next,
         };
-        if (history.prev) {
-          history.prev.next = newHistory;
+        if (head.prev) {
+          head.prev.next = newHistory;
         }
-        if (history.next) {
-          history.next.prev = newHistory;
+        if (head.next) {
+          head.next.prev = newHistory;
         }
-        historyRef.current.history = newHistory;
+        historyRef.current.head = newHistory;
       },
     [historyRef],
   );
@@ -55,18 +57,27 @@ export const useHistory = () => {
     ({ snapshot }) =>
       () => {
         try {
-          const { history } = historyRef.current;
+          const { head } = historyRef.current;
           // Release all history linked to next
-          for (let next = history.next; next; next = next.next) {
+          for (let next = head.next; next; next = next.next) {
             next.release?.();
           }
           const release = snapshot.retain();
-          historyRef.current.history = history.next = {
-            id: history.id + 1,
+          historyRef.current.head = head.next = {
+            id: head.id + 1,
             snapshot,
             release,
-            prev: history,
+            prev: head,
           };
+          while (
+            historyRef.current.head.id - historyRef.current.tail.id >
+            MAX_HISTORY_LENGTH
+          ) {
+            const { tail } = historyRef.current;
+            tail.release?.();
+            delete tail.next?.prev;
+            historyRef.current.tail = tail.next!;
+          }
         } finally {
           historyRef.current.isInCommit = false;
         }
@@ -81,8 +92,8 @@ export const useHistory = () => {
         historyRef.current.isInRestore = true;
         const release = snapshot.retain();
         try {
-          const { history } = historyRef.current;
-          const restoreHistory = side === 'undo' ? history.prev : history.next;
+          const { head } = historyRef.current;
+          const restoreHistory = side === 'undo' ? head.prev : head.next;
           const restoreSnapshot = restoreHistory?.snapshot;
           if (!restoreSnapshot) {
             return;
@@ -93,7 +104,7 @@ export const useHistory = () => {
               set(state, val);
             }
           });
-          historyRef.current.history = restoreHistory;
+          historyRef.current.head = restoreHistory;
           historyRef.current.restoreSnapshotId = newSnapshot.getID();
           gotoSnapshot(newSnapshot);
         } finally {
@@ -127,7 +138,7 @@ export const HistoryObserver = () => {
   }, [effect]);
 
   useRecoilTransactionObserver_UNSTABLE(({ snapshot }) => {
-    if (!historyRef.current.history.snapshot) {
+    if (!historyRef.current.head.snapshot) {
       commitRef.current();
       return;
     }

@@ -10,15 +10,18 @@ interface HistoryStep {
 }
 
 export interface HistoryStore {
-  history: HistoryStep;
+  head: HistoryStep;
+  tail: HistoryStep;
   restoreSnapshotId: SnapshotID | null;
   isInRestore: boolean;
   isInCommit: boolean;
 }
+const defaultHistory: HistoryStep = {
+  id: 0,
+};
 const defaultHistoryStore: HistoryStore = {
-  history: {
-    id: 0,
-  },
+  head: defaultHistory,
+  tail: defaultHistory,
   restoreSnapshotId: null,
   isInRestore: false,
   isInCommit: false,
