@@ -3,11 +3,11 @@ import { customElement } from '@lit/reactive-element/decorators/custom-element.j
 import { property } from '@lit/reactive-element/decorators/property.js';
 import { RuntimeScope } from '@mirajs/core';
 import { renderElement } from './renderElement';
-import { runtimeEnvironmentFactory } from './runtimeEnvironment';
+import { runtimeEnvironmentFactory } from './runtime';
 import { RuntimeEnvironmentConfig } from './types';
 
-@customElement('eval-presentation')
-export class EvalPresentation extends ReactiveElement {
+@customElement('mira-eval')
+export class MiraEval extends ReactiveElement {
   private mountPoint: HTMLDivElement;
   private evaluatedElement: any = null;
   private runtimeScope: RuntimeScope | undefined;
@@ -74,3 +74,5 @@ export class EvalPresentation extends ReactiveElement {
     console.error(error);
   }
 }
+
+export default MiraEval;

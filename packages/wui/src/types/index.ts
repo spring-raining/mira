@@ -10,6 +10,7 @@ export type KeyMap = { [k in KeyActions]: KeySequence };
 
 export type MiraWuiConfig = {
   runtime: string;
+  eval: string;
   inputDebounce?: number;
   layout?: 'oneColumn' | 'twoColumn';
   keyMap?: Partial<KeyMap>;

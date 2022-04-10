@@ -19,3 +19,5 @@ export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory<
     }),
   };
 };
+
+export default runtimeEnvironmentFactory;

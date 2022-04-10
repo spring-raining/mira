@@ -39,7 +39,8 @@ export const Mira: React.VFC<{
         worker: true,
       }}
       config={{
-        runtime: '@mirajs/react',
+        eval: '/_mira/-/node_modules/@mirajs/react/dist/eval.js',
+        runtime: '/_mira/-/node_modules/@mirajs/react/dist/runtime.js',
       }}
     />
   );

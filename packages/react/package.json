@@ -6,10 +6,13 @@
   "module": "./dist/index.js",
   "exports": {
     ".": {
-      "default": "./dist/index.js"
+      "import": "./dist/index.js"
     },
-    "./evalPresentation.js": {
-      "default": "./dist/evalPresentation.js"
+    "./eval.js": {
+      "import": "./dist/eval.js"
+    },
+    "./runtime.js": {
+      "import": "./dist/runtime.js"
     }
   },
   "types": "./dist/index.d.ts",

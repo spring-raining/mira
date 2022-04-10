@@ -1,5 +1,3 @@
-import { runtimeEnvironmentFactory } from './runtimeEnvironment';
-
+export { MiraEval } from './eval';
+export { runtimeEnvironmentFactory } from './runtime';
 export type { RuntimeEnvironmentConfig } from './types';
-export { runtimeEnvironmentFactory };
-export default runtimeEnvironmentFactory;

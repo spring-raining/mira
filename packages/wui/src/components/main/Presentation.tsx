@@ -1,5 +1,12 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import { useBroadcast } from '../../hooks/useBroadcast';
+import { useConfig } from '../../state/config';
 import {
   useEvaluatedResultLoadable,
   useRenderParams,
@@ -20,6 +27,13 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   const [, postCode] = useBroadcast<{ source: string }>(brickId, 'code');
   const [, postParameter] = useBroadcast(brickId, 'parameter');
   const [presentationUpdate] = useBroadcast(brickId, 'presentationUpdate');
+  const config = useConfig();
+  const iframeSrc = useMemo(() => {
+    const url = new URL('/_mira/-/foo.html', window.location.origin);
+    url.searchParams.set('eval', config.eval);
+    url.searchParams.set('runtime', config.runtime);
+    return url.href;
+  }, [config]);
 
   const [showIframe, setShowIframe] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(32);
@@ -49,7 +63,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       );
       iframe.removeEventListener('load', handleLoad);
     };
-  }, [brickId]);
+  }, [brickId, config]);
 
   useEffect(() => {
     if (result.state !== 'hasValue') {
@@ -89,7 +103,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
     <>
       <iframe
         ref={iframeEl}
-        src="/_mira/-/foo.html"
+        src={iframeSrc}
         className={sprinkles({
           display: showIframe && !displayingError ? 'flex' : 'none',
         })}

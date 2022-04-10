@@ -10,7 +10,10 @@ function App() {
     <UniverseProvider>
       <Universe
         moduleLoader={moduleLoader}
-        config={{ runtime: '@mirajs/react' }}
+        config={{
+          eval: '/_mira/-/node_modules/@mirajs/react/dist/eval.js',
+          runtime: '/_mira/-/node_modules/@mirajs/react/dist/runtime.js',
+        }}
         mdx={`# Hello Mira!`}
       />
     </UniverseProvider>
