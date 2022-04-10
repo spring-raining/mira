@@ -144,7 +144,7 @@ export const ProvidenceObserver = ({
       )
       .map((brick) => ({
         id: brick.id,
-        scriptNode: brick.children ?? undefined,
+        scriptNode: brick.ast ?? undefined,
       }));
     const deadScript = prevScriptFragments
       .filter((p) => nextScriptFragments.every((n) => p.id !== n.id))

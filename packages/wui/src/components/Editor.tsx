@@ -33,31 +33,38 @@ export const Editor: React.VFC<EditorProps> = ({
   errorMarkers,
   warnMarkers,
 }) => {
-  const { brick } = useBrick(brickId);
-  const { editorState, languageCompartment, setEditorViewSingleton } =
-    useEditorState({
-      brickId,
-    });
-  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const { brick, isActive } = useBrick(brickId);
   const [editorView, setEditorView] = useState<EditorView>();
+  const { editorState, configurable } = useEditorState({
+    brickId,
+    editorView,
+  });
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!editorContainerRef.current) {
       return;
     }
-    const editorView = new EditorView({
-      state: editorState,
-      parent: editorContainerRef.current,
-    });
-    setEditorView(editorView);
-    setEditorViewSingleton(editorView);
-    return () => {
-      editorView.destroy();
-    };
-  }, [editorState, setEditorViewSingleton]);
+    if (editorView) {
+      editorView.setState(editorState);
+    } else {
+      const editorView = new EditorView({
+        state: editorState,
+        parent: editorContainerRef.current,
+      });
+      setEditorView(editorView);
+    }
+  }, [editorState, editorView]);
+
+  useEffect(
+    () => () => {
+      editorView?.destroy();
+    },
+    [editorView],
+  );
 
   useEffect(() => {
-    if (!editorView || !languageCompartment) {
+    if (!editorView) {
       return;
     }
     const language =
@@ -69,9 +76,19 @@ export const Editor: React.VFC<EditorProps> = ({
         ? 'jsx'
         : '';
     editorView.dispatch({
-      effects: languageCompartment.reconfigure(getLanguageExtension(language)),
+      effects: configurable.language.reconfigure(
+        getLanguageExtension(language),
+      ),
     });
-  }, [brick, editorView, languageCompartment]);
+  }, [brick, editorView, configurable]);
+
+  useEffect(() => {
+    if (isActive) {
+      editorView?.focus();
+    } else {
+      editorView?.contentDOM.blur();
+    }
+  }, [editorView, isActive]);
 
   return <div ref={editorContainerRef} />;
 };

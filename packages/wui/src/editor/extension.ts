@@ -2,7 +2,7 @@ import { autocompletion } from '@codemirror/autocomplete';
 import { closeBrackets } from '@codemirror/closebrackets';
 import { highlightActiveLineGutter } from '@codemirror/gutter';
 import { defaultHighlightStyle } from '@codemirror/highlight';
-import { history } from '@codemirror/history';
+import { history, historyField } from '@codemirror/history';
 import { indentOnInput } from '@codemirror/language';
 import { bracketMatching } from '@codemirror/matchbrackets';
 import {
@@ -40,3 +40,7 @@ export const editorExtension: Extension = [
   EditorView.lineWrapping,
   editorTheme,
 ];
+
+export const editorStateFieldMap = {
+  history: historyField,
+};

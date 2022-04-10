@@ -2,8 +2,8 @@ import { createCompiler } from '@mirajs/core';
 import mdxMarkdownExt from 'mdast-util-mdx/to-markdown';
 import toMarkdown from 'mdast-util-to-markdown';
 import type { Parent, Node } from 'unist';
+import { createNewBrick } from '../state/helper';
 import { ASTNode, Brick, NoteBrick, SnippetBrick, ScriptBrick } from '../types';
-import { genBrickId, genMiraId } from './../util';
 
 const scriptTypes = [
   'mdxFlowExpression',
@@ -15,9 +15,9 @@ const scriptTypes = [
 const omitProperties = ['position', 'data', 'attributes'];
 const miraMetaRe = /^mira/;
 
-type NoteChunk = Omit<NoteBrick, 'text'> & { children: ASTNode[] };
-type SnippetChunk = Omit<SnippetBrick, 'text'> & { children: ASTNode[] };
-type ScriptChunk = Omit<ScriptBrick, 'text'> & { children: ASTNode[] };
+type NoteChunk = Required<Pick<NoteBrick, 'type' | 'ast'>>;
+type SnippetChunk = Required<Pick<SnippetBrick, 'type' | 'ast' | 'language'>>;
+type ScriptChunk = Required<Pick<ScriptBrick, 'type' | 'ast'>>;
 type Chunk = NoteChunk | SnippetChunk | ScriptChunk;
 
 export const parseMdx = (mdxString: string): Node[] => {
@@ -33,11 +33,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
   const parsed = compiler.parse(mdxString);
 
   const chunk = (parsed as Parent).children.reduce((acc, _node): Chunk[] => {
-    // set identical id for each node
-    const node: ASTNode = {
-      id: genBrickId(),
-      ..._node,
-    };
+    const node: ASTNode = { ..._node };
 
     const head = acc.slice(0, acc.length - 1);
     const tail = acc[acc.length - 1];
@@ -45,36 +41,26 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
       return [
         ...acc,
         {
-          id: genBrickId(),
           type: 'script',
-          children: [node],
+          ast: [node],
         },
       ];
     } else if (node.type === 'code') {
-      const miraMetaMatch = node.meta?.match(miraMetaRe);
       const chunk: SnippetChunk = {
-        id: genBrickId(),
         type: 'snippet',
         language: node.lang ?? '',
-        children: [node],
-        ...(miraMetaMatch && {
-          mira: {
-            id: genMiraId(),
-            isLived: true,
-          },
-        }),
+        ast: [node],
       };
       return [...acc, chunk];
     } else if (
       acc.length === 0 ||
       tail.type !== 'note' ||
-      tail.children[0].type === 'code' ||
+      tail.ast[0].type === 'code' ||
       (node.type === 'heading' && node.depth <= 3)
     ) {
       const chunk: NoteChunk = {
-        id: genBrickId(),
         type: 'note',
-        children: [node],
+        ast: [node],
       };
       return [...acc, chunk];
     } else {
@@ -82,7 +68,7 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
         ...head,
         {
           ...tail,
-          children: [...(tail.children ?? []), node],
+          ast: [...(tail.ast ?? []), node],
         },
       ];
     }
@@ -99,23 +85,29 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
     };
   };
   const bricks = chunk.map((el): Brick => {
-    const { children } = el;
     const text: string =
-      children[0]?.type === 'code'
-        ? children[0].value
-        : children
+      el.ast[0]?.type === 'code'
+        ? el.ast[0].value
+        : el.ast
             .map(({ position }) =>
               mdxString.slice(position.start.offset, position.end.offset),
             )
             .join('\n\n');
-    return { ...el, children: children.map(scan), text } as Brick;
+    const miraMetaMatch =
+      el.type === 'snippet' && el.ast[0].meta?.match(miraMetaRe);
+    return createNewBrick({
+      ...el,
+      ast: el.ast.map(scan),
+      text,
+      isLived: !!miraMetaMatch,
+    });
   });
   return bricks;
 };
 
 export const dehydrateBrick = (brick: Brick): string => {
   return toMarkdown(
-    { type: 'root', children: brick.children },
+    { type: 'root', children: brick.ast },
     { listItemIndent: 'one', extensions: [mdxMarkdownExt] },
   );
 };

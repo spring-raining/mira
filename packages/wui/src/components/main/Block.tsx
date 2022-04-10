@@ -2,12 +2,9 @@ import clsx from 'clsx';
 import React, { useCallback, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useInViewBrickState } from '../../hooks/useInViewState';
-import {
-  useBrick,
-  useBrickManipulator,
-  createNewBrick,
-} from '../../state/brick';
+import { useBrick, useBrickManipulator } from '../../state/brick';
 import { useEvaluatedResultLoadable } from '../../state/evaluator';
+import { createNewBrick } from '../../state/helper';
 import { sprinkles } from '../../styles/sprinkles.css';
 import { BrickId } from '../../types';
 import { CodePreview } from '../CodePreview';

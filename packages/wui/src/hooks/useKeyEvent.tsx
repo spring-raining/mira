@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useConfig } from '../state/config';
 import { KeyActions, KeyMap } from '../types';
 import { useHistory } from './useHistory';
@@ -10,7 +10,7 @@ export const defaultKeyMap: KeyMap = {
 
 export const useKeyEvent = () => {
   const config = useConfig();
-  const { restore } = useHistory();
+  const { undo, redo } = useHistory();
 
   const keyMap = useMemo(
     (): KeyMap => ({
@@ -23,12 +23,8 @@ export const useKeyEvent = () => {
   const keyEventHandlers: {
     [k in KeyActions]: (keyEvent?: KeyboardEvent) => void;
   } = {
-    UNDO: useCallback(() => {
-      restore(-1);
-    }, [restore]),
-    REDO: useCallback(() => {
-      restore(1);
-    }, [restore]),
+    UNDO: undo,
+    REDO: redo,
   };
 
   return { keyMap, keyEventHandlers };

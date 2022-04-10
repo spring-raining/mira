@@ -15,12 +15,19 @@ export type MiraWuiConfig = {
   keyMap?: Partial<KeyMap>;
 };
 
+export type CodeEditorData = {
+  state: {
+    doc: string;
+    selection: any;
+    [field: string]: any;
+  };
+};
+
 export type ParsedImportStatement = ImportDefinition & {
   statement: string;
 };
 
 export interface ASTNode {
-  id: string;
   [field: string]: any;
 }
 
@@ -34,7 +41,8 @@ export type BrickId = `brick.${string}`;
 export interface BrickState {
   id: BrickId;
   text: string;
-  children?: ASTNode[] | null;
+  ast?: ASTNode[];
+  codeEditor: CodeEditorData;
 }
 export type NoteBrick = BrickState & {
   type: 'note';
@@ -50,7 +58,7 @@ export type ScriptBrick = BrickState & {
 export type Brick = NoteBrick | SnippetBrick | ScriptBrick;
 
 export type LiteralBrickData = {
-  text: string;
+  codeEditor: CodeEditorData;
   mira?: Mira;
 };
 

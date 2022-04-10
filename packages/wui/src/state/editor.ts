@@ -2,32 +2,41 @@ import { undo, redo } from '@codemirror/history';
 import { EditorState, Compartment } from '@codemirror/state';
 import { EditorView, ViewUpdate, keymap } from '@codemirror/view';
 import { useCallback, useMemo, useEffect } from 'react';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { editorExtension } from '../editor/extension';
+import { useRecoilCallback } from 'recoil';
+import { editorExtension, editorStateFieldMap } from '../editor/extension';
 import { BrickId } from '../types';
 import { editorKeymap } from './../editor/keymap';
 import { useDebouncedCallback } from './../hooks/useDebouncedCallback';
 import { activeBrickIdState, brickOrderState } from './atoms';
-import { useBrick, brickStateFamily } from './brick';
+import { useBrick } from './brick';
 
 export interface MiraBrickEditorData {
   editorState: EditorState;
-  languageCompartment: Compartment;
+  configurable: {
+    language: Compartment;
+  };
 }
 
-const editorStates: Record<BrickId, MiraBrickEditorData> = {};
-const stateToViewMap = new WeakMap<EditorState, EditorView>();
-export const destroyEditorState = (id: BrickId) => {
-  const state = editorStates[id];
-  if (state) {
-    stateToViewMap.delete(state.editorState);
-    delete editorStates[id];
-  }
-};
+const editorViewMap = new Map<BrickId, EditorView>();
 
-export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
-  const brick = useRecoilValue(brickStateFamily(brickId));
-  const { setSwap, applySwap } = useBrick(brickId);
+export const useEditorState = ({
+  brickId,
+  editorView,
+}: {
+  brickId: BrickId;
+  editorView?: EditorView;
+}) => {
+  const { brick, setSwap, applySwap } = useBrick(brickId);
+
+  useEffect(() => {
+    if (!editorView) {
+      return;
+    }
+    editorViewMap.set(brickId, editorView);
+    return () => {
+      editorViewMap.delete(brickId);
+    };
+  }, [brickId, editorView]);
 
   const onMoveForwardCommand = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -39,10 +48,8 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
         }
         const nextBrickId = brickOrder
           .slice(idx + 1)
-          .find((id) => !!editorStates[id]);
-        const view =
-          nextBrickId &&
-          stateToViewMap.get(editorStates[nextBrickId]?.editorState);
+          .find((id) => editorViewMap.has(id));
+        const view = nextBrickId && editorViewMap.get(nextBrickId);
         if (!view) {
           return;
         }
@@ -70,10 +77,8 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
         const prevBrickId = brickOrder
           .slice(0, idx)
           .reverse()
-          .find((id) => !!editorStates[id]);
-        const view =
-          prevBrickId &&
-          stateToViewMap.get(editorStates[prevBrickId]?.editorState);
+          .find((id) => editorViewMap.has(id));
+        const view = prevBrickId && editorViewMap.get(prevBrickId);
         if (!view) {
           return;
         }
@@ -90,13 +95,24 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
     [brickId],
   );
 
-  const viewUpdateListener = useRecoilCallback(
+  const docChangeListener = useCallback(
+    (update: ViewUpdate) => {
+      if (update.docChanged) {
+        setSwap({
+          state: update.state.toJSON(editorStateFieldMap),
+        });
+      }
+    },
+    [setSwap],
+  );
+  const debouncedDocChangeListener = useDebouncedCallback(
+    docChangeListener,
+    33,
+  );
+
+  const updateListener = useRecoilCallback(
     ({ set }) =>
       (update: ViewUpdate) => {
-        const doc = update.state.doc.toString();
-        if (update.docChanged) {
-          setSwap(doc);
-        }
         if (update.focusChanged) {
           if (update.view.hasFocus) {
             set(activeBrickIdState, brickId);
@@ -105,40 +121,30 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
           }
         }
       },
-    [brickId, setSwap, applySwap],
-  );
-  const debouncedViewUpdateListener = useDebouncedCallback(
-    viewUpdateListener,
-    66,
+    [brickId, applySwap],
   );
 
-  const { editorState, languageCompartment } =
-    useMemo((): MiraBrickEditorData => {
-      if (editorStates[brickId]) {
-        return editorStates[brickId];
+  const { editorState, configurable } = useMemo((): MiraBrickEditorData => {
+    const handleCursorPageUp = ({ state }: EditorView) => {
+      if (state.selection.main.anchor === 0) {
+        onMoveBackwardCommand();
+        return true;
       }
-
-      const handleCursorPageUp = ({ state }: EditorView) => {
-        if (state.selection.main.anchor === 0) {
-          onMoveBackwardCommand();
-          return true;
-        }
-        return false;
-      };
-      const handleCursorPageDown = ({ state }: EditorView) => {
-        if (state.selection.main.anchor === state.doc.length) {
-          onMoveForwardCommand();
-          return true;
-        }
-        return false;
-      };
-
-      const languageCompartment = new Compartment();
-      const editorState = EditorState.create({
-        doc: brick?.text,
+      return false;
+    };
+    const handleCursorPageDown = ({ state }: EditorView) => {
+      if (state.selection.main.anchor === state.doc.length) {
+        onMoveForwardCommand();
+        return true;
+      }
+      return false;
+    };
+    const language = new Compartment();
+    const editorState = EditorState.fromJSON(
+      brick.codeEditor.state,
+      {
         extensions: [
           editorExtension,
-          languageCompartment.of([]),
           keymap.of([
             { key: 'Mod-z', run: undo, preventDefault: true },
             {
@@ -157,33 +163,29 @@ export const useEditorState = ({ brickId }: { brickId: BrickId }) => {
             },
             ...editorKeymap,
           ]),
-          EditorView.updateListener.of(debouncedViewUpdateListener),
+          EditorView.updateListener.of(debouncedDocChangeListener),
+          EditorView.updateListener.of(updateListener),
+          language.of([]),
         ],
-      });
-      return (editorStates[brickId] = {
-        languageCompartment,
-        editorState,
-      });
-    }, [
-      brickId,
-      brick,
-      debouncedViewUpdateListener,
-      onMoveForwardCommand,
-      onMoveBackwardCommand,
-    ]);
+      },
+      editorStateFieldMap,
+    );
+    return {
+      editorState,
+      configurable: {
+        language,
+      },
+    };
+  }, [
+    brick,
+    onMoveBackwardCommand,
+    onMoveForwardCommand,
+    debouncedDocChangeListener,
+    updateListener,
+  ]);
 
-  const setEditorViewSingleton = useCallback(
-    (editorView: EditorView) => {
-      stateToViewMap.set(editorState, editorView);
-    },
-    [editorState],
-  );
-  useEffect(
-    () => () => {
-      stateToViewMap.delete(editorState);
-    },
-    [editorState],
-  );
-
-  return { editorState, languageCompartment, setEditorViewSingleton };
+  return {
+    editorState,
+    configurable,
+  };
 };

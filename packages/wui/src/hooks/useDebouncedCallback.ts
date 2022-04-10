@@ -17,11 +17,9 @@ export const useDebouncedCallback = <T extends unknown[]>(
 
   const callback = useCallback(
     (...args: T) => {
-      let cancelled = false;
       cancel();
-      const cancelFn = cancellable(() => !cancelled && fn(...args), ms);
+      const cancelFn = cancellable(() => fn(...args), ms);
       canceller.current.push(() => {
-        cancelled = true;
         cancelFn();
       });
     },

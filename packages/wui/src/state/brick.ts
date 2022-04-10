@@ -6,11 +6,10 @@ import {
   selector,
   selectorFamily,
 } from 'recoil';
-import { useHistory } from '../hooks/useHistory';
 import { dehydrateBrick } from '../mdx/io';
 import { updateBrickByText, updateBrickTrait } from '../mdx/update';
-import { Brick, BrickId } from '../types';
-import { cancellable, genBrickId, genMiraId, noop } from '../util';
+import { Brick, BrickId, CodeEditorData } from '../types';
+import { cancellable, genMiraId, noop } from '../util';
 import {
   activeBrickIdState,
   focusedBrickIdState,
@@ -20,10 +19,9 @@ import {
   brickOrderState,
   brickParseErrorState,
   brickModuleImportErrorState,
-  brickTextSwapState,
+  brickEditorSwapState,
   evaluatePausedState,
 } from './atoms';
-import { destroyEditorState } from './editor';
 import { getDictItemSelector } from './helper';
 
 const transpiledMdxCache = new WeakMap<Brick, string>();
@@ -43,9 +41,9 @@ const brickModuleImportErrorStateFamily = getDictItemSelector({
   state: brickModuleImportErrorState,
 });
 
-const brickTextSwapStateFamily = getDictItemSelector({
-  key: 'brickTextSwapStateFamily',
-  state: brickTextSwapState,
+const brickEditorSwapStateFamily = getDictItemSelector({
+  key: 'brickEditorSwapStateFamily',
+  state: brickEditorSwapState,
 });
 
 const bricksState = selector({
@@ -62,7 +60,7 @@ const literalBrickDataFamily = selectorFamily({
     (brickId: BrickId) =>
     ({ get }) => {
       const brick = get(brickStateFamily(brickId));
-      const swap = get(brickTextSwapStateFamily(brickId));
+      const swap = get(brickEditorSwapStateFamily(brickId));
       return (
         swap ||
         (brick && {
@@ -109,7 +107,7 @@ export const useBricks = ({
         reset(unsavedBrickIdsState);
         reset(brickOrderState);
         reset(brickDictState);
-        reset(brickTextSwapState);
+        reset(brickEditorSwapState);
       },
     [],
   );
@@ -192,7 +190,6 @@ export const useBricks = ({
 };
 
 export const useBrick = (brickId: BrickId) => {
-  const { commit } = useHistory();
   const brick = useRecoilValue(brickStateFamily(brickId));
   const brickParseError = useRecoilValue(brickParseErrorStateFamily(brickId));
   const brickModuleImportError = useRecoilValue(
@@ -202,7 +199,7 @@ export const useBrick = (brickId: BrickId) => {
   const focusedBrickId = useRecoilValue(focusedBrickIdState);
   const selectedBrickIds = useRecoilValue(selectedBrickIdsState);
   const unsavedBrickIds = useRecoilValue(unsavedBrickIdsState);
-  const swap = useRecoilValue(brickTextSwapStateFamily(brickId));
+  const swap = useRecoilValue(brickEditorSwapStateFamily(brickId));
   const literalBrickData = useRecoilValue(literalBrickDataFamily(brickId));
 
   const setActive = useRecoilCallback(
@@ -221,55 +218,15 @@ export const useBrick = (brickId: BrickId) => {
       },
     [brickId],
   );
-  const updateText = useRecoilCallback(
-    ({ set, snapshot }) =>
-      async (text: string) => {
-        const brick = await snapshot.getPromise(brickStateFamily(brickId));
-        if (!brick) {
-          return;
-        }
-        const { newBrick, syntaxError } = updateBrickByText(brick, text);
-        set(brickParseErrorState, (prev) => ({
-          ...prev,
-          [brickId]: syntaxError
-            ? {
-                error: syntaxError,
-                parsedText: text,
-              }
-            : undefined,
-        }));
-        if (Array.isArray(newBrick)) {
-          set(brickDictState, (prevState) => ({
-            ...prevState,
-            ...newBrick.reduce(
-              (acc, brick) => ({
-                ...acc,
-                [brick.id]: brick,
-              }),
-              {},
-            ),
-          }));
-          set(brickOrderState, (prevState) => {
-            const arr = [...prevState];
-            arr.splice(
-              prevState.indexOf(brick.id),
-              1,
-              ...newBrick.map(({ id }) => id),
-            );
-            return arr;
-          });
-        } else {
-          set(brickStateFamily(brickId), newBrick);
-        }
-        commit();
-      },
-    [brickId, commit],
-  );
   const updateTrait = useRecoilCallback(
     ({ set, snapshot }) =>
       async (trait: { type?: Brick['type']; language?: string }) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
-        if (!brick) {
+        if (
+          !brick ||
+          (brick.type !== 'snippet' && brick.type === trait.type) ||
+          (brick.type === 'snippet' && brick.language === trait.language)
+        ) {
           return;
         }
         const { newBrick, syntaxError } = updateBrickTrait(brick, trait);
@@ -305,29 +262,25 @@ export const useBrick = (brickId: BrickId) => {
         } else {
           set(brickStateFamily(brickId), newBrick);
         }
-        commit();
       },
-    [brickId, commit],
+    [brickId],
   );
   const setSwap = useRecoilCallback(
     ({ snapshot, set }) =>
-      async (text: string | undefined) => {
+      async (data: CodeEditorData | undefined) => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
         const mira = brick?.type === 'snippet' && brick.mira;
-        set(brickTextSwapState, (state) => ({
+        set(brickEditorSwapState, (state) => ({
           ...state,
-          [brickId]:
-            typeof text === 'string'
+          [brickId]: data && {
+            codeEditor: data,
+            mira: mira
               ? {
-                  text,
-                  mira: mira
-                    ? {
-                        ...mira,
-                        id: genMiraId(),
-                      }
-                    : undefined,
+                  ...mira,
+                  id: genMiraId(),
                 }
               : undefined,
+          },
         }));
       },
     [brickId],
@@ -337,16 +290,52 @@ export const useBrick = (brickId: BrickId) => {
       async () => {
         const brick = await snapshot.getPromise(brickStateFamily(brickId));
         const swap = await snapshot.getPromise(
-          brickTextSwapStateFamily(brickId),
+          brickEditorSwapStateFamily(brickId),
         );
-        set(brickTextSwapStateFamily(brickId), undefined);
-        if (!brick || !swap || brick.text === swap.text) {
+        set(brickEditorSwapStateFamily(brickId), undefined);
+        if (!brick || !swap) {
           return;
         }
-        updateText(swap.text);
-        commit();
+
+        const text = swap.codeEditor.state.doc;
+        const { newBrick, syntaxError } = updateBrickByText(brick, text);
+        set(brickParseErrorState, (prev) => ({
+          ...prev,
+          [brickId]: syntaxError
+            ? {
+                error: syntaxError,
+                parsedText: text,
+              }
+            : undefined,
+        }));
+        if (Array.isArray(newBrick)) {
+          set(brickDictState, (prevState) => ({
+            ...prevState,
+            ...newBrick.reduce(
+              (acc, brick) => ({
+                ...acc,
+                [brick.id]: brick,
+              }),
+              {},
+            ),
+          }));
+          set(brickOrderState, (prevState) => {
+            const arr = [...prevState];
+            arr.splice(
+              prevState.indexOf(brick.id),
+              1,
+              ...newBrick.map(({ id }) => id),
+            );
+            return arr;
+          });
+        } else {
+          set(brickStateFamily(brickId), {
+            ...newBrick,
+            codeEditor: swap.codeEditor,
+          });
+        }
       },
-    [brickId, updateText, commit],
+    [brickId],
   );
 
   return {
@@ -355,7 +344,6 @@ export const useBrick = (brickId: BrickId) => {
     moduleImportError: brickModuleImportError,
     swap,
     literalBrickData,
-    updateText,
     updateTrait,
     isActive: brickId === activeBrickId,
     isFocused: brickId === focusedBrickId,
@@ -369,8 +357,6 @@ export const useBrick = (brickId: BrickId) => {
 };
 
 export const useBrickManipulator = () => {
-  const { commit } = useHistory();
-
   const insertBrick = useRecoilCallback(
     ({ snapshot, set }) =>
       async ({
@@ -395,9 +381,8 @@ export const useBrickManipulator = () => {
         );
         set(brickDictState, brickDict);
         set(brickOrderState, brickOrder);
-        commit();
       },
-    [commit],
+    [],
   );
 
   const cleanup = useRecoilCallback(
@@ -410,50 +395,10 @@ export const useBrickManipulator = () => {
           activeBrickId === brickId ? null : activeBrickId,
         );
         set(brickStateFamily(brickId), undefined);
-        set(brickTextSwapStateFamily(brickId), undefined);
-        destroyEditorState(brickId);
-        commit();
+        set(brickEditorSwapStateFamily(brickId), undefined);
       },
-    [commit],
+    [],
   );
 
   return { insertBrick, cleanup };
-};
-
-export const createNewBrick = ({
-  type,
-  language,
-  isLived,
-}: {
-  type: Brick['type'];
-  language?: string;
-  isLived?: boolean;
-}): Brick => {
-  if (type === 'snippet') {
-    return {
-      id: genBrickId(),
-      type,
-      language: language ?? '',
-      text: '',
-      children: null,
-      ...(isLived && {
-        mira: {
-          id: genMiraId(),
-          isLived,
-        },
-      }),
-    };
-  }
-  return {
-    id: genBrickId(),
-    type,
-    text: '',
-    children: null,
-    ...(isLived && {
-      mira: {
-        id: genMiraId(),
-        isLived,
-      },
-    }),
-  };
 };

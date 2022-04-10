@@ -55,10 +55,10 @@ export const brickModuleImportErrorState = atom<Record<string, Error>>({
   default: {},
 });
 
-export const brickTextSwapState = atom<
+export const brickEditorSwapState = atom<
   Record<BrickId, LiteralBrickData | undefined>
 >({
-  key: 'brickTextSwapState',
+  key: 'brickEditorSwapState',
   default: {},
 });
 

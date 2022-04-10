@@ -35,7 +35,7 @@ export const updateBrickByText = (
       newBrick: {
         ...brick,
         text: '',
-        children: [],
+        ast: [],
       },
     };
   }

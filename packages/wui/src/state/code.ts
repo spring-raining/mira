@@ -1,6 +1,6 @@
 import { selector } from 'recoil';
 import { ScriptBrick, SnippetBrick, Mira } from '../types';
-import { brickDictState, brickTextSwapState } from './atoms';
+import { brickDictState, brickEditorSwapState } from './atoms';
 
 export const codeFragmentsState = selector<
   Pick<SnippetBrick & { mira: Mira }, 'id' | 'text' | 'language' | 'mira'>[]
@@ -8,16 +8,16 @@ export const codeFragmentsState = selector<
   key: 'codeFragmentsState',
   get: ({ get }) => {
     const brickDict = get(brickDictState);
-    const brickTextSwap = get(brickTextSwapState);
+    const brickEditorSwap = get(brickEditorSwapState);
     const livedSnippets = Object.values(brickDict).filter(
       (v): v is SnippetBrick & { mira: Mira } =>
         v.type === 'snippet' && !!v.mira?.isLived,
     );
     return livedSnippets.map(({ id, text, language, mira }) => {
       const ret = { id, text, language, mira };
-      const swap = brickTextSwap[id];
+      const swap = brickEditorSwap[id];
       if (swap) {
-        ret.text = swap.text;
+        ret.text = swap.codeEditor.state.doc;
         if (swap.mira) {
           ret.mira = swap.mira;
         }

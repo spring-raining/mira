@@ -236,7 +236,7 @@ export const PlanetarySystem: React.VFC = () => {
               onMultipleSelect,
             }}
           >
-            {brick.type === 'note' && getMarkdownSubject(brick.children ?? [])}
+            {brick.type === 'note' && getMarkdownSubject(brick.ast ?? [])}
           </PlanetaryListItem>
         ))}
       </div>

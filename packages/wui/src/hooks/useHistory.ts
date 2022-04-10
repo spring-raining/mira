@@ -1,7 +1,9 @@
+import { useEffect, useRef } from 'react';
 import {
   useRecoilCallback,
   useRecoilTransactionObserver_UNSTABLE,
   RecoilState,
+  RecoilValue,
 } from 'recoil';
 import {
   brickDictState,
@@ -9,6 +11,7 @@ import {
   activeBrickIdState,
 } from '../state/atoms';
 import { useHistoryRef } from './history/context';
+import { useDebouncedCallback } from './useDebouncedCallback';
 
 const recordingAtoms: Readonly<RecoilState<any>[]> = [
   brickDictState,
@@ -16,71 +19,137 @@ const recordingAtoms: Readonly<RecoilState<any>[]> = [
   activeBrickIdState,
 ] as const;
 
-export const HistoryObserver = () => {
-  const historyRef = useHistoryRef();
-  useRecoilTransactionObserver_UNSTABLE(({ snapshot }) => {
-    const prev = historyRef.current.stack;
-    const purged = prev.slice(prev.length - 1);
-    historyRef.current.stack = [
-      ...prev.slice(0, prev.length - 1),
-      {
-        snapshot,
-        release: snapshot.retain(),
-      },
-    ];
-    purged.forEach(({ release }) => release());
-  });
-  return null;
-};
+const watchingAtoms: Readonly<RecoilValue<any>[]> = [
+  brickDictState,
+  brickOrderState,
+] as const;
 
 export const useHistory = () => {
   const historyRef = useHistoryRef();
 
-  const commit = useRecoilCallback(
+  const effect = useRecoilCallback(
     ({ snapshot }) =>
-      async () => {
-        const { stack, depth } = historyRef.current;
-        const purged = stack.slice(depth + 1);
-        historyRef.current = {
-          stack: [
-            ...stack.slice(0, depth + 1),
-            {
-              snapshot,
-              release: snapshot.retain(),
-            },
-          ],
-          depth: depth + 1,
+      () => {
+        const { history } = historyRef.current;
+        history.release?.();
+        const release = snapshot.retain();
+        const newHistory = {
+          id: history.id,
+          snapshot,
+          release,
+          prev: history.prev,
+          next: history.next,
         };
-        purged.forEach(({ release }) => release());
+        if (history.prev) {
+          history.prev.next = newHistory;
+        }
+        if (history.next) {
+          history.next.prev = newHistory;
+        }
+        historyRef.current.history = newHistory;
       },
-    [],
+    [historyRef],
   );
+
+  const _commit = useRecoilCallback(
+    ({ snapshot }) =>
+      () => {
+        try {
+          const { history } = historyRef.current;
+          // Release all history linked to next
+          for (let next = history.next; next; next = next.next) {
+            next.release?.();
+          }
+          const release = snapshot.retain();
+          historyRef.current.history = history.next = {
+            id: history.id + 1,
+            snapshot,
+            release,
+            prev: history,
+          };
+        } finally {
+          historyRef.current.isInCommit = false;
+        }
+      },
+    [historyRef],
+  );
+  const commit = useDebouncedCallback(_commit, 500);
 
   const restore = useRecoilCallback(
     ({ snapshot, gotoSnapshot }) =>
-      async (step: number) => {
-        const { stack, depth } = historyRef.current;
-        if (depth + step < 0 || depth + step >= stack.length - 1) {
-          return;
-        }
-        const restoreSnapshot = stack[depth + step].snapshot;
-        const newSnapshot = await snapshot.asyncMap(async ({ set }) => {
-          for (const state of recordingAtoms) {
-            const val = await restoreSnapshot.getPromise(state);
-            set(state, val);
+      async (side: 'undo' | 'redo') => {
+        historyRef.current.isInRestore = true;
+        const release = snapshot.retain();
+        try {
+          const { history } = historyRef.current;
+          const restoreHistory = side === 'undo' ? history.prev : history.next;
+          const restoreSnapshot = restoreHistory?.snapshot;
+          if (!restoreSnapshot) {
+            return;
           }
-        });
-        historyRef.current = {
-          stack:
-            depth < stack.length - 1
-              ? stack
-              : [...stack, { snapshot, release: snapshot.retain() }],
-          depth: depth + step,
-        };
-        gotoSnapshot(newSnapshot);
+          const newSnapshot = await snapshot.asyncMap(async ({ set }) => {
+            for (const state of recordingAtoms) {
+              const val = await restoreSnapshot.getPromise(state);
+              set(state, val);
+            }
+          });
+          historyRef.current.history = restoreHistory;
+          historyRef.current.restoreSnapshotId = newSnapshot.getID();
+          gotoSnapshot(newSnapshot);
+        } finally {
+          release();
+          historyRef.current.isInRestore = false;
+        }
       },
-    [],
+    [historyRef],
   );
 
-  return { commit, restore };
+  return {
+    effect,
+    commit,
+    undo: () => restore('undo'),
+    redo: () => restore('redo'),
+  };
+};
+
+export const HistoryObserver = () => {
+  const historyRef = useHistoryRef();
+  const { effect, commit } = useHistory();
+
+  const commitRef = useRef(commit);
+  useEffect(() => {
+    commitRef.current = commit;
+  }, [commit]);
+
+  const effectRef = useRef(effect);
+  useEffect(() => {
+    effectRef.current = effect;
+  }, [effect]);
+
+  useRecoilTransactionObserver_UNSTABLE(({ snapshot }) => {
+    if (!historyRef.current.history.snapshot) {
+      commitRef.current();
+      return;
+    }
+    if (historyRef.current.restoreSnapshotId === snapshot.getID()) {
+      historyRef.current.restoreSnapshotId = null;
+      return;
+    }
+    if (historyRef.current.isInRestore) {
+      return;
+    }
+
+    for (const node of snapshot.getNodes_UNSTABLE({ isModified: true })) {
+      if (watchingAtoms.map((v) => v.key).includes(node.key)) {
+        historyRef.current.isInCommit = true;
+        commitRef.current();
+        break;
+      }
+    }
+    if (!historyRef.current.isInCommit) {
+      effectRef.current();
+    }
+  });
+
+  return null;
 };

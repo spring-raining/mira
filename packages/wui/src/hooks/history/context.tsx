@@ -1,18 +1,27 @@
 import React, { createContext, useContext, useRef } from 'react';
-import { Snapshot } from 'recoil';
+import { Snapshot, SnapshotID } from 'recoil';
 
 interface HistoryStep {
-  snapshot: Snapshot;
-  release: () => void;
+  id: number;
+  snapshot?: Snapshot;
+  release?: () => void;
+  next?: HistoryStep;
+  prev?: HistoryStep;
 }
 
 export interface HistoryStore {
-  stack: HistoryStep[];
-  depth: number;
+  history: HistoryStep;
+  restoreSnapshotId: SnapshotID | null;
+  isInRestore: boolean;
+  isInCommit: boolean;
 }
 const defaultHistoryStore: HistoryStore = {
-  stack: [],
-  depth: 0,
+  history: {
+    id: 0,
+  },
+  restoreSnapshotId: null,
+  isInRestore: false,
+  isInCommit: false,
 };
 
 const HistoryContext = createContext<React.MutableRefObject<HistoryStore>>({
