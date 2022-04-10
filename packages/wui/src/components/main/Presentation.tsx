@@ -19,6 +19,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   const { renderParams } = useRenderParams(brickId);
   const [, postCode] = useBroadcast<{ source: string }>(brickId, 'code');
   const [, postParameter] = useBroadcast(brickId, 'parameter');
+  const [presentationUpdate] = useBroadcast(brickId, 'presentationUpdate');
 
   const [showIframe, setShowIframe] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(32);
@@ -60,8 +61,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       return;
     }
     postCode({ source });
-    resizeIframeHeight();
-  }, [result, postCode, resizeIframeHeight]);
+  }, [result, postCode]);
 
   useEffect(() => {
     if (!renderParams) {
@@ -72,8 +72,11 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       obj[k] = v;
     }
     postParameter(obj);
+  }, [renderParams, postParameter]);
+
+  useEffect(() => {
     resizeIframeHeight();
-  }, [renderParams, postParameter, resizeIframeHeight]);
+  }, [presentationUpdate, resizeIframeHeight]);
 
   const [displayingError, setDisplayingError] = useState<Error>();
   useEffect(() => {

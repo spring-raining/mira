@@ -35,8 +35,10 @@ export class EvalPresentation extends ReactiveElement {
 
   protected update(changedProperties: PropertyValues): void {
     super.update(changedProperties);
-    const event = new CustomEvent('props-changed', {
+    const event = new CustomEvent('props-change', {
       detail: this.props || {},
+      bubbles: true,
+      composed: true,
     });
     this.dispatchEvent(event);
   }

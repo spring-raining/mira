@@ -159,9 +159,7 @@ export const useBroadcast = <
   name: string,
   kind: K,
 ) => {
-  const channel = useRef(
-    isBroadcastChannelSupported ? new BroadcastChannel(name) : undefined,
-  );
+  const [channel, setChannel] = useState<BroadcastChannel | undefined>();
   const [state, setState] = useState<T>();
 
   const pseudoFunctionRef = useRef(new Map<string, CallableFunction>());
@@ -175,6 +173,9 @@ export const useBroadcast = <
 
   const postMessage = useCallback(
     (value: T) => {
+      if (!channel) {
+        return;
+      }
       const cloneableValue: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(value)) {
         try {
@@ -188,28 +189,38 @@ export const useBroadcast = <
           return;
         }
       }
-      channel.current?.postMessage({
+      channel.postMessage({
         kind,
         value: cloneableValue,
       });
       setState(value);
     },
-    [kind, getPseudoFunction],
+    [channel, kind, getPseudoFunction],
   );
 
   useEffect(() => {
-    // if (channel.current) {
-    //   channel.current.onmessage = (e) => {
-    //     console.log(e);
-    //   };
-    // }
-    () => {
-      if (channel.current) {
-        channel.current.close();
-        channel.current = undefined;
-      }
+    const broadcastChannel = isBroadcastChannelSupported
+      ? new BroadcastChannel(name)
+      : undefined;
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (
+        event: MessageEvent<{ kind: string; value: any }>,
+      ) => {
+        if (event.data.kind === kind) {
+          setState(event.data.value);
+        } else if (event.data.kind === 'functionCall') {
+          const { calleeId, args } = event.data.value;
+          const fn = pseudoFunctionRef.current.get(calleeId);
+          // eslint-disable-next-line prefer-spread, @typescript-eslint/ban-types
+          (fn as Function | undefined)?.apply(null, args);
+        }
+      };
+    }
+    setChannel(broadcastChannel);
+    return () => {
+      broadcastChannel?.close();
     };
-  }, [name]);
+  }, [name, kind]);
 
   return [state, postMessage] as const;
 };

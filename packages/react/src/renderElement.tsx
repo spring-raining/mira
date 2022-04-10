@@ -37,16 +37,25 @@ const wrapElement = (
         setElementProps(event.detail);
       };
       parentEl.addEventListener(
-        'props-changed',
+        'props-change',
         propsChangedCallback as EventListener,
       );
       return () => {
         parentEl.removeEventListener(
-          'props-changed',
+          'props-change',
           propsChangedCallback as EventListener,
         );
       };
     }, []);
+
+    useEffect(() => {
+      parentEl.dispatchEvent(
+        new CustomEvent('update', {
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }, [elementProps]);
 
     return <Element {...elementProps} />;
   };
