@@ -8,6 +8,7 @@ const output = [
       path.resolve(__dirname, 'src/index.ts'),
       path.resolve(__dirname, 'src/eval.ts'),
       path.resolve(__dirname, 'src/runtime.ts'),
+      path.resolve(__dirname, 'src/viteConfig.ts'),
     ],
     output: [
       {

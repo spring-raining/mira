@@ -73,8 +73,9 @@ export class DependencyManager<ID extends string> extends EventTarget<{
   moduleUpdate: ModuleUpdateEvent<ID>;
   renderParamsUpdate: RenderParamsUpdateEvent<ID>;
 }> {
-  private mdxPath: string;
-  private depsRootPath: string;
+  private base: string;
+  private depsContext: string;
+  private importerContext: string;
   private moduleLoader: (specifier: string) => Promise<unknown>;
   private miraBrickImportDef = {} as Record<ID, readonly ImportDefinition[]>;
   private miraBrickExportDef = {} as Record<ID, readonly string[]>;
@@ -96,17 +97,20 @@ export class DependencyManager<ID extends string> extends EventTarget<{
   private blockingUpdateEvent: (CustomEvent | LazyCustomEvent)[] = [];
 
   constructor({
-    mdxPath,
-    depsRootPath,
+    base,
+    depsContext,
+    importerContext,
     moduleLoader,
   }: {
-    mdxPath: string;
-    depsRootPath: string;
+    base: string;
+    depsContext: string;
+    importerContext: string;
     moduleLoader: (specifier: string) => Promise<unknown>;
   }) {
     super();
-    this.mdxPath = mdxPath;
-    this.depsRootPath = depsRootPath;
+    this.base = base;
+    this.depsContext = depsContext;
+    this.importerContext = importerContext;
     this.moduleLoader = moduleLoader;
   }
 
@@ -471,8 +475,9 @@ export class DependencyManager<ID extends string> extends EventTarget<{
       try {
         esmImports = await collectEsmImports({
           node: scriptNode,
-          depsRootPath: this.depsRootPath,
-          contextPath: this.mdxPath,
+          base: this.base,
+          depsContext: this.depsContext,
+          importerContext: this.importerContext,
         });
         const importResults = await Promise.all(
           esmImports.map(async (definition) => {

@@ -29,12 +29,10 @@ const usePrevState = <T>(state: T): [T, T | undefined] => {
 
 export const ProvidenceObserver = ({
   mdxPath,
-  depsRootPath,
   moduleLoader,
-  config: { runtime, inputDebounce },
+  config: { base, depsContext, framework, inputDebounce },
 }: {
   mdxPath: string;
-  depsRootPath: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
   config: MiraWuiConfig;
 }) => {
@@ -82,10 +80,11 @@ export const ProvidenceObserver = ({
   useEffect(() => {
     const p = setupProvidence({
       store: providenceRef.current,
-      runtime,
+      framework,
       inputDebounce,
       mdxPath,
-      depsRootPath,
+      base,
+      depsContext,
       moduleLoader,
       onEvaluatorUpdate,
       onModuleUpdate,
@@ -94,10 +93,11 @@ export const ProvidenceObserver = ({
     providence.current = p;
     return p.teardown;
   }, [
-    runtime,
+    framework,
     inputDebounce,
     mdxPath,
-    depsRootPath,
+    base,
+    depsContext,
     moduleLoader,
     providenceRef,
     onEvaluatorUpdate,

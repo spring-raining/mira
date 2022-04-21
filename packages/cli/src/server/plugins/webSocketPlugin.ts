@@ -6,13 +6,7 @@ import {
   WebSocket,
   Logger,
 } from '@web/dev-server-core';
-import { devServerWatcherPreambleCode } from '../../clientCode/devServer';
-import { hmrPreambleCode } from '../../clientCode/hmr';
 import { ProjectConfig } from '../../config';
-import {
-  HMR_PREAMBLE_IMPORT_PATH,
-  DEV_SERVER_WATCHER_PREAMBLE_IMPORT_PATH,
-} from '../../constants';
 import { setupWebSocketHandler as setupFileSystemHandler } from '../fileSystem/webSocket';
 
 const proxyWdsCommunication =
@@ -105,14 +99,6 @@ export function webSocketPlugin({ config }: { config: ProjectConfig }): Plugin {
         'message',
         proxyWdsCommunication({ logger })(fileSystemHandler),
       );
-    },
-    async serve(ctx) {
-      if (ctx.path === HMR_PREAMBLE_IMPORT_PATH) {
-        return hmrPreambleCode;
-      }
-      if (ctx.path === DEV_SERVER_WATCHER_PREAMBLE_IMPORT_PATH) {
-        return devServerWatcherPreambleCode;
-      }
     },
   };
 }

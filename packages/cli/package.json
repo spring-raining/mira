@@ -17,6 +17,8 @@
     "build": "run-s build:*",
     "build:rollup": "rollup -c",
     "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
+    "build:vendor": "run-s build:vendor:*",
+    "build:vendor:msgpack": "esbuild src/vendor/@msgpack.js --bundle --minify --format=esm --outfile=dist/vendor/@msgpack.js",
     "dev": "rollup -c -w --no-watch.clearScreen --environment DEV",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
@@ -34,14 +36,14 @@
     "@types/picomatch": "^2.2.4"
   },
   "dependencies": {
+    "@mirajs/core": "1.0.0",
     "@mirajs/workspace": "1.0.0",
     "@msgpack/msgpack": "2.7.1",
     "@web/dev-server": "^0.1.14",
-    "find-node-modules": "^2.1.2",
     "globby": "^11.0.2",
     "koa-send": "5.0.1",
     "picomatch": "^2.2.2",
     "reflect-metadata": "0.1.13",
-    "vite": "2.9.0"
+    "vite": "2.9.5"
   }
 }

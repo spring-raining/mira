@@ -1,8 +1,4 @@
-declare module 'find-node-modules' {
-  const findNodeModules: (args?: {
-    cwd?: string;
-    searchFor?: string;
-    relative?: boolean;
-  }) => string[];
-  export default findNodeModules;
+declare interface Window {
+  __MIRA_HMR__: any;
+  __MIRA_WDS__: any;
 }

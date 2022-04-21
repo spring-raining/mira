@@ -1,33 +1,27 @@
-export const devServerWatcherNamespace = '__MIRA_WDS__';
-export const devServerWatcherUpdateEventName = '__MIRA_WDS_UPDATE__';
+/* eslint-disable node/no-unpublished-import */
 
 // Refers to @web/dev-server-core
 // https://github.com/modernweb-dev/web/blob/292c567517d846411f6bcdfd1d60b3f50e20a783/packages/dev-server-core/src/web-sockets/webSocketsPlugin.ts
-export const devServerWatcherPreambleCode = `
-import { encode, decode, decodeAsync } from '/_mira/vendor/@msgpack/msgpack/dist.es5+esm/index.mjs';
+import { encode, decode, decodeAsync } from '../vendor/@msgpack.js';
 
-export let webSocket;
-export let webSocketOpened;
-export let sendMessage;
-export let sendMessageWaitForResponse;
-let getNextMessageId;
+export let webSocket: WebSocket;
+export let webSocketOpened: Promise<void>;
+export let sendMessage: (msg: any) => void;
+export let sendMessageWaitForResponse: (msg: any) => Promise<any>;
+let getNextMessageId: () => number;
 function setupWebSocket() {
-  if (
-    window.parent !== window &&
-    window.parent.${devServerWatcherNamespace} !== undefined
-  ) {
+  if (window.parent !== window && window.parent.__MIRA_WDS__ !== undefined) {
     // get the websocket instance from the parent element if present
-    const info = window.parent.${devServerWatcherNamespace};
+    const info = window.parent.__MIRA_WDS__;
     webSocket = info.webSocket;
     webSocketOpened = info.webSocketOpened;
     getNextMessageId = info.getNextMessageId;
   } else {
-    const socketUrl = \`\${location.protocol === 'http:' ? 'ws://' : 'wss://'}\${
+    const socketUrl = `${location.protocol === 'http:' ? 'ws://' : 'wss://'}${
       location.host
-    }/wds\`;
-    webSocket =
-      'WebSocket' in window ? new WebSocket(socketUrl) : null;
-    webSocketOpened = new Promise((resolve) => {
+    }/wds`;
+    webSocket = new WebSocket(socketUrl);
+    webSocketOpened = new Promise<void>((resolve) => {
       if (!webSocket) {
         resolve();
       } else {
@@ -44,7 +38,7 @@ function setupWebSocket() {
       messageId += 1;
       return messageId;
     };
-    window.${devServerWatcherNamespace} = {
+    window.__MIRA_WDS__ = {
       webSocket,
       webSocketOpened,
       getNextMessageId,
@@ -61,18 +55,23 @@ function setupWebSocket() {
 
   // sends a websocket message and expects a response from the server
   sendMessageWaitForResponse = async (message) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const id = getNextMessageId();
 
-      async function onResponse(e) {
-        const message = e.data instanceof Blob
-          ? await decodeAsync(e.data.stream())
-          : e.data instanceof ArrayBuffer
-          ? decode(e.data)
-          : typeof e.data === 'string'
-          ? JSON.parse(e.data)
-          : null;
-        if (message && message.type === 'message-response' && message.id === id) {
+      async function onResponse(e: MessageEvent) {
+        const message =
+          e.data instanceof Blob
+            ? await decodeAsync(e.data.stream())
+            : e.data instanceof ArrayBuffer
+            ? decode(e.data)
+            : typeof e.data === 'string'
+            ? JSON.parse(e.data)
+            : null;
+        if (
+          message &&
+          message.type === 'message-response' &&
+          message.id === id
+        ) {
           webSocket.removeEventListener('message', onResponse);
           if (message.error) {
             reject(new Error(message.error));
@@ -88,8 +87,8 @@ function setupWebSocket() {
         webSocket.removeEventListener('message', onResponse);
         reject(
           new Error(
-            \`Did not receive a server response for message with type \${message.type} within 20000ms\`
-          )
+            `Did not receive a server response for message with type ${message.type} within 20000ms`,
+          ),
         );
       }, 20000);
 
@@ -104,7 +103,7 @@ function setupWebSocket() {
           return;
         }
         const msg = JSON.parse(e.data);
-        const ev = new CustomEvent('${devServerWatcherUpdateEventName}', {
+        const ev = new CustomEvent('__MIRA_WDS_UPDATE__', {
           detail: msg,
         });
         window.dispatchEvent(ev);
@@ -117,4 +116,3 @@ function setupWebSocket() {
 }
 
 setupWebSocket();
-`;

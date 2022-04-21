@@ -9,8 +9,9 @@ export type KeySequence = string | Array<string>;
 export type KeyMap = { [k in KeyActions]: KeySequence };
 
 export type MiraWuiConfig = {
-  runtime: string;
-  eval: string;
+  base: string;
+  depsContext: string;
+  framework: string;
   inputDebounce?: number;
   layout?: 'oneColumn' | 'twoColumn';
   keyMap?: Partial<KeyMap>;

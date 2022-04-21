@@ -1,6 +1,19 @@
 export interface MiraConfig {
-  framework?: 'react';
+  framework?: string;
   module?: string[];
+}
+
+export interface Framework {
+  runtime: RuntimeEnvironmentFactory;
+  MiraEval?: MiraEvalBase;
+  viteConfig?: {
+    optimizeDeps?: {
+      entries?: string[];
+      include?: string[];
+      exclude?: string[];
+      extensions?: string[];
+    };
+  };
 }
 
 export interface RuntimeScope {
@@ -25,3 +38,14 @@ export type RuntimeEnvironmentFactory<
 > = (arg?: {
   config?: RuntimeEnvironmentConfig;
 }) => RuntimeEnvironment<CustomRuntimeScope>;
+
+export abstract class MiraEvalBase extends HTMLElement {
+  props: any;
+
+  abstract evaluateCode(
+    code: string,
+    scopeVal: Map<string, any>,
+  ): Promise<void>;
+
+  abstract loadScript(source: string): Promise<void>;
+}

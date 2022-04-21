@@ -10,6 +10,9 @@ export interface WorkspaceRepository {
     ctx: GetServerSidePropsContext,
   ): Promise<MiraMdxFileItem<number>[]>;
   constants: {
+    base: string;
+    depsContext: string;
+    frameworkUrl: string;
     hmrUpdateEventName?: string;
     hmrPreambleImportPath?: string;
     devServerWatcherUpdateEventName?: string;

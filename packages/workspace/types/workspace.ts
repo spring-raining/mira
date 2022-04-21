@@ -8,5 +8,4 @@ export interface FileStat<T = Date> {
 export type MiraMdxFileItem<T = Date> = FileStat<T> & {
   supports: 'miraMdx';
   body: string;
-  depsRootPath: string;
 };

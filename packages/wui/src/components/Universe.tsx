@@ -23,17 +23,14 @@ import { PlanetarySystem } from './planetarySystem';
 export interface UniverseProps {
   mdx?: string;
   path?: string;
-  depsRootPath?: string;
   moduleLoader?: (specifier: string) => Promise<any>;
   onUpdate?: (mdx: string) => void;
-  transpilerConfig?: ServiceOptions;
   config: MiraWuiConfig;
 }
 
 const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
   onUpdate = noop,
-  transpilerConfig,
 }) => {
   const { bricks, importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
@@ -77,7 +74,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
       <main className={style.mainPane}>
         <div className={style.mainSticky}>
           {bricks.map((brick) => (
-            <Block key={brick.id} {...{ transpilerConfig }} {...brick} />
+            <Block key={brick.id} {...brick} />
           ))}
         </div>
       </main>
@@ -92,14 +89,13 @@ const UniverseView: React.VFC<UniverseProps> = ({
 
 export const Universe: React.VFC<UniverseProps> = ({
   path = '/',
-  depsRootPath = '/_mira',
   moduleLoader = noopAsync,
   config,
   ...other
 }) => {
   const _config = config || {};
-  if (!_config.runtime) {
-    throw new Error('Missing required config: runtime');
+  if (!_config.framework) {
+    throw new Error('Missing required config: framework');
   }
   return (
     <RecoilRoot
@@ -109,14 +105,11 @@ export const Universe: React.VFC<UniverseProps> = ({
     >
       <HistoryObserver />
       <ProvidenceObserver
-        {...{ mdxPath: path, depsRootPath, moduleLoader, config }}
+        {...{ mdxPath: path, moduleLoader, config }}
         {...other}
       />
       <RootContainerQueryProvider>
-        <UniverseView
-          {...{ path, depsRootPath, moduleLoader, config }}
-          {...other}
-        />
+        <UniverseView {...{ path, moduleLoader, config }} {...other} />
       </RootContainerQueryProvider>
     </RecoilRoot>
   );

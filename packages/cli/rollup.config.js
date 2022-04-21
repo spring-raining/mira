@@ -1,5 +1,6 @@
 /* eslint-disable */
 import path from 'path';
+import globby from 'globby';
 import { commonPlugins } from '../../rollup.config';
 import * as packageJson from './package.json';
 
@@ -32,6 +33,20 @@ const output = [
       'ip',
       'ws',
     ],
+    plugins: commonPlugins,
+  },
+  {
+    input: globby.sync(path.resolve(__dirname, 'src/clientCode/*.ts')),
+    output: [
+      {
+        dir: path.resolve(__dirname, 'dist/clientCode'),
+        entryFileNames: '[name].js',
+        format: 'module',
+        exports: 'named',
+        sourcemap: true,
+      },
+    ],
+    external: [/\/vendor\//],
     plugins: commonPlugins,
   },
 ];

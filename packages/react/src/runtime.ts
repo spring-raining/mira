@@ -3,7 +3,7 @@ import { createElement, Fragment } from 'react';
 import { render as ReactDOMRender, unmountComponentAtNode } from 'react-dom';
 import { RuntimeEnvironmentConfig } from './types';
 
-export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory<
+export const runtime: RuntimeEnvironmentFactory<
   RuntimeEnvironmentConfig
 > = () => {
   return {
@@ -20,4 +20,4 @@ export const runtimeEnvironmentFactory: RuntimeEnvironmentFactory<
   };
 };
 
-export default runtimeEnvironmentFactory;
+export default runtime;

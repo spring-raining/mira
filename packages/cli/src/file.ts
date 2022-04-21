@@ -3,7 +3,6 @@ import path from 'path';
 import { MiraMdxFileItem, FileStat } from '@mirajs/workspace';
 import picomatch from 'picomatch';
 import { ProjectConfig } from './config';
-import { MIDDLEWARE_PATH_PREFIX } from './constants';
 
 export const resolveProjectPath = ({
   pathname,
@@ -43,7 +42,6 @@ export const readProjectFileObject = async ({
     const body = await fs.readFile(absPath, { encoding: 'utf-8' });
     return {
       ...fileStat,
-      depsRootPath: MIDDLEWARE_PATH_PREFIX,
       supports: 'miraMdx' as const,
       body,
     };

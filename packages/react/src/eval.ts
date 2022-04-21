@@ -1,13 +1,11 @@
 import { ReactiveElement, PropertyValues } from '@lit/reactive-element';
-import { customElement } from '@lit/reactive-element/decorators/custom-element.js';
 import { property } from '@lit/reactive-element/decorators/property.js';
-import { RuntimeScope } from '@mirajs/core';
+import { RuntimeScope, MiraEvalBase } from '@mirajs/core';
 import { renderElement } from './renderElement';
-import { runtimeEnvironmentFactory } from './runtime';
+import { runtime } from './runtime';
 import { RuntimeEnvironmentConfig } from './types';
 
-@customElement('mira-eval')
-export class MiraEval extends ReactiveElement {
+export class MiraEval extends ReactiveElement implements MiraEvalBase {
   private mountPoint: HTMLDivElement;
   private evaluatedElement: any = null;
   private runtimeScope: RuntimeScope | undefined;
@@ -43,8 +41,12 @@ export class MiraEval extends ReactiveElement {
     this.dispatchEvent(event);
   }
 
-  async loadScript(src: string) {
-    const env = runtimeEnvironmentFactory({ config: this.config });
+  async evaluateCode(): Promise<void> {
+    // no code evaluation
+  }
+
+  async loadScript(src: string): Promise<void> {
+    const env = runtime({ config: this.config });
     this.runtimeScope = env.getRuntimeScope({});
     for (const [k, v] of Object.entries(this.runtimeScope)) {
       (globalThis as any)[k] = v;

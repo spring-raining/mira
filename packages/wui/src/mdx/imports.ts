@@ -6,7 +6,7 @@ const isPathImport = (spec: string): boolean =>
 
 const isRemoteUrl = (spec: string): boolean => /^https?:\/\//.test(spec);
 
-const pathJoin = (...args: string[]): string => {
+export const pathJoin = (...args: string[]): string => {
   let str = args[0];
   for (let i = 1; i < args.length; i++) {
     str = str.replace(/\/$/, '');
@@ -15,7 +15,10 @@ const pathJoin = (...args: string[]): string => {
   return str;
 };
 
-const resolveLocalPath = (specifier: string, basePath: string): string => {
+export const resolveLocalPath = (
+  specifier: string,
+  basePath: string,
+): string => {
   const targetUrl = new URL(
     specifier[0] === '/' ? specifier : pathJoin(basePath, specifier),
     window.location.origin,
@@ -25,26 +28,29 @@ const resolveLocalPath = (specifier: string, basePath: string): string => {
 
 export const resolveImportSpecifier = ({
   specifier,
-  depsRootPath,
-  contextPath = '.',
+  base,
+  depsContext,
+  importerContext = '.',
 }: {
   specifier: string;
-  depsRootPath: string;
-  contextPath?: string;
+  base: string;
+  depsContext: string;
+  importerContext?: string;
 }): string => {
   const origin = window.location.origin;
   if (isRemoteUrl(specifier)) {
     return specifier;
   }
   if (isPathImport(specifier)) {
-    const basePath = pathJoin(contextPath.replace(/^\/+/, ''), '../');
+    const basePath = pathJoin(importerContext.replace(/^\/+/, ''), '../');
     const resolvedPath = resolveLocalPath(specifier, basePath);
     // import query represents that is imported directly, which affects HMR behavior
-    return `${pathJoin(origin, depsRootPath, '/-', resolvedPath)}?import`;
+    return `${pathJoin(origin, base, depsContext, '/-', resolvedPath)}?import`;
   }
   return `${pathJoin(
     origin,
-    depsRootPath,
+    base,
+    depsContext,
     '/-/node_modules',
     specifier,
   )}?import`;
@@ -52,12 +58,14 @@ export const resolveImportSpecifier = ({
 
 export const collectEsmImports = async ({
   node,
-  depsRootPath,
-  contextPath,
+  base,
+  depsContext,
+  importerContext,
 }: {
   node: ASTNode[];
-  depsRootPath: string;
-  contextPath: string;
+  base: string;
+  depsContext: string;
+  importerContext: string;
 }): Promise<ParsedImportStatement[]> => {
   const parseAll = node
     .filter((node) => node.type === 'mdxjsEsm')
@@ -75,20 +83,21 @@ export const collectEsmImports = async ({
     ...def,
     specifier: resolveImportSpecifier({
       specifier: def.specifier,
-      depsRootPath,
-      contextPath,
+      base,
+      depsContext,
+      importerContext,
     }),
   }));
   return rewrited;
 };
 
-export const loadModule = async ({
+export const loadModule = async <T = Record<string, unknown>>({
   specifier,
   moduleLoader,
 }: {
   specifier: string;
   moduleLoader: (specifier: string) => Promise<any>;
-}): Promise<Record<string, unknown>> => {
+}): Promise<T> => {
   const mod = await moduleLoader(specifier);
   return mod;
 };

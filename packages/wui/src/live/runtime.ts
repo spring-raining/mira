@@ -1,4 +1,4 @@
-import type { RuntimeEnvironmentFactory } from '@mirajs/core';
+import type { Framework } from '@mirajs/core';
 import { loadModule, resolveImportSpecifier } from '../mdx/imports';
 import { RuntimeEnvironment } from '../types';
 import { genRunEnvId } from './../util';
@@ -6,25 +6,26 @@ import { genRunEnvId } from './../util';
 export type Runtime = { getRuntimeEnvironment: () => RuntimeEnvironment };
 
 export const setupRuntime = async ({
-  runtime,
+  framework,
   moduleLoader,
-  depsRootPath,
+  base,
+  depsContext,
 }: {
-  runtime: string;
+  framework: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
-  depsRootPath: string;
+  base: string;
+  depsContext: string;
 }): Promise<Runtime> => {
-  const runtimeSpecifier = resolveImportSpecifier({
-    specifier: runtime,
-    depsRootPath,
+  const frameworkSpecifier = resolveImportSpecifier({
+    specifier: framework,
+    base,
+    depsContext,
   });
-  const runtimeModule = (await loadModule({
-    specifier: runtimeSpecifier,
+  const frameworkModule = await loadModule<Framework>({
+    specifier: frameworkSpecifier,
     moduleLoader,
-  })) as any;
-  const { getRuntimeScope } = (
-    runtimeModule.runtimeEnvironmentFactory as RuntimeEnvironmentFactory
-  )();
+  });
+  const { getRuntimeScope } = frameworkModule.runtime();
 
   return {
     getRuntimeEnvironment: () => ({

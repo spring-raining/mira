@@ -1,9 +1,21 @@
+import { createRequire } from 'module';
+import type { Framework } from '@mirajs/core';
 import { Plugin, Middleware, DevServerCoreConfig } from '@web/dev-server-core';
 import { createServer, UserConfig } from 'vite';
 import { MIDDLEWARE_PATH_PREFIX } from '../../constants';
 import { hmrVitePlugin } from './vite/hmrPlugin';
+import { htmlVitePlugin } from './vite/htmlPlugin';
 
-const VITE_BASE = `${MIDDLEWARE_PATH_PREFIX}/-/`;
+const require = createRequire(import.meta.url);
+
+const VITE_BASE = `${MIDDLEWARE_PATH_PREFIX}-/`;
+
+const iframeDefaultHtml = `<html>
+<body style="margin: 0;">
+  <mira-eval></mira-eval>
+</body>
+</html>
+`;
 
 export async function vitePluginFactory(
   coreConfig: DevServerCoreConfig,
@@ -11,6 +23,11 @@ export async function vitePluginFactory(
   vitePlugin: Plugin;
   viteMiddleware: Middleware;
 }> {
+  // TODO: Read arbitrary framework
+  const { viteConfig: frameworkConfig }: Framework = await import(
+    require.resolve('@mirajs/react/viteConfig.js')
+  );
+
   const viteConfig: UserConfig = {
     root: coreConfig.rootDir,
     // base: coreConfig.basePath,
@@ -20,12 +37,17 @@ export async function vitePluginFactory(
     mode: 'development',
     clearScreen: false,
     server: {
-      middlewareMode: 'html',
+      middlewareMode: 'ssr',
+      hmr: {
+        overlay: false,
+      },
     },
+    optimizeDeps: frameworkConfig?.optimizeDeps,
     plugins: [
       hmrVitePlugin({
         base: VITE_BASE,
       }),
+      htmlVitePlugin(),
     ],
   };
   const viteServer = await createServer(viteConfig);
@@ -39,9 +61,18 @@ export async function vitePluginFactory(
 
   const viteMiddleware: Middleware = async (ctx, next) => {
     if (ctx.path.startsWith(VITE_BASE)) {
-      ctx.path = ctx.path.substring(VITE_BASE.length - 1);
-      await viteServer.middlewares.handle(ctx.req, ctx.res, next);
-      ctx.respond = false;
+      // 1. Use Vite's middleware to serve dependencies
+      await new Promise((res) => {
+        viteServer.middlewares.handle(ctx.req, ctx.res, res);
+      });
+
+      // 2. If not, serve the index HTML file
+      const template = await viteServer.transformIndexHtml(
+        ctx.path,
+        iframeDefaultHtml,
+      );
+      ctx.body = template;
+      ctx.status = 200;
       return;
     }
     await next();

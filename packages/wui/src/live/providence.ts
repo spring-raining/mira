@@ -46,29 +46,32 @@ export interface Providence {
 
 export const setupProvidence = ({
   store,
-  runtime,
+  framework,
   inputDebounce = 66,
   mdxPath,
-  depsRootPath,
+  base,
+  depsContext,
   moduleLoader,
   onEvaluatorUpdate,
   onModuleUpdate,
   onRenderParamsUpdate,
 }: {
   store: ProvidenceStore;
-  runtime: string;
+  framework: string;
   inputDebounce?: number;
   mdxPath: string;
-  depsRootPath: string;
+  base: string;
+  depsContext: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
   onEvaluatorUpdate: (e: EvaluateState) => void;
   onModuleUpdate: (e: ModuleImportInfo<BrickId>) => void;
   onRenderParamsUpdate: (e: RenderParamsUpdateInfo<BrickId>) => void;
 }): Providence => {
   const _runtime = setupRuntime({
-    runtime,
+    framework,
     moduleLoader,
-    depsRootPath,
+    base,
+    depsContext,
   });
 
   const run = async ({
@@ -306,8 +309,9 @@ export const setupProvidence = ({
   };
 
   store.dependency = new DependencyManager<BrickId>({
-    mdxPath,
-    depsRootPath,
+    base,
+    depsContext,
+    importerContext: mdxPath,
     moduleLoader,
   });
   store.dependency.addEventListener('dependencyUpdate', handleDependencyUpdate);

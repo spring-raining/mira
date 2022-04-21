@@ -57,7 +57,7 @@
     "react-intersection-observer": "^8.32.0",
     "requestidlecallback-polyfill": "^1.0.2",
     "rollup-plugin-postcss": "^4.0.0",
-    "vite": "2.9.0"
+    "vite": "2.9.5"
   },
   "peerDependencies": {
     "react": ">=16.9.0",

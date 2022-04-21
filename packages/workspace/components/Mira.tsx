@@ -9,7 +9,12 @@ export const Mira: React.VFC<{
   mdx: string | undefined;
   constants: WorkspaceRepository['constants'];
   onUpdate?: (mdx: string) => void;
-}> = ({ file, mdx, constants: { hmrUpdateEventName }, onUpdate = noop }) => {
+}> = ({
+  file,
+  mdx,
+  constants: { base, depsContext, frameworkUrl, hmrUpdateEventName },
+  onUpdate = noop,
+}) => {
   const moduleLoader = useCallback(async (specifier: string) => {
     const mod = await import(/* webpackIgnore: true */ specifier);
     return mod;
@@ -31,16 +36,12 @@ export const Mira: React.VFC<{
     <MiraWui
       mdx={mdx}
       path={file?.path}
-      depsRootPath={file?.depsRootPath}
       onUpdate={onUpdate}
       moduleLoader={moduleLoader}
-      transpilerConfig={{
-        wasmURL: '/_mira/vendor/esbuild-wasm/esbuild.wasm',
-        worker: true,
-      }}
       config={{
-        eval: '/_mira/-/node_modules/@mirajs/react/dist/eval.js',
-        runtime: '/_mira/-/node_modules/@mirajs/react/dist/runtime.js',
+        base,
+        depsContext,
+        framework: frameworkUrl,
       }}
     />
   );

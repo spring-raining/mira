@@ -6,13 +6,20 @@
   "module": "./dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./eval.js": {
-      "import": "./dist/eval.js"
+      "import": "./dist/eval.js",
+      "default": "./dist/eval.js"
     },
     "./runtime.js": {
-      "import": "./dist/runtime.js"
+      "import": "./dist/runtime.js",
+      "default": "./dist/runtime.js"
+    },
+    "./viteConfig.js": {
+      "import": "./dist/viteConfig.js",
+      "default": "./dist/viteConfig.js"
     }
   },
   "types": "./dist/index.d.ts",

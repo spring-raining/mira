@@ -4,6 +4,7 @@ module.exports = {
   rules: {
     'node/no-missing-import': 'off',
     'node/no-missing-require': 'off',
+    'node/no-unsupported-features/es-syntax': 'off',
     'node/no-extraneous-import': [
       'error',
       {
@@ -17,6 +18,7 @@ module.exports = {
           'command-line-usage',
           'debounce',
           'ip',
+          'koa-compose',
           'ws',
         ],
       },

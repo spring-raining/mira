@@ -1,8 +1,7 @@
 import { WorkspaceRepository } from '@mirajs/workspace';
-import { devServerWatcherUpdateEventName } from './clientCode/devServer';
-import { hmrUpdateEventName } from './clientCode/hmr';
 import { ProjectConfig } from './config';
 import {
+  MIDDLEWARE_PATH_PREFIX,
   HMR_PREAMBLE_IMPORT_PATH,
   DEV_SERVER_WATCHER_PREAMBLE_IMPORT_PATH,
 } from './constants';
@@ -36,9 +35,12 @@ export const getWorkspaceRepository = ({
       ).flat();
     },
     constants: {
-      hmrUpdateEventName,
+      base: '/',
+      depsContext: MIDDLEWARE_PATH_PREFIX,
+      frameworkUrl: '/node_modules/@mirajs/react?import',
+      hmrUpdateEventName: '__MIRA_HMR_UPDATE__',
       hmrPreambleImportPath: HMR_PREAMBLE_IMPORT_PATH,
-      devServerWatcherUpdateEventName,
+      devServerWatcherUpdateEventName: '__MIRA_WDS_UPDATE__',
       devServerWatcherImportPath: DEV_SERVER_WATCHER_PREAMBLE_IMPORT_PATH,
     },
   };

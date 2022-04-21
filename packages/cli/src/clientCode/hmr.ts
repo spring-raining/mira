@@ -1,10 +1,8 @@
-export const hmrNamespace = '__MIRA_HMR__';
-export const hmrUpdateEventName = '__MIRA_HMR_UPDATE__';
-
-export const hmrPreambleCode = `const exports = {};
-exports.update = (msg) => {
-  const ev = new CustomEvent('${hmrUpdateEventName}', { detail: msg });
+const hmr: any = {};
+hmr.update = (msg: any) => {
+  const ev = new CustomEvent('__MIRA_HMR_UPDATE__', { detail: msg });
   window.dispatchEvent(ev);
 };
-window.${hmrNamespace} = exports;
-`;
+window.__MIRA_HMR__ = hmr;
+
+export {};

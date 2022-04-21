@@ -6,6 +6,7 @@ import React, {
   useMemo,
 } from 'react';
 import { useBroadcast } from '../../hooks/useBroadcast';
+import { pathJoin, resolveImportSpecifier } from '../../mdx/imports';
 import { useConfig } from '../../state/config';
 import {
   useEvaluatedResultLoadable,
@@ -29,9 +30,14 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   const [presentationUpdate] = useBroadcast(brickId, 'presentationUpdate');
   const config = useConfig();
   const iframeSrc = useMemo(() => {
-    const url = new URL('/_mira/-/foo.html', window.location.origin);
-    url.searchParams.set('eval', config.eval);
-    url.searchParams.set('runtime', config.runtime);
+    const path = pathJoin(config.base, config.depsContext, '/-/index.html');
+    const frameworkSpecifier = resolveImportSpecifier({
+      specifier: config.framework,
+      base: config.base,
+      depsContext: config.depsContext,
+    });
+    const url = new URL(path, window.location.origin);
+    url.searchParams.set('framework', frameworkSpecifier);
     return url.href;
   }, [config]);
 

@@ -25,7 +25,6 @@ export const getWorkspaceRepository =
           birthtime: birthtime.getTime(),
           supports: 'miraMdx' as const,
           body,
-          depsRootPath: '/_mira', //TODO
         };
       }),
     );
@@ -33,6 +32,10 @@ export const getWorkspaceRepository =
     return {
       getMiraFiles: async () => exampleFiles,
       mode: 'standalone',
-      constants: {},
+      constants: {
+        base: '/',
+        depsContext: '/_mira/',
+        frameworkUrl: '', // TODO
+      },
     };
   };
