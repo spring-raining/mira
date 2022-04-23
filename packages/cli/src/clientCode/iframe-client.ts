@@ -1,65 +1,12 @@
 import type { MiraEvalBase } from '@mirajs/core';
 
-window.__MIRA_HMR__ = {
-  update: () => {
-    // do nothing
-  },
-};
-
 let presentationElement = document.querySelector<MiraEvalBase>('mira-eval');
 if (!presentationElement) {
   presentationElement = document.createElement('mira-eval') as MiraEvalBase;
   document.body.appendChild(presentationElement);
 }
 
-const onMessage = (event: MessageEvent<{ kind: string; value: any }>) => {
-  if (event.data.kind === 'config') {
-    console.log(event.data.value);
-  }
-  if (event.data.kind === 'code') {
-    handleCodeChange(event.data.value);
-  }
-  if (event.data.kind === 'parameter') {
-    handleParameterChange(event.data.value);
-  }
-};
-
-const query = new URLSearchParams(window.location.search);
-const evaluatorUrl = query.get('framework');
-if (evaluatorUrl) {
-  // define <mira-eval> element
-  import(evaluatorUrl).then(({ MiraEval }) => {
-    window.customElements.define('mira-eval', MiraEval);
-  });
-}
-
 let broadcastChannel: BroadcastChannel | null = null;
-window.addEventListener('message', (event) => {
-  if (event.origin !== window.location.origin) {
-    return;
-  }
-
-  if (typeof event.data === 'string' && event.data.startsWith('connect:')) {
-    const name = event.data.replace(/^connect:/, '');
-    if (broadcastChannel) {
-      broadcastChannel.close();
-    }
-    broadcastChannel = new BroadcastChannel(name);
-    broadcastChannel.onmessage = onMessage;
-    presentationElement?.addEventListener('update', handlePresentationUpdate);
-  }
-  if (typeof event.data === 'string' && event.data.startsWith('disconnect:')) {
-    const name = event.data.replace(/^disconnect:/, '');
-    if (broadcastChannel && broadcastChannel.name === name) {
-      broadcastChannel?.close();
-      broadcastChannel = null;
-    }
-    presentationElement?.removeEventListener(
-      'update',
-      handlePresentationUpdate,
-    );
-  }
-});
 
 function handleCodeChange({ source }: { source: string }) {
   presentationElement?.loadScript(source);
@@ -169,5 +116,73 @@ function hydrateClonedObject<T extends Record<string, unknown>>(object: T): T {
 
   return hydrate(object) as T;
 }
+
+const onBroadcastMessage = (
+  event: MessageEvent<{ kind: string; value: any }>,
+) => {
+  if (event.data.kind === 'config') {
+    console.log(event.data.value);
+  }
+  if (event.data.kind === 'code') {
+    handleCodeChange(event.data.value);
+  }
+  if (event.data.kind === 'parameter') {
+    handleParameterChange(event.data.value);
+  }
+};
+
+const openBroadcast = (name: string) => {
+  if (broadcastChannel) {
+    broadcastChannel.close();
+  }
+  broadcastChannel = new BroadcastChannel(name);
+  broadcastChannel.onmessage = onBroadcastMessage;
+  presentationElement?.addEventListener('update', handlePresentationUpdate);
+};
+
+const closeBroadcast = (name: string) => {
+  if (broadcastChannel?.name !== name) {
+    return;
+  }
+  broadcastChannel?.close();
+  broadcastChannel = null;
+  presentationElement?.removeEventListener('update', handlePresentationUpdate);
+};
+
+const onPeerMessage = (name: string) => (event: MessageEvent) => {
+  if (event.origin !== window.location.origin) {
+    return;
+  }
+
+  if (typeof event.data === 'string' && event.data.startsWith('disconnect:')) {
+    closeBroadcast(name);
+  }
+};
+
+async function init() {
+  window.__MIRA_HMR__ = {
+    update: () => {
+      // do nothing
+    },
+  };
+
+  const query = new URLSearchParams(window.location.search);
+  const evaluatorUrl = query.get('framework');
+  if (evaluatorUrl) {
+    // define <mira-eval> element
+    const { MiraEval } = await import(evaluatorUrl);
+    window.customElements.define('mira-eval', MiraEval);
+  }
+
+  const broadcastName = query.get('broadcastName');
+  if (broadcastName) {
+    openBroadcast(broadcastName);
+    window.addEventListener('message', onPeerMessage(broadcastName));
+  }
+
+  window.postMessage('load-client', window.location.origin);
+}
+
+window.addEventListener('load', init);
 
 export {};

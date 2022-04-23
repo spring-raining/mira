@@ -37,10 +37,12 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       depsContext: config.depsContext,
     });
     const url = new URL(path, window.location.origin);
+    url.searchParams.set('broadcastName', brickId);
     url.searchParams.set('framework', frameworkSpecifier);
     return url.href;
-  }, [config]);
+  }, [config, brickId]);
 
+  const [isConnected, setConnected] = useState(false);
   const [showIframe, setShowIframe] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(32);
   const resizeIframeHeight = useCallback(() => {
@@ -55,24 +57,31 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
     if (!iframe) {
       return;
     }
-    const handleLoad = () => {
-      iframe.contentWindow?.postMessage(
-        `connect:${brickId}`,
-        window.location.origin,
-      );
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      if (event.data === 'load-client') {
+        iframe.contentWindow?.postMessage(
+          `connect:${brickId}`,
+          window.location.origin,
+        );
+        setConnected(true);
+      }
     };
-    iframe.addEventListener('load', handleLoad);
+    iframe.contentWindow?.addEventListener('message', handleMessage);
     return () => {
       iframe.contentWindow?.postMessage(
         `disconnect:${brickId}`,
         window.location.origin,
       );
-      iframe.removeEventListener('load', handleLoad);
+      iframe.contentWindow?.removeEventListener('message', handleMessage);
+      setConnected(false);
     };
   }, [brickId, config]);
 
   useEffect(() => {
-    if (result.state !== 'hasValue') {
+    if (!isConnected || result.state !== 'hasValue') {
       return;
     }
     const { source, hasDefaultExport } = result.contents;
@@ -81,10 +90,10 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       return;
     }
     postCode({ source });
-  }, [result, postCode]);
+  }, [isConnected, result, postCode]);
 
   useEffect(() => {
-    if (!renderParams) {
+    if (!isConnected || !renderParams) {
       return;
     }
     const obj: Record<string, unknown> = {};
@@ -92,7 +101,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       obj[k] = v;
     }
     postParameter(obj);
-  }, [renderParams, postParameter]);
+  }, [isConnected, renderParams, postParameter]);
 
   useEffect(() => {
     resizeIframeHeight();
