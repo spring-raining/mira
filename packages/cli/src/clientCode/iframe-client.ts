@@ -20,11 +20,21 @@ function handleParameterChange(clonedProps: Record<string, unknown>) {
   presentationElement.props = props;
 }
 
-function handlePresentationUpdate() {
+function handlePresentationUpdate(event: Event) {
   broadcastChannel?.postMessage({
     kind: 'presentationUpdate',
     value: {
-      time: Date.now(),
+      time: event.timeStamp,
+    },
+  });
+}
+
+function handlePresentationError(event: ErrorEvent) {
+  broadcastChannel?.postMessage({
+    kind: 'presentationError',
+    value: {
+      error: event.error,
+      time: event.timeStamp,
     },
   });
 }
@@ -138,6 +148,7 @@ const openBroadcast = (name: string) => {
   broadcastChannel = new BroadcastChannel(name);
   broadcastChannel.onmessage = onBroadcastMessage;
   presentationElement?.addEventListener('update', handlePresentationUpdate);
+  presentationElement?.addEventListener('error', handlePresentationError);
 };
 
 const closeBroadcast = (name: string) => {
@@ -147,6 +158,7 @@ const closeBroadcast = (name: string) => {
   broadcastChannel?.close();
   broadcastChannel = null;
   presentationElement?.removeEventListener('update', handlePresentationUpdate);
+  presentationElement?.removeEventListener('error', handlePresentationError);
 };
 
 const onPeerMessage = (name: string) => (event: MessageEvent) => {

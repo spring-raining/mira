@@ -66,14 +66,26 @@ export class MiraEval extends ReactiveElement implements MiraEvalBase {
 
   private render() {
     this.runtimeScope?.$mount(
-      renderElement(this.evaluatedElement, this.props, this, this.handleError),
+      renderElement(
+        this.evaluatedElement,
+        this.props,
+        this,
+        this.handleError.bind(this),
+      ),
       this.mountPoint,
     );
   }
 
   private handleError(error: unknown) {
-    // TODO
-    console.error(error);
+    if (error instanceof Error) {
+      const event = new ErrorEvent('error', {
+        error,
+        message: error.message,
+        bubbles: true,
+        composed: true,
+      });
+      this.dispatchEvent(event);
+    }
   }
 }
 

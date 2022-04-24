@@ -6,6 +6,7 @@ import React, {
   useMemo,
 } from 'react';
 import { useBroadcast } from '../../hooks/useBroadcast';
+import { useMemoWithPrev } from '../../hooks/useMemoWithPrev';
 import { pathJoin, resolveImportSpecifier } from '../../mdx/imports';
 import { useConfig } from '../../state/config';
 import {
@@ -27,7 +28,14 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   const { renderParams } = useRenderParams(brickId);
   const [, postCode] = useBroadcast<{ source: string }>(brickId, 'code');
   const [, postParameter] = useBroadcast(brickId, 'parameter');
-  const [presentationUpdate] = useBroadcast(brickId, 'presentationUpdate');
+  const [presentationUpdate] = useBroadcast<{ time: number }>(
+    brickId,
+    'presentationUpdate',
+  );
+  const [presentationError] = useBroadcast<{ error: Error; time: number }>(
+    brickId,
+    'presentationError',
+  );
   const config = useConfig();
   const iframeSrc = useMemo(() => {
     const path = pathJoin(config.base, config.depsContext, '/-/index.html');
@@ -48,7 +56,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   const resizeIframeHeight = useCallback(() => {
     const body = iframeEl.current?.contentWindow?.document?.body;
     if (body) {
-      setIframeHeight(body.scrollHeight + 32);
+      setIframeHeight(body.scrollHeight);
     }
   }, []);
 
@@ -81,7 +89,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
   }, [brickId, config]);
 
   useEffect(() => {
-    if (!isConnected || result.state !== 'hasValue') {
+    if (!isConnected || result.state !== 'hasValue' || !result.contents) {
       return;
     }
     const { source, hasDefaultExport } = result.contents;
@@ -107,12 +115,26 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
     resizeIframeHeight();
   }, [presentationUpdate, resizeIframeHeight]);
 
-  const [displayingError, setDisplayingError] = useState<Error>();
-  useEffect(() => {
-    if (result.state === 'hasValue') {
-      setDisplayingError(result.contents.error);
-    }
-  }, [result]);
+  const displayingError = useMemoWithPrev<Error | undefined>(
+    (prev) => {
+      if (result.state === 'loading') {
+        return prev;
+      }
+      if (result.state === 'hasError') {
+        return result.contents;
+      }
+      if (result.contents?.error) {
+        return result.contents?.error;
+      } else if (
+        presentationError &&
+        (!presentationUpdate ||
+          presentationError.time > presentationUpdate.time)
+      ) {
+        return presentationError.error;
+      }
+    },
+    [result, presentationError, presentationUpdate],
+  );
 
   return (
     <>

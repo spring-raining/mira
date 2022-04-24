@@ -13,9 +13,8 @@ const miraEvaluateResultFamily = selectorFamily({
   get:
     (miraId: MiraId | undefined) =>
     async ({ get }) => {
-      // Can throw reference error
-      const evaluateState = get(miraEvaluateStateDictState)[miraId!];
-      return await evaluateState.result;
+      const evaluateState = miraId && get(miraEvaluateStateDictState)[miraId];
+      return evaluateState && (await evaluateState.result);
     },
 });
 

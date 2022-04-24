@@ -8,5 +8,12 @@ module.exports = {
   ],
   rules: {
     'react/prop-types': 'off',
+    'react-hooks/exhaustive-deps': [
+      'warn',
+      {
+        // https://github.com/facebook/react/tree/main/packages/eslint-plugin-react-hooks#advanced-configuration
+        additionalHooks: '(useMemoWithPrev)',
+      },
+    ],
   },
 };

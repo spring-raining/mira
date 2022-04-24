@@ -110,12 +110,12 @@ export const Block: React.FC<{
               brickId={id}
               errorMarkers={
                 evaluatedResultLoadable.state === 'hasValue'
-                  ? evaluatedResultLoadable.contents.errorMarkers
+                  ? evaluatedResultLoadable.contents?.errorMarkers
                   : []
               }
               warnMarkers={
                 evaluatedResultLoadable.state === 'hasValue'
-                  ? evaluatedResultLoadable.contents.warnMarkers
+                  ? evaluatedResultLoadable.contents?.warnMarkers
                   : []
               }
             />
