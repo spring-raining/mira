@@ -60,7 +60,7 @@ export const ScrollableBlockList: React.VFC<{
   const virtualizer = useVirtual({
     size: bricks.length,
     parentRef,
-    overscan: 5,
+    overscan: 4,
     scrollOffsetFn: useCallback(() => {
       const offsetTop = contentsRef.current?.offsetTop ?? 0;
       return parentRef.current ? parentRef.current.scrollTop - offsetTop : 0;
@@ -112,15 +112,16 @@ export const ScrollableBlockList: React.VFC<{
       className={style.listContainer}
       style={{ height: virtualizer.totalSize }}
     >
-      {virtualItems.map((row, i) => (
-        <div
-          key={row.key}
-          className={style.listItem}
-          style={{ top: row.start }}
-        >
-          <Block ref={row.measureRef} {...bricks[row.index]} />
-        </div>
-      ))}
+      {bricks.map((brick) => {
+        const row = virtualItems.find((row) => row.key === brick.id);
+        return (
+          <React.Suspense key={brick.id} fallback={null}>
+            <div className={style.listItem} style={{ top: row?.start }}>
+              <Block inView={!!row} ref={row && row.measureRef} {...brick} />
+            </div>
+          </React.Suspense>
+        );
+      })}
     </div>
   );
 };

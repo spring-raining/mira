@@ -5,6 +5,7 @@ import { useEvaluatedResultLoadable } from '../../state/evaluator';
 import { createNewBrick } from '../../state/helper';
 import { sprinkles } from '../../styles/sprinkles.css';
 import { BrickId } from '../../types';
+import { noop } from '../../util';
 import { CodePreview } from '../CodePreview';
 import { Editor } from '../Editor';
 import { IconButton } from '../atomic/button';
@@ -20,8 +21,9 @@ export const Block = forwardRef<
   HTMLDivElement,
   {
     id: BrickId;
+    inView?: boolean;
   }
->(({ id }, ref) => {
+>(({ id, inView = true }, ref) => {
   const {
     brick,
     parseError,
@@ -68,6 +70,11 @@ export const Block = forwardRef<
       e.stopPropagation();
     }, []),
   };
+
+  if (!inView) {
+    // Cancel rendering and throw to parent suspense
+    throw new Promise(noop);
+  }
 
   return (
     <div className={style.blockContainer} {...containerCallbacks}>

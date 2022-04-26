@@ -26,7 +26,7 @@ export const useEditorState = ({
   brickId: BrickId;
   editorView?: EditorView;
 }) => {
-  const { brick, setSwap, applySwap } = useBrick(brickId);
+  const { brick, setSwap, applySwap, isActive } = useBrick(brickId);
 
   useEffect(() => {
     if (!editorView) {
@@ -183,6 +183,13 @@ export const useEditorState = ({
     debouncedDocChangeListener,
     updateListener,
   ]);
+
+  useEffect(() => {
+    if (!editorView || !isActive) {
+      return;
+    }
+    editorView.dispatch(editorView.state.update({ scrollIntoView: true }));
+  }, [editorView, isActive]);
 
   return {
     editorState,
