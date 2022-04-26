@@ -126,6 +126,7 @@ export const Presentation: React.VFC<{ brickId: BrickId; mira: Mira }> = ({
       if (result.contents?.error) {
         return result.contents?.error;
       } else if (
+        result.contents?.hasDefaultExport &&
         presentationError &&
         (!presentationUpdate ||
           presentationError.time > presentationUpdate.time)

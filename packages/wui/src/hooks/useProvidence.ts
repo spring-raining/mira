@@ -18,14 +18,7 @@ import {
   BrickId,
 } from '../types';
 import { useProvidenceRef } from './providence/context';
-
-const usePrevState = <T>(state: T): [T, T | undefined] => {
-  const ref = useRef<T>();
-  useEffect(() => {
-    ref.current = state;
-  });
-  return [state, ref.current];
-};
+import { usePrevState } from './usePrevState';
 
 export const ProvidenceObserver = ({
   mdxPath,

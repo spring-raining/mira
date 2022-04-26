@@ -12,7 +12,7 @@ export interface UniverseContext {
     fn: (message: RefreshModuleEvent) => void,
   ) => void;
   __cache: React.MutableRefObject<{
-    inViewState: Set<string>;
+    inViewState: string[];
   }>;
 }
 
@@ -22,7 +22,7 @@ const universeContext = createContext<UniverseContext>({
   removeRefreshModuleListener: noop,
   __cache: {
     current: {
-      inViewState: new Set(),
+      inViewState: [],
     },
   },
 });
@@ -36,7 +36,7 @@ export const UniverseProvider: React.FC = ({ children }) => {
   const { HistoryProvider } = useHistoryContext();
   const { ProvidenceProvider } = useProvidenceContext();
   const __cache = useRef<UniverseContext['__cache']['current']>({
-    inViewState: new Set(),
+    inViewState: [],
   });
 
   return (

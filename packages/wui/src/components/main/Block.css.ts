@@ -34,6 +34,22 @@ defineGlobalStyle(
   }),
 );
 
+export const blockVirtualRefArea = defineStyle([
+  css({
+    position: 'relative',
+  }),
+  {
+    selectors: {
+      [`${displayColumn.oneColumn} &`]: css({
+        gridArea: '1 / 2 / span 3 / auto',
+      }),
+      [`${displayColumn.twoColumn} &`]: css({
+        gridArea: '1 / 2 / span 2 / span 2',
+      }),
+    },
+  },
+]);
+
 export const editorArea = defineStyle([
   css({
     position: 'relative',

@@ -218,7 +218,7 @@ export const PlanetarySystem: React.VFC = () => {
       <div
         {...{ ref, onClick }}
         className={style.planetarySystemContainer}
-        style={{ marginTop }}
+        style={{ transform: `translateY(${marginTop}px)` }}
       >
         {bricks.map((brick, i) => (
           <PlanetaryListItem

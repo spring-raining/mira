@@ -3,7 +3,7 @@ import { vars } from '../../styles/themes.css';
 
 export const planetarySystemContainer = defineStyle(
   css({
-    transitionProperty: 'margin-top',
+    transitionProperty: 'transform',
     transitionTimingFunction: 'ease-in-out',
     transitionDuration: 'normal',
   }),

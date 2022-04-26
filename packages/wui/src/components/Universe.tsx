@@ -18,6 +18,7 @@ import { MiraWuiConfig } from '../types';
 import { noop, noopAsync } from '../util';
 import * as style from './Universe.css';
 import { Block } from './main/Block';
+import { ScrollableBlockList } from './main/ScrollableBlockList';
 import { PlanetarySystem } from './planetarySystem';
 
 export interface UniverseProps {
@@ -32,7 +33,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
   mdx: initialMdx,
   onUpdate = noop,
 }) => {
-  const { bricks, importBricks, resetActiveBrick } = useBricks({
+  const { importBricks, resetActiveBrick } = useBricks({
     onUpdateMdx: onUpdate,
   });
   const config = useConfig();
@@ -73,9 +74,7 @@ const UniverseView: React.VFC<UniverseProps> = ({
       <GlobalHotKeys keyMap={keyMap} handlers={keyEventHandlers} />
       <main className={style.mainPane}>
         <div className={style.mainSticky}>
-          {bricks.map((brick) => (
-            <Block key={brick.id} {...brick} />
-          ))}
+          <ScrollableBlockList onUpdateMdx={onUpdate} />
         </div>
       </main>
       <aside className={style.planetarySystemPane}>

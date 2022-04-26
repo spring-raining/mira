@@ -1,7 +1,5 @@
 import clsx from 'clsx';
-import React, { useCallback, useEffect } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { useInViewBrickState } from '../../hooks/useInViewState';
+import React, { useCallback } from 'react';
 import { useBrick, useBrickManipulator } from '../../state/brick';
 import { useEvaluatedResultLoadable } from '../../state/evaluator';
 import { createNewBrick } from '../../state/helper';
@@ -10,15 +8,20 @@ import { BrickId } from '../../types';
 import { CodePreview } from '../CodePreview';
 import { Editor } from '../Editor';
 import { IconButton } from '../atomic/button';
+import { forwardRef } from '../atomic/util';
 import { PlusIcon } from '../icon/plus';
 import * as style from './Block.css';
 import { BlockToolbar } from './BlockToolbar';
 import { MarkdownPreview } from './MarkdownProvider';
 import { Presentation } from './Presentation';
 
-export const Block: React.FC<{
-  id: BrickId;
-}> = ({ id }) => {
+export const Block = forwardRef<
+  'div',
+  HTMLDivElement,
+  {
+    id: BrickId;
+  }
+>(({ id }, ref) => {
   const {
     brick,
     parseError,
@@ -66,14 +69,9 @@ export const Block: React.FC<{
     }, []),
   };
 
-  const [observerRef, inView] = useInView({ threshold: 0 });
-  const { updateInViewState } = useInViewBrickState();
-  useEffect(() => {
-    updateInViewState(id, inView);
-  }, [id, inView, updateInViewState]);
-
   return (
     <div className={style.blockContainer} {...containerCallbacks}>
+      <div ref={ref} className={style.blockVirtualRefArea}></div>
       <div className={style.livePreviewArea}>
         <div className={style.topSticky}>
           <div className={style.livePreviewContainer}>
@@ -96,7 +94,7 @@ export const Block: React.FC<{
           </div>
         </div>
       </div>
-      <div ref={observerRef} className={style.editorArea}>
+      <div className={style.editorArea}>
         <div
           className={clsx(
             style.topSticky,
@@ -256,4 +254,4 @@ export const Block: React.FC<{
       </div>
     </div>
   );
-};
+});
