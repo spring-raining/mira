@@ -37,6 +37,7 @@ defineGlobalStyle(
 export const blockVirtualRefArea = defineStyle([
   css({
     position: 'relative',
+    pointerEvents: 'none',
   }),
   {
     selectors: {

@@ -107,19 +107,13 @@ export const ScrollableBlockList: React.VFC<{
   }, [virtualItems, updateInViewState]);
 
   return (
-    <div
-      ref={contentsRef}
-      className={style.listContainer}
-      style={{ height: virtualizer.totalSize }}
-    >
+    <div ref={contentsRef} className={style.listContainer}>
       {bricks.map((brick) => {
         const row = virtualItems.find((row) => row.key === brick.id);
         return (
-          <React.Suspense key={brick.id} fallback={null}>
-            <div className={style.listItem} style={{ top: row?.start }}>
-              <Block inView={!!row} ref={row && row.measureRef} {...brick} />
-            </div>
-          </React.Suspense>
+          <div key={brick.id} className={style.listItem}>
+            <Block inView={!!row} ref={row && row.measureRef} {...brick} />
+          </div>
         );
       })}
     </div>
