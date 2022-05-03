@@ -11,28 +11,21 @@ export const blockContainer = defineStyle([
   css({
     pos: 'relative',
     my: -10,
-    pointerEvents: 'none',
     d: 'grid',
   }),
   {
     selectors: {
       [`${displayColumn.oneColumn} &`]: css({
-        gridTemplateColumns: `${vars.sizes['8']} 1fr`,
+        gridTemplateColumns: `${vars.sizes['10']} 1fr`,
         gridTemplateRows: `${vars.sizes['10']} auto auto ${vars.sizes['10']}`,
       }),
       [`${displayColumn.twoColumn} &`]: css({
-        gridTemplateColumns: `${vars.sizes['8']} 1fr 1fr`,
+        gridTemplateColumns: `${vars.sizes['10']} 1fr 1fr`,
         gridTemplateRows: `${vars.sizes['10']} auto ${vars.sizes['10']}`,
       }),
     },
   },
 ]);
-defineGlobalStyle(
-  `${blockContainer} > *`,
-  css({
-    pointerEvents: 'auto',
-  }),
-);
 
 export const blockVirtualRefArea = defineStyle([
   css({

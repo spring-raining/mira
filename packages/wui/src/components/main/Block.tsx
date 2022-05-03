@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import * as editorTheme from '../../editor/theme';
 import { useCombinedRefs } from '../../hooks/useCombineRef';
 import { usePrevState } from '../../hooks/usePrevState';
+import { useStop } from '../../hooks/useStop';
 import { useBrick, useBrickManipulator } from '../../state/brick';
 import { useEvaluatedResultLoadable } from '../../state/evaluator';
 import { createNewBrick } from '../../state/helper';
@@ -313,6 +314,7 @@ export const Block = forwardRef<'div', HTMLDivElement, BlockPropType>(
     const { isActive, setFocused } = useBrick(id);
     const virtualRef = useRef<HTMLDivElement>(null);
     const combinedVirtualRef = useCombinedRefs(virtualRef, ref);
+    const stop = useStop();
 
     const containerCallbacks = {
       onMouseOver: useCallback(() => {
@@ -325,9 +327,7 @@ export const Block = forwardRef<'div', HTMLDivElement, BlockPropType>(
           setFocused(false);
         }
       }, [setFocused, inView]),
-      onClick: useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-      }, []),
+      onClick: stop,
     };
 
     const [nextViewState, prevViewState] = usePrevState({ inView, isActive });

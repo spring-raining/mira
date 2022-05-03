@@ -84,7 +84,10 @@ export const Editor: React.VFC<EditorProps> = ({
 
   useEffect(() => {
     if (isActive) {
-      editorView?.focus();
+      if (!document.activeElement?.closest('input,textarea')) {
+        // Focus to editor if any ancestor elements are not focusable
+        editorView?.focus();
+      }
     } else {
       editorView?.contentDOM.blur();
     }
