@@ -1,3 +1,4 @@
+import path from 'path';
 import { WorkspaceRepository } from '@mirajs/workspace';
 import { ProjectConfig } from './config';
 import {
@@ -34,6 +35,7 @@ export const getWorkspaceRepository = ({
         )
       ).flat();
     },
+    workspaceDirname: path.basename(config.server.rootDir),
     constants: {
       base: '/',
       depsContext: MIDDLEWARE_PATH_PREFIX,

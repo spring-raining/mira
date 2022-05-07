@@ -1,4 +1,3 @@
-import { GetServerSidePropsContext } from 'next';
 import { injectable } from 'tsyringe';
 import { MiraMdxFileItem } from '../../types/workspace';
 
@@ -6,9 +5,7 @@ export const workspaceServiceToken = 'WorkspaceService';
 
 export interface WorkspaceRepository {
   mode: 'devServer' | 'standalone' | 'unknown';
-  getMiraFiles(
-    ctx: GetServerSidePropsContext,
-  ): Promise<MiraMdxFileItem<number>[]>;
+  workspaceDirname: string;
   constants: {
     base: string;
     depsContext: string;
@@ -18,6 +15,7 @@ export interface WorkspaceRepository {
     devServerWatcherUpdateEventName?: string;
     devServerWatcherImportPath?: string;
   };
+  getMiraFiles(): Promise<MiraMdxFileItem<number>[]>;
 }
 
 @injectable()

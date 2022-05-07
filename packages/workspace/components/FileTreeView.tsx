@@ -1,6 +1,6 @@
 import { Flex, Stack, Text } from '@chakra-ui/react';
 import React from 'react';
-import { useMiraFiles } from '../hooks/workspace';
+import { useMiraFiles } from '../state/workspace';
 
 export const FileTreeView: React.VFC = () => {
   const { miraFiles, activeFilePath, setActiveFilePath } = useMiraFiles();

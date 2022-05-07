@@ -1,51 +1,62 @@
 import { Flex } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Script from 'next/script';
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { container } from 'tsyringe';
 import { FileTreeView } from '../components/FileTreeView';
-import { UniverseView } from '../components/UniverseView';
-import { useMiraFiles } from '../hooks/workspace';
-import {
-  fileSystemServiceToken,
-  FileSystemService,
-} from '../services/filesystem/fileSystem.trait';
+// import { StartupView } from '../components/StartupView';
+// import { UniverseView } from '../components/UniverseView';
+import { useServiceContext } from '../hooks/useServiceContext';
 import {
   workspaceServiceToken,
   WorkspaceService,
-  WorkspaceRepository,
 } from '../services/workspace/workspace.trait';
+import { useMiraFiles, useWorkspaceFile } from '../state/workspace';
 import { DevServerEvent } from '../types/devServer';
 import { MiraMdxFileItem } from '../types/workspace';
 
 interface PageProps {
-  mira: MiraMdxFileItem<number>[];
-  constants: WorkspaceRepository['constants'];
+  miraFiles?: MiraMdxFileItem<number>[];
 }
 
-export const getServerSideProps: GetServerSideProps<PageProps> = async (
-  ctx,
-) => {
+const StartupView = dynamic(() => import('../components/StartupView'), {
+  ssr: false,
+});
+const UniverseView = dynamic(() => import('../components/UniverseView'), {
+  ssr: false,
+});
+
+export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
+  if (!container.isRegistered(workspaceServiceToken)) {
+    return { props: {} };
+  }
   const cli = container.resolve<WorkspaceService>(workspaceServiceToken);
-  const mira = await cli.service.getMiraFiles(ctx);
+  const miraFiles = await cli.service.getMiraFiles();
   return {
-    props: { mira, constants: cli.service.constants },
+    props: { miraFiles },
   };
 };
 
-export default function Home({ mira, constants }: PageProps) {
+export default function Home({ miraFiles }: PageProps) {
+  const { workspace } = useServiceContext();
+  const constants = useMemo(() => workspace?.service.constants, [workspace]);
   const { setMiraFiles } = useMiraFiles();
   useEffect(() => {
-    console.log(mira);
-    setMiraFiles(
-      mira.map((it) => ({
-        ...it,
-        mtime: new Date(it.mtime),
-        birthtime: new Date(it.mtime),
-      })),
-    );
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    (async () => {
+      const files =
+        miraFiles ?? (workspace && (await workspace.service.getMiraFiles()));
+      if (files) {
+        setMiraFiles(
+          files.map((it) => ({
+            ...it,
+            mtime: new Date(it.mtime),
+          })),
+        );
+      }
+    })();
+  }, [miraFiles, setMiraFiles, workspace]);
 
   useEffect(() => {
     const fn = (event: CustomEvent<DevServerEvent>) => {
@@ -54,31 +65,14 @@ export default function Home({ mira, constants }: PageProps) {
         // TODO
       }
     };
-    if (constants.devServerWatcherUpdateEventName) {
+    if (constants?.devServerWatcherUpdateEventName) {
       const eventName = constants.devServerWatcherUpdateEventName;
       window.addEventListener(eventName, fn as EventListener);
       return () => window.removeEventListener(eventName, fn as EventListener);
     }
-  }, [constants.devServerWatcherUpdateEventName]);
+  }, [constants]);
 
-  // const test = useCallback(async () => {
-  //   const { service } = container.resolve<FileSystemService>(
-  //     fileSystemServiceToken,
-  //   );
-  //   const msg = await service.getFile({
-  //     path: ['01.mdx'],
-  //   });
-  //   console.log('>>>>', msg);
-  // }, []);
-
-  // const fileAccess = useCallback(async () => {
-  //   const handler = await window.showDirectoryPicker();
-  //   for await (const key of handler) {
-  //     console.log(key);
-  //   }
-  //   const pkg = await handler.getFileHandle('package.json');
-  //   console.log(pkg);
-  // }, []);
+  const { activeMiraFile: file } = useWorkspaceFile();
 
   return (
     <>
@@ -88,10 +82,10 @@ export default function Home({ mira, constants }: PageProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {constants.devServerWatcherImportPath && (
+      {constants?.devServerWatcherImportPath && (
         <Script type="module" src={constants.devServerWatcherImportPath} />
       )}
-      {constants.hmrPreambleImportPath && (
+      {constants?.hmrPreambleImportPath && (
         <Script type="module" src={constants.hmrPreambleImportPath} />
       )}
 
@@ -102,9 +96,9 @@ export default function Home({ mira, constants }: PageProps) {
           overflow="auto"
           flexDir="column"
           alignItems="stretch"
+          borderColor="gray.100"
+          borderRightWidth={1}
         >
-          {/* <button onClick={test}>Test</button>
-          <button onClick={fileAccess}>fileAccess</button> */}
           <FileTreeView />
         </Flex>
         <Flex
@@ -114,7 +108,13 @@ export default function Home({ mira, constants }: PageProps) {
           flexDir="column"
           alignItems="stretch"
         >
-          <UniverseView {...{ constants }} />
+          {constants && file ? (
+            <React.Suspense fallback={null}>
+              <UniverseView {...{ constants, file }} />
+            </React.Suspense>
+          ) : (
+            <StartupView />
+          )}
         </Flex>
       </Flex>
     </>

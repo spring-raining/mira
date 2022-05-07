@@ -1,13 +1,8 @@
 import { Flex } from '@chakra-ui/react';
 import { UniverseProvider } from '@mirajs/wui';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { container } from 'tsyringe';
-import { useWorkspaceFile } from '../hooks/workspace';
-import {
-  fileSystemServiceToken,
-  FileSystemService,
-} from '../services/filesystem/fileSystem.trait';
-import { WorkspaceRepository } from '../services/workspace/workspace.trait';
+import { useServiceContext } from '../hooks/useServiceContext';
+import { MiraMdxFileItem } from '../module';
 import { Mira } from './Mira';
 
 const useDebouncedCallback = <T extends unknown[]>(
@@ -25,23 +20,25 @@ const useDebouncedCallback = <T extends unknown[]>(
 };
 
 export const UniverseView: React.VFC<{
-  constants: WorkspaceRepository['constants'];
-}> = ({ constants }) => {
-  const { activeMiraFile: file } = useWorkspaceFile();
+  file: MiraMdxFileItem;
+}> = ({ file }) => {
+  const { fileSystem, workspace } = useServiceContext();
   const [mdx, setMdx] = useState<string>();
+  if (!fileSystem || !workspace) {
+    throw Promise.resolve();
+  }
 
   const writeFile = useCallback(
     (updated: string) => {
       if (!file || updated === mdx) {
         return;
       }
-      const fs = container.resolve<FileSystemService>(fileSystemServiceToken);
-      fs.service.writeFile({
+      fileSystem.service.writeFile({
         path: [file.path],
         data: updated,
       });
     },
-    [file, mdx],
+    [file, mdx, fileSystem],
   );
   const onUpdate = useDebouncedCallback(writeFile, 3000);
 
@@ -50,24 +47,24 @@ export const UniverseView: React.VFC<{
       return;
     }
     (async () => {
-      const fs = container.resolve<FileSystemService>(fileSystemServiceToken);
-      const { buf } = await fs.service.getFile({ path: [file.path] });
+      const { buf } = await fileSystem.service.getFile({ path: [file.path] });
       const decoder = new TextDecoder();
       setMdx(decoder.decode(buf));
     })();
     return () => setMdx(undefined);
-  }, [file]);
+  }, [file, fileSystem]);
 
-  if (!file) {
-    return <Flex>No file</Flex>;
-  }
   return (
     <Flex flex={1} position="relative">
       <UniverseProvider key={file.path}>
         {typeof mdx === 'string' && (
-          <Mira {...{ file, mdx, constants, onUpdate }} />
+          <Mira
+            {...{ file, mdx, constants: workspace.service.constants, onUpdate }}
+          />
         )}
       </UniverseProvider>
     </Flex>
   );
 };
+
+export default UniverseView;

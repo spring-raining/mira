@@ -31,12 +31,11 @@ export const readProjectFileObject = async ({
   const relPath = path.relative(workspace, pathname);
   const absPath = resolveProjectPath({ pathname, config });
 
-  const { size, mtime, birthtime } = await fs.stat(absPath);
+  const { size, mtime } = await fs.stat(absPath);
   const fileStat = {
     path: path.posix.relative(workspace, pathname),
     size,
     mtime: mtime.getTime(),
-    birthtime: birthtime.getTime(),
   };
   if (picomatch(mdx.includes, { ignore: mdx.excludes })(relPath)) {
     const body = await fs.readFile(absPath, { encoding: 'utf-8' });

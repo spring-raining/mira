@@ -49,6 +49,7 @@ export declare global {
   }
 
   interface FileSystemFileHandle extends FileSystemHandle {
+    readonly kind: 'file';
     getFile(): Promise<File>;
     createWritable(options?: {
       keepExistingData?: boolean;
@@ -59,9 +60,8 @@ export declare global {
     new (): FileSystemFileHandle;
   }
 
-  interface FileSystemDirectoryHandle
-    extends FileSystemHandle,
-      Iterable<FileSystemHandle> {
+  interface FileSystemDirectoryHandle extends FileSystemHandle {
+    readonly kind: 'directory';
     getFileHandle(
       name: string,
       options?: { create?: boolean },
@@ -74,6 +74,14 @@ export declare global {
     resolve(
       possibleDescendant: FileSystemHandle,
     ): Promise<string[] | undefined>;
+    keys(): AsyncIterableIterator<string>;
+    values(): AsyncIterableIterator<
+      FileSystemDirectoryHandle | FileSystemFileHandle
+    >;
+    entries(): AsyncIterableIterator<
+      [string, FileSystemDirectoryHandle | FileSystemFileHandle]
+    >;
+    [Symbol.asyncIterator]: FileSystemDirectoryHandle['entries'];
   }
 
   interface FileSystemDirectoryHandleConstructor {
