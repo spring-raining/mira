@@ -1,12 +1,17 @@
-import { MDXProvider, mdx } from '@mdx-js/react';
-import { createCompiler } from '@mirajs/core';
+import { resolveFileAndOptions } from '@mdx-js/mdx/lib/util/resolve-file-and-options';
 import toH from 'hast-to-hyperscript';
-import toHast from 'mdast-util-to-hast';
-import React, { useState, useEffect } from 'react';
-import type { Node } from 'unist';
-import visit from 'unist-util-visit';
+import { MDXComponents } from 'mdx/types';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+} from 'react';
+import { createCompileToHastProcessor } from '../mdx/processsor';
 
-const components: Record<string, React.ReactNode> = {
+// Avoid installing `@mdx-js/react` package, otherwise it breaks type definition of React
+const defaultComponents: MDXComponents = {
   a: (props: React.HTMLAttributes<HTMLElement>) => (
     <a
       {...props}
@@ -20,84 +25,40 @@ const components: Record<string, React.ReactNode> = {
     </a>
   ),
 };
+const MDXContext = createContext({});
+const useMDXComponents = (components: MDXComponents) => {
+  const contextComponents = useContext(MDXContext);
+  return useMemo(
+    () => ({ ...contextComponents, ...components }),
+    [contextComponents, components],
+  );
+};
 
-export const MarkdownProvider: React.FC = ({ children }) => (
-  <MDXProvider components={components}>{children}</MDXProvider>
-);
+export const MarkdownProvider: React.FC = ({ children }) => {
+  const allComponents = useMDXComponents(defaultComponents);
+  return (
+    <MDXContext.Provider value={allComponents}>{children}</MDXContext.Provider>
+  );
+};
 
-export const markdownCompiler = createCompiler({
-  remarkPlugins: [
-    // Disable mdxjsEsm node
-    () => (ast) => {
-      function onVisit(node: Node): void {
-        if (node.data?.estree) {
-          node.data.estree = null;
-        }
-        (node.attributes as Node[])?.forEach(onAttribute);
-      }
-      function onAttribute(node: Node): void {
-        onVisit(node);
-        if (node.value) {
-          onVisit(node.value as Node);
-        }
-      }
-      visit(ast, ['mdxjsEsm'], onVisit);
-    },
-  ],
-  rehypePlugins: [
-    () => (ast) => {
-      return toHast(ast, {
-        passThrough: [
-          'element', // Ignore node already converted to hast
-          'mdxjsEsm',
-        ],
-        unknownHandler: (h, node) => {
-          if (['mdxJsxTextElement', 'mdxJsxFlowElement'].includes(node.type)) {
-            const props = ((node.attributes ?? []) as Node[]).reduce(
-              (acc, attr) => {
-                if (attr.type === 'mdxJsxAttribute') {
-                  // FIXME: Support live evaluation
-                  // if (attr.value?.type === 'mdxJsxAttributeValueExpression') {}
-                  if (
-                    !attr.value ||
-                    typeof attr.value === 'string' ||
-                    typeof attr.value === 'number'
-                  ) {
-                    return { ...acc, [attr.name as string]: attr.value };
-                  }
-                }
-                // FIXME: Support live evaluation
-                // if (attr.type === 'mdxJsxExpressionAttribute') {}
-                return acc;
-              },
-              {},
-            );
-            return h(node, node.name as string, props, node.children as Node[]);
-          }
-          if (['mdxTextExpression', 'mdxFlowExpression'].includes(node.type)) {
-            // FIXME: Support live evaluation
-            return h(node, 'span', [
-              { type: 'text', value: `{${node.value}}` },
-            ]);
-          }
-          return node;
-        },
-      });
-    },
-  ],
-});
+const compileToHast = async (mdx: string) => {
+  const { file } = resolveFileAndOptions(mdx);
+  const markdownCompiler = createCompileToHastProcessor();
+  const parsed = markdownCompiler.parse(file);
+  const transformed = await markdownCompiler.run(parsed);
+  return transformed;
+};
 
-export const useMarkdownRenderer = (md: string) => {
+export const useMarkdownRenderer = (mdx: string) => {
   const [element, setElement] = useState<React.ReactElement>();
 
   useEffect(() => {
     (async () => {
-      const parsed = markdownCompiler.parse(md);
-      const transformed = await markdownCompiler.run(parsed);
-      const root = toH(mdx, transformed);
+      const transformed = await compileToHast(mdx);
+      const root = toH(React.createElement, transformed);
       setElement(root);
     })();
-  }, [md]);
+  }, [mdx]);
 
   return { element };
 };

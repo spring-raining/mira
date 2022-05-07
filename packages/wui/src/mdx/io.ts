@@ -1,9 +1,10 @@
-import { createCompiler } from '@mirajs/core';
-import mdxMarkdownExt from 'mdast-util-mdx/to-markdown';
-import toMarkdown from 'mdast-util-to-markdown';
+import { Root } from 'mdast';
+import { mdxToMarkdown } from 'mdast-util-mdx';
+import { toMarkdown } from 'mdast-util-to-markdown';
 import type { Parent, Node } from 'unist';
 import { createNewBrick } from '../state/helper';
 import { ASTNode, Brick, NoteBrick, SnippetBrick, ScriptBrick } from '../types';
+import { createMdxProcessor } from './processsor';
 
 const scriptTypes = [
   'mdxFlowExpression',
@@ -21,7 +22,7 @@ type ScriptChunk = Required<Pick<ScriptBrick, 'type' | 'ast'>>;
 type Chunk = NoteChunk | SnippetChunk | ScriptChunk;
 
 export const parseMdx = (mdxString: string): Node[] => {
-  const compiler = createCompiler();
+  const compiler = createMdxProcessor();
   const parsed = compiler.parse(mdxString) as Parent;
   return parsed.children.filter(
     (node) => node.type !== 'yaml', // Skip config block
@@ -29,7 +30,7 @@ export const parseMdx = (mdxString: string): Node[] => {
 };
 
 export const hydrateMdx = (mdxString: string): Brick[] => {
-  const compiler = createCompiler();
+  const compiler = createMdxProcessor();
   const parsed = compiler.parse(mdxString);
 
   const chunk = (parsed as Parent).children.reduce((acc, _node): Chunk[] => {
@@ -106,8 +107,8 @@ export const hydrateMdx = (mdxString: string): Brick[] => {
 };
 
 export const dehydrateBrick = (brick: Brick): string => {
-  return toMarkdown(
-    { type: 'root', children: brick.ast },
-    { listItemIndent: 'one', extensions: [mdxMarkdownExt] },
-  );
+  return toMarkdown({ type: 'root', children: brick.ast } as Root, {
+    listItemIndent: 'one',
+    extensions: [mdxToMarkdown()],
+  });
 };

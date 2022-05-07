@@ -1,0 +1,24 @@
+{
+  "name": "@mirajs/rollup",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "test": "jest"
+  },
+  "peerDependencies": {
+    "rollup": ">=2"
+  },
+  "dependencies": {
+    "@mdx-js/rollup": "^2.0.0",
+    "@mirajs/mdx-mira": "1.0.0"
+  },
+  "devDependencies": {
+    "react": "17.0.2"
+  }
+}

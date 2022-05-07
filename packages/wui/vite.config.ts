@@ -19,10 +19,6 @@ export default defineConfig({
       external: [
         ...Object.keys(packageJson.dependencies),
         ...Object.keys(packageJson.peerDependencies),
-        'mdast-util-to-hast',
-        'mdast-util-to-markdown',
-        'mdast-util-to-mdx/to-markdown',
-        'unist-util-visit',
       ],
     },
   },

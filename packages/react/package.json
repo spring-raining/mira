@@ -39,7 +39,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.10.1",
     "@lit/reactive-element": "1.3.0",
     "@mirajs/core": "1.0.0",
     "@types/jest": "^26.0.0",

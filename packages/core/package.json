@@ -25,14 +25,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@mdx-js/mdx": "2.0.0-next.9",
     "es-module-lexer": "0.4.1",
-    "remark-frontmatter": "3.0.0",
     "strip-comments": "2.0.1",
     "sucrase": "3.20.3"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.10.1",
     "@types/strip-comments": "^2.0.0"
   }
 }

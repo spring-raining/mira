@@ -23,15 +23,18 @@
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
   "dependencies": {
-    "@mdx-js/react": "2.0.0-next.9",
+    "@mdx-js/mdx": "^2.0.0",
     "@mirajs/core": "1.0.0",
+    "@mirajs/mdx-mira": "1.0.0",
     "@mirajs/transpiler": "1.0.0",
     "hast-to-hyperscript": "9.0.1",
-    "mdast-util-mdx": "0.1.1",
+    "mdast-util-mdx": "^2.0.0",
+    "mdast-util-to-markdown": "^1.0.0",
     "nanoid": "3.1.20",
     "react-dnd": "14.0.3",
     "react-dnd-html5-backend": "14.0.1",
-    "recoil": "0.6.1"
+    "recoil": "0.6.1",
+    "unist-util-visit": "^4.0.0"
   },
   "devDependencies": {
     "@chakra-ui/react": "1.6.0",

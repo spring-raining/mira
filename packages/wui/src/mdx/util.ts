@@ -1,4 +1,4 @@
-import toMarkdown from 'mdast-util-to-markdown';
+import { toMarkdown } from 'mdast-util-to-markdown';
 import { ASTNode } from '../types';
 
 export const getMarkdownSubject = (node: ASTNode[]): string | null => {

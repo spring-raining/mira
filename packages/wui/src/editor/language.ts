@@ -9,9 +9,13 @@ export const getLanguageExtension = (language: string): Extension => {
       return markdown();
     case 'javascript':
     case 'js':
+    case 'mjs':
+    case 'cjs':
       return javascript();
     case 'typescirpt':
     case 'ts':
+    case 'mts':
+    case 'cts':
       return javascript({ typescript: true });
     case 'jsx':
       return javascript({ jsx: true });
