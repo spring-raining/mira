@@ -8,7 +8,7 @@
     },
     "dev": {
       "cache": false,
-      "dependsOn": ["@mirajs/workspace#build"]
+      "dependsOn": ["@mirajs/mira-workspace#build"]
     },
     "lint": {},
     "lint:fix": {}

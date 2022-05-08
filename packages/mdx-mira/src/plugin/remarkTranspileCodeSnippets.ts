@@ -1,4 +1,4 @@
-import { scanModuleSpecifier } from '@mirajs/core';
+import { scanModuleSpecifier } from '@mirajs/util';
 import { OnLoadResult, Loader } from 'esbuild';
 import { Plugin } from 'unified';
 import { Parent } from 'unist';

@@ -1,5 +1,5 @@
 {
-  "name": "@mirajs/mdx-mira",
+  "name": "@mirajs/util",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,19 +17,19 @@
     "build:rollup": "rollup -c",
     "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
     "dev": "rollup -c -w --no-watch.clearScreen --environment DEV",
-    "test": "npm run build && jest",
+    "test": "jest",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@mirajs/util": "1.0.0",
-    "esbuild": "0.14.38",
-    "mdast-util-to-hast": "^12.1.0",
-    "unist-util-visit": "^4.0.0"
+    "es-module-lexer": "0.4.1",
+    "strip-comments": "2.0.1",
+    "sucrase": "3.20.3"
   },
   "devDependencies": {
-    "@mdx-js/mdx": "^2.0.0",
-    "unified": "^10.0.0",
-    "unist-util-inspect": "^7.0.0"
+    "@types/strip-comments": "^2.0.0"
   }
 }

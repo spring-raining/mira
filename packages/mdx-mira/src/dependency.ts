@@ -2,8 +2,8 @@ import {
   parseImportStatement,
   scanModuleSpecifier,
   scanDeclarations,
-} from '@mirajs/core';
-import type { ExportDefaultDeclaration } from '@mirajs/core/dist/declaration-parser/types';
+} from '@mirajs/util';
+import type { ExportDefaultDeclaration } from '@mirajs/util/dist/declaration-parser/types';
 import { transpileCode } from './transpiler';
 import { ImportDefinition } from './types';
 
