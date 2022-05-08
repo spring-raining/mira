@@ -27,7 +27,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@rollup/plugin-replace": "3.0.1",
     "@types/babel__code-frame": "^7.0.2",
     "@types/command-line-usage": "^5.0.1",
     "@types/debounce": "^1.2.0",

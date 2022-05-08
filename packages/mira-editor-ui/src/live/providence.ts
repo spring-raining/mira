@@ -19,7 +19,7 @@ import {
   RenderParamsUpdateEvent,
 } from './dependency';
 import { setupRuntime } from './runtime';
-import { transpileCode } from './transpileCode';
+import { buildCode } from './transpiler';
 
 export interface Providence {
   dispatchCodeUpdates: ({
@@ -89,12 +89,13 @@ export const setupProvidence = ({
     resolvedValues: readonly [string, string[]][];
     importDefinitions: readonly ImportDefinition[];
   }): Promise<EvaluatedResult> => {
-    const transpiledData = await transpileCode({
+    const transpiledData = await buildCode({
       code,
       resolvedValues,
       importDefinitions,
     });
-    if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
+    const transpiledCode = transpiledData.result?.[0].text;
+    if (transpiledData.errorObject || typeof transpiledCode !== 'string') {
       return {
         id: miraId,
         environment,
@@ -104,7 +105,6 @@ export const setupProvidence = ({
         warnMarkers: transpiledData.warnings,
       };
     }
-    const transpiledCode = transpiledData.text;
     const runtimeScope = environment.getRuntimeScope({});
     for (const [k, v] of Object.entries(runtimeScope)) {
       (globalThis as any)[k] = v;
@@ -166,12 +166,13 @@ export const setupProvidence = ({
     importDefinitions: readonly ImportDefinition[];
     dependencyError: Error;
   }): Promise<EvaluatedResult> => {
-    const transpiledData = await transpileCode({
+    const transpiledData = await buildCode({
       code,
       resolvedValues,
       importDefinitions,
     });
-    if (transpiledData.errorObject || typeof transpiledData.text !== 'string') {
+    const transpiledCode = transpiledData.result?.[0].text;
+    if (transpiledData.errorObject || typeof transpiledCode !== 'string') {
       return {
         id: miraId,
         environment,

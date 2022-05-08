@@ -1,4 +1,3 @@
-import { ServiceOptions } from '@mirajs/transpiler-esbuild';
 import clsx from 'clsx';
 import React, { useEffect, useMemo } from 'react';
 import { GlobalHotKeys } from 'react-hotkeys';
@@ -17,7 +16,6 @@ import { useConfig } from '../state/config';
 import { MiraWuiConfig } from '../types';
 import { noop, noopAsync } from '../util';
 import * as style from './Universe.css';
-import { Block } from './main/Block';
 import { ScrollableBlockList } from './main/ScrollableBlockList';
 import { PlanetarySystem } from './planetarySystem';
 

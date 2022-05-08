@@ -92,7 +92,7 @@ export class DependencyManager<ID extends string | number = string | number> {
         bundle: false,
         sourcemap: false,
       });
-      const transformedCode = transformed.text;
+      const transformedCode = transformed.result?.[0].text;
       if (transformed.errorObject || typeof transformedCode !== 'string') {
         // Failed to transform
         throw new Error('Failed to parse code');

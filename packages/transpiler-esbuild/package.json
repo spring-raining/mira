@@ -7,6 +7,12 @@
   "exports": {
     ".": {
       "default": "./dist/index.js"
+    },
+    "./browser": {
+      "default": "./dist/browser/index.js"
+    },
+    "./node": {
+      "default": "./dist/node/index.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -22,6 +28,8 @@
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
   "dependencies": {
-    "esbuild-wasm": "0.8.50"
+    "@mirajs/util": "1.0.0",
+    "esbuild": "0.14.38",
+    "esbuild-wasm": "0.14.38"
   }
 }

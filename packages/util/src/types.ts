@@ -49,3 +49,74 @@ export abstract class MiraEvalBase extends HTMLElement {
 
   abstract loadScript(source: string): Promise<void>;
 }
+
+export interface MessageLocation {
+  /** 1-based */
+  line: number;
+  /** 0-based, in bytes */
+  column: number;
+  /** in bytes */
+  length: number;
+  file?: string | null;
+  namespace?: string | null;
+  lineText?: string | null;
+  suggestion?: string | null;
+}
+
+export interface Message {
+  text: string;
+  location?: MessageLocation | null;
+  pluginName?: string | null;
+  detail?: any;
+}
+
+export interface BuildOutputFile {
+  path: string;
+  contents: Uint8Array;
+  text: string;
+}
+
+export interface BuildResult {
+  result: BuildOutputFile[];
+  errorObject?: undefined;
+  errors: Message[];
+  warnings: Message[];
+}
+
+export interface BuildFailure {
+  result?: undefined;
+  errorObject: Error;
+  errors: Message[];
+  warnings: Message[];
+}
+
+export interface TransformResult {
+  result: {
+    code: string;
+    map?: string | null;
+  };
+  errorObject?: undefined;
+  errors: Message[];
+  warnings: Message[];
+}
+
+export interface TransformFailure {
+  result?: undefined;
+  errorObject: Error;
+  errors: Message[];
+  warnings: Message[];
+}
+
+export abstract class MiraTranspilerBase<
+  InitOptions = object,
+  BuildOptions = object,
+  TransformOptions = object,
+> {
+  abstract get isInitialized(): boolean;
+  abstract init(options: InitOptions): Promise<void>;
+  abstract build(options: BuildOptions): Promise<BuildResult | BuildFailure>;
+  abstract transform(
+    input: string,
+    options?: TransformOptions,
+  ): Promise<TransformResult | TransformFailure>;
+}

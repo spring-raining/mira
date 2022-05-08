@@ -13,4 +13,12 @@ export type {
   RuntimeEnvironment,
   RuntimeEnvironmentFactory,
   MiraEvalBase,
+  MessageLocation,
+  Message,
+  BuildOutputFile,
+  BuildResult,
+  BuildFailure,
+  TransformResult,
+  TransformFailure,
+  MiraTranspilerBase,
 } from './types';

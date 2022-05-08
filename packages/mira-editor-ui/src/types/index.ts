@@ -1,4 +1,7 @@
-import { RuntimeEnvironment as CoreRuntimeEnvironment } from '@mirajs/util';
+import {
+  RuntimeEnvironment as CoreRuntimeEnvironment,
+  Message,
+} from '@mirajs/util';
 import { ImportDefinition } from '@mirajs/util/dist/ecmaImport';
 import { Update } from 'vite';
 
@@ -64,23 +67,6 @@ export type LiteralBrickData = {
   mira?: Mira;
 };
 
-export interface MarkerMessage {
-  location: {
-    line: number;
-    column: number;
-    length: number;
-  };
-  text: string;
-}
-
-export interface TranspiledResult {
-  text?: string;
-  map?: string;
-  warnings: MarkerMessage[];
-  errors: MarkerMessage[];
-  errorObject?: Error;
-}
-
 export type EnvironmentId = `env.${string}`;
 export interface RuntimeEnvironment extends CoreRuntimeEnvironment {
   envId: EnvironmentId;
@@ -93,8 +79,8 @@ export interface EvaluatedResult {
   code?: string;
   source?: string;
   error?: Error;
-  errorMarkers?: MarkerMessage[];
-  warnMarkers?: MarkerMessage[];
+  errorMarkers?: Message[];
+  warnMarkers?: Message[];
 }
 
 export interface EvaluateState {

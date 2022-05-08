@@ -17,7 +17,7 @@ import {
   RefreshModuleEvent,
   ParsedImportStatement,
 } from '../types';
-import { transpileCode } from './transpileCode';
+import { buildCode } from './transpiler';
 
 const intersection = <T extends string | number>(
   a: readonly T[],
@@ -281,12 +281,12 @@ export class DependencyManager<ID extends string> extends EventTarget<{
     let nextExports: readonly string[] = [];
     let nextDefaultParams: readonly string[] | null = null;
     try {
-      const transformed = await transpileCode({
+      const transformed = await buildCode({
         code,
         bundle: false,
         sourcemap: false,
       });
-      const transformedCode = transformed.text;
+      const transformedCode = transformed.result?.[0].text;
       if (transformed.errorObject || typeof transformedCode !== 'string') {
         // Failed to transform
         throw new Error('Failed to parse code');

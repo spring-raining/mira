@@ -19,19 +19,3 @@ export interface ImportDefinition {
   importBinding: { [key: string]: string };
   namespaceImport: string | null;
 }
-
-export interface MarkerMessage {
-  location: {
-    line: number;
-    column: number;
-    length: number;
-  };
-  text: string;
-}
-
-export interface TranspiledResult {
-  text?: string;
-  warnings: MarkerMessage[];
-  errors: MarkerMessage[];
-  errorObject?: Error;
-}

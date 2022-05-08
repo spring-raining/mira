@@ -8,13 +8,7 @@ export { codeSnippetsGlobalName, codeSnippetsCommentMarker } from './const';
 export { DependencyManager } from './dependency';
 export { stringifyImportDefinition } from './ecmaScript';
 export { transpileCode, bundleCode } from './transpiler';
-export type {
-  Node,
-  MiraNode,
-  ImportDefinition,
-  MarkerMessage,
-  TranspiledResult,
-} from './types';
+export type { Node, MiraNode, ImportDefinition } from './types';
 export {
   remarkCollectCodeSnippets,
   remarkTranspileCodeSnippets,

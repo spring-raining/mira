@@ -1,5 +1,5 @@
 import { scanModuleSpecifier } from '@mirajs/util';
-import { OnLoadResult, Loader } from 'esbuild';
+import type { OnLoadResult, Loader } from 'esbuild';
 import { Plugin } from 'unified';
 import { Parent } from 'unist';
 import { visit } from 'unist-util-visit';
@@ -137,10 +137,11 @@ const transpileToExecutableCode = async (
     loaderContents,
     globalName: codeSnippetsGlobalName,
   });
-  if (bundleResult.errorObject) {
+  const code = bundleResult.result?.[0].text;
+  if (!code || bundleResult.errorObject) {
     throw bundleResult.errorObject;
   }
-  return bundleResult.text;
+  return code;
 };
 
 const setComponentNameForCodeBlock = (

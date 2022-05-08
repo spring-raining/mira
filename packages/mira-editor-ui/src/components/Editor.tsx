@@ -1,4 +1,5 @@
 import { EditorView } from '@codemirror/view';
+import { Message } from '@mirajs/util';
 import React, { useEffect, useRef, useState } from 'react';
 import { getLanguageExtension } from '../editor/language';
 import { useBrick } from '../state/brick';
@@ -13,19 +14,10 @@ export const useRefFromProp = <T extends unknown>(
   return ref;
 };
 
-export interface MarkerMessage {
-  location: {
-    line: number;
-    column: number;
-    length: number;
-  };
-  text: string;
-}
-
 export interface EditorProps {
   brickId: BrickId;
-  errorMarkers?: MarkerMessage[];
-  warnMarkers?: MarkerMessage[];
+  errorMarkers?: Message[];
+  warnMarkers?: Message[];
 }
 
 export const Editor: React.VFC<EditorProps> = ({
