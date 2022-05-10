@@ -1,7 +1,6 @@
 import { EsbuildTranspiler } from '@mirajs/transpiler-esbuild';
-import type { BuildResult, BuildFailure } from '@mirajs/util';
+import type { BuildResult, BuildFailure, EcmaImport } from '@mirajs/util';
 import type { OnLoadResult } from 'esbuild';
-import { ImportDefinition } from './types';
 
 const _transpiler = (async () => {
   const transpiler = new EsbuildTranspiler();
@@ -14,7 +13,7 @@ export const transpileCode = async ({
 }: {
   code: string;
   resolvedValues?: readonly [string, string[]][];
-  importDefinitions?: readonly ImportDefinition[];
+  importDefinitions?: readonly EcmaImport.ImportDefinition[];
   bundle?: boolean;
   sourcemap?: boolean;
 }): Promise<BuildResult | BuildFailure> => {

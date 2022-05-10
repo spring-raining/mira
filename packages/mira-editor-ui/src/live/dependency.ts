@@ -2,8 +2,8 @@ import {
   parseImportStatement,
   scanModuleSpecifier,
   scanDeclarations,
+  DeclarationParser,
 } from '@mirajs/util';
-import type { ExportDefaultDeclaration } from '@mirajs/util/dist/declaration-parser/types';
 import { EventTarget, Event } from 'event-target-shim';
 import { collectEsmImports, loadModule, mapModuleValues } from '../mdx/imports';
 import {
@@ -318,7 +318,7 @@ export class DependencyManager<ID extends string> extends EventTarget<{
       nextExports = namedExportVal;
 
       const defaultExport = declaration.exportDeclarations.find(
-        (e): e is ExportDefaultDeclaration =>
+        (e): e is DeclarationParser.ExportDefaultDeclaration =>
           e.type === 'ExportDefaultDeclaration',
       );
       if (defaultExport) {

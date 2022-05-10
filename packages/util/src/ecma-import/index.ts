@@ -1,26 +1,6 @@
-import {
-  init as initEsModuleLexer,
-  parse,
-  ImportSpecifier,
-} from 'es-module-lexer';
+import { init as initEsModuleLexer, parse } from 'es-module-lexer';
 import stripComments from 'strip-comments';
-
-export type { ImportSpecifier };
-
-export interface ImportNode {
-  type: 'import';
-  value: string;
-}
-
-export interface ImportDefinition {
-  specifier: string;
-  all: boolean;
-  default: boolean;
-  namespace: boolean;
-  named: string[];
-  importBinding: { [key: string]: string };
-  namespaceImport: string | null;
-}
+import { ImportDefinition, ImportSpecifier } from './types';
 
 // http://www.ecma-international.org/ecma-262/6.0/#sec-imports
 /* eslint-disable no-useless-escape */
@@ -168,4 +148,32 @@ export const importModules = async (
     }
   }
   return modules;
+};
+
+export const stringifyImportDefinition = (definition: ImportDefinition) => {
+  let statement = 'import';
+  if (definition.all) {
+    statement += ` ${JSON.stringify(definition.specifier)};`;
+  } else {
+    const defaultBinding =
+      definition.default && definition.importBinding['default'];
+    if (defaultBinding) {
+      statement += ` ${defaultBinding}`;
+    }
+    if (definition.namespaceImport) {
+      statement += `${defaultBinding ? ', ' : ''} * as ${
+        definition.namespaceImport
+      }`;
+    }
+    const importList = definition.named.map((name) =>
+      definition.importBinding[name] && name !== definition.importBinding[name]
+        ? `${name} as ${definition.importBinding[name]}`
+        : name,
+    );
+    if (importList.length > 0) {
+      statement += `${defaultBinding ? ', ' : ''} { ${importList.join(', ')} }`;
+    }
+    statement += ` from ${JSON.stringify(definition.specifier)};`;
+  }
+  return statement;
 };

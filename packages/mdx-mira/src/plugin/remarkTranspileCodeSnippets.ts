@@ -1,11 +1,10 @@
-import { scanModuleSpecifier } from '@mirajs/util';
+import { scanModuleSpecifier, stringifyImportDefinition } from '@mirajs/util';
 import type { OnLoadResult, Loader } from 'esbuild';
 import { Plugin } from 'unified';
 import { Parent } from 'unist';
 import { visit } from 'unist-util-visit';
 import { codeSnippetsCommentMarker, codeSnippetsGlobalName } from '../const';
 import { DependencyManager } from '../dependency';
-import { stringifyImportDefinition } from '../ecmaScript';
 import { bundleCode } from '../transpiler';
 import { MiraNode } from '../types';
 
@@ -123,7 +122,6 @@ const transpileToExecutableCode = async (
         named: [...exportDef],
         importBinding: {
           ...(defaultComponent && { default: defaultComponent }),
-          ...exportDef.reduce((acc, def) => ({ ...acc, [def]: def }), {}),
         },
         namespaceImport: null,
       });

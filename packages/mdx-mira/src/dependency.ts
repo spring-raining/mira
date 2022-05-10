@@ -2,10 +2,12 @@ import {
   parseImportStatement,
   scanModuleSpecifier,
   scanDeclarations,
+  DeclarationParser,
+  EcmaImport,
 } from '@mirajs/util';
-import type { ExportDefaultDeclaration } from '@mirajs/util/dist/declaration-parser/types';
 import { transpileCode } from './transpiler';
-import { ImportDefinition } from './types';
+
+type ImportDefinition = EcmaImport.ImportDefinition;
 
 const intersection = <T extends string | number>(
   a: readonly T[],
@@ -124,7 +126,7 @@ export class DependencyManager<ID extends string | number = string | number> {
       nextExports = namedExportVal;
 
       const defaultExport = declaration.exportDeclarations.find(
-        (e): e is ExportDefaultDeclaration =>
+        (e): e is DeclarationParser.ExportDefaultDeclaration =>
           e.type === 'ExportDefaultDeclaration',
       );
       if (defaultExport) {

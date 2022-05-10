@@ -1,4 +1,4 @@
-import { Node } from 'unist';
+import type { Node } from 'unist';
 
 export type { Node };
 
@@ -9,13 +9,3 @@ export type MiraNode = Node & {
     defaultExportNode?: Node;
   };
 };
-
-export interface ImportDefinition {
-  specifier: string;
-  all: boolean;
-  default: boolean;
-  namespace: boolean;
-  named: string[];
-  importBinding: { [key: string]: string };
-  namespaceImport: string | null;
-}
