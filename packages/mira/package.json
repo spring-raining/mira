@@ -35,8 +35,8 @@
     "@types/picomatch": "^2.2.4"
   },
   "dependencies": {
-    "@mirajs/mira-workspace": "1.0.0",
-    "@mirajs/util": "1.0.0",
+    "@mirajs/mira-workspace": "workspace:*",
+    "@mirajs/util": "workspace:*",
     "@msgpack/msgpack": "2.7.1",
     "@web/dev-server": "^0.1.14",
     "globby": "^11.0.2",

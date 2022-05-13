@@ -1,11 +1,9 @@
 import {
   RuntimeEnvironment as CoreRuntimeEnvironment,
   Message,
-  EcmaImport,
+  ImportDefinition,
 } from '@mirajs/util';
 import { Update } from 'vite';
-
-export type ImportDefinition = EcmaImport.ImportDefinition;
 
 export type KeyActions = 'UNDO' | 'REDO';
 export type KeySequence = string | Array<string>;

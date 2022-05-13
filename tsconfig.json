@@ -16,7 +16,8 @@
     "jsx": "react",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "preserveSymlinks": true
   },
   "include": ["src/**/*.ts", "module/**/*.ts"],
   "exclude": ["node_modules"]

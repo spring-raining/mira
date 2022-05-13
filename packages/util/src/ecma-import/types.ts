@@ -1,4 +1,11 @@
-export type { ImportSpecifier } from 'es-module-lexer';
+export interface ImportSpecifier {
+  readonly n: string | undefined;
+  readonly s: number;
+  readonly e: number;
+  readonly ss: number;
+  readonly se: number;
+  readonly d: number;
+}
 
 export interface ImportDefinition {
   specifier: string;

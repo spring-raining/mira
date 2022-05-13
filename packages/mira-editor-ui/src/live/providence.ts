@@ -1,3 +1,4 @@
+import { ImportDefinition } from '@mirajs/util';
 import { ProvidenceStore } from '../hooks/providence/context';
 import {
   Mira,
@@ -5,7 +6,6 @@ import {
   EvaluateState,
   RuntimeEnvironment,
   ASTNode,
-  ImportDefinition,
   ModuleImportInfo,
   RenderParamsUpdateInfo,
   RefreshModuleEvent,

@@ -1,5 +1,9 @@
-import { parseImportStatement, scanModuleSpecifier } from '@mirajs/util';
-import { ParsedImportStatement, ASTNode, ImportDefinition } from '../types';
+import {
+  parseImportStatement,
+  scanModuleSpecifier,
+  ImportDefinition,
+} from '@mirajs/util';
+import { ParsedImportStatement, ASTNode } from '../types';
 
 const isPathImport = (spec: string): boolean =>
   spec[0] === '.' || spec[0] === '/';

@@ -3,6 +3,7 @@ import {
   scanModuleSpecifier,
   scanDeclarations,
   DeclarationParser,
+  ImportDefinition,
 } from '@mirajs/util';
 import { EventTarget, Event } from 'event-target-shim';
 import { collectEsmImports, loadModule, mapModuleValues } from '../mdx/imports';
@@ -13,7 +14,6 @@ import {
   ModuleImportMapping,
   ModuleImportInfo,
   RenderParamsUpdateInfo,
-  ImportDefinition,
   RefreshModuleEvent,
   ParsedImportStatement,
 } from '../types';

@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@mdx-js/rollup": "^2.0.0",
-    "@mirajs/mdx-mira": "1.0.0"
+    "@mirajs/mdx-mira": "workspace:*"
   },
   "devDependencies": {
     "react": "17.0.2"

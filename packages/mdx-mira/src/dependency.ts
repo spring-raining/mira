@@ -3,11 +3,9 @@ import {
   scanModuleSpecifier,
   scanDeclarations,
   DeclarationParser,
-  EcmaImport,
+  ImportDefinition,
 } from '@mirajs/util';
 import { transpileCode } from './transpiler';
-
-type ImportDefinition = EcmaImport.ImportDefinition;
 
 const intersection = <T extends string | number>(
   a: readonly T[],

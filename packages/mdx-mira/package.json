@@ -22,8 +22,8 @@
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
   "dependencies": {
-    "@mirajs/transpiler-esbuild": "1.0.0",
-    "@mirajs/util": "1.0.0",
+    "@mirajs/transpiler-esbuild": "workspace:*",
+    "@mirajs/util": "workspace:*",
     "mdast-util-to-hast": "^12.1.0",
     "unist-util-visit": "^4.0.0"
   },

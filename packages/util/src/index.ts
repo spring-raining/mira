@@ -5,7 +5,7 @@ export {
   importModules,
   stringifyImportDefinition,
 } from './ecma-import';
-export * as EcmaImport from './ecma-import/types';
+export * from './ecma-import/types';
 
 export { scanDeclarations } from './declaration-parser';
 export * as DeclarationParser from './declaration-parser/types';

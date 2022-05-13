@@ -3,8 +3,8 @@ import {
   stringifyImportDefinition,
   BuildResult,
   BuildFailure,
+  ImportDefinition,
 } from '@mirajs/util';
-import { ImportDefinition } from '../types';
 
 const _transpiler = (async () => {
   const transpiler = new EsbuildTranspiler();
