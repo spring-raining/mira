@@ -19,6 +19,7 @@ export default defineConfig({
       external: [
         ...Object.keys(packageJson.dependencies),
         ...Object.keys(packageJson.peerDependencies),
+        'cssesc',
       ],
     },
   },

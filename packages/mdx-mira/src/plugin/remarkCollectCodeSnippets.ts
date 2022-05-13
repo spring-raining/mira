@@ -1,3 +1,4 @@
+import { Code } from 'mdast';
 import { Plugin } from 'unified';
 import { Node, Parent } from 'unist';
 import { visit } from 'unist-util-visit';
@@ -8,7 +9,7 @@ export const remarkCollectCodeSnippets: Plugin = () => (ast) => {
   const codeBlocks: Node[] = [];
 
   let index = 0;
-  visit(ast, 'code', (node: Node) => {
+  visit(ast, 'code', (node: Code) => {
     if (typeof node.meta !== 'string') {
       return;
     }
@@ -37,5 +38,5 @@ export const remarkCollectCodeSnippets: Plugin = () => (ast) => {
   parent.children?.unshift({
     type: 'miraCodeDeclaration',
     children: codeBlocks,
-  });
+  } as Node);
 };

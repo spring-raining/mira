@@ -1,6 +1,13 @@
 import { nodeTypes, createProcessor } from '@mdx-js/mdx';
 import { remarkMarkAndUnravel } from '@mdx-js/mdx/lib/plugin/remark-mark-and-unravel';
 // import { remarkMira, rehypeMira, recmaMira } from '@mirajs/mdx-mira';
+import {
+  MdxJsxAttribute,
+  MdxJsxElement,
+  MdxFlowExpression,
+  MdxTextExpression,
+  Parent,
+} from '@mirajs/mdx-mira';
 import remarkMdx from 'remark-mdx';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
@@ -27,15 +34,17 @@ export const createCompileToHastProcessor = () => {
       // Disable mdxjsEsm node
       () => (ast) => {
         function onVisit(node: Node): void {
-          if (node.data?.estree) {
-            node.data.estree = null;
+          const element = node as MdxJsxElement;
+          if (element.data?.estree) {
+            element.data.estree = null;
           }
-          (node.attributes as Node[])?.forEach(onAttribute);
+          element.attributes?.forEach(onAttribute);
         }
         function onAttribute(node: Node): void {
-          onVisit(node);
-          if (node.value) {
-            onVisit(node.value as Node);
+          const attribute = node as MdxJsxAttribute;
+          onVisit(attribute);
+          if (attribute.value && typeof attribute.value === 'object') {
+            onVisit(attribute.value);
           }
         }
         visit(ast, 'mdxjsEsm', onVisit);
@@ -47,32 +56,33 @@ export const createCompileToHastProcessor = () => {
         'element', // Ignore node already converted to hast
         ...nodeTypes,
       ],
-      unknownHandler: (h, node) => {
+      unknownHandler: (h: (...args: any[]) => void, node: Node) => {
         if (['mdxJsxTextElement', 'mdxJsxFlowElement'].includes(node.type)) {
-          const props = ((node.attributes ?? []) as Node[]).reduce(
-            (acc, attr) => {
-              if (attr.type === 'mdxJsxAttribute') {
-                // FIXME: Support live evaluation
-                // if (attr.value?.type === 'mdxJsxAttributeValueExpression') {}
-                if (
-                  !attr.value ||
-                  typeof attr.value === 'string' ||
-                  typeof attr.value === 'number'
-                ) {
-                  return { ...acc, [attr.name as string]: attr.value };
-                }
-              }
+          const element = node as MdxJsxElement;
+          const props = (element.attributes ?? []).reduce((acc, attr) => {
+            if (attr.type === 'mdxJsxAttribute') {
               // FIXME: Support live evaluation
-              // if (attr.type === 'mdxJsxExpressionAttribute') {}
-              return acc;
-            },
-            {},
-          );
-          return h(node, node.name as string, props, node.children);
+              // if (attr.value?.type === 'mdxJsxAttributeValueExpression') {}
+              if (
+                !attr.value ||
+                typeof attr.value === 'string' ||
+                typeof attr.value === 'number'
+              ) {
+                return { ...acc, [attr.name as string]: attr.value };
+              }
+            }
+            // FIXME: Support live evaluation
+            // if (attr.type === 'mdxJsxExpressionAttribute') {}
+            return acc;
+          }, {});
+          return h(element, element.name, props, (element as Parent).children);
         }
         if (['mdxTextExpression', 'mdxFlowExpression'].includes(node.type)) {
           // FIXME: Support live evaluation
-          return h(node, 'span', [{ type: 'text', value: `{${node.value}}` }]);
+          const expression = node as MdxFlowExpression | MdxTextExpression;
+          return h(expression, 'span', [
+            { type: 'text', value: `{${expression.value}}` },
+          ]);
         }
         return node;
       },

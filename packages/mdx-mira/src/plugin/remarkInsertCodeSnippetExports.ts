@@ -6,8 +6,8 @@ import { MiraNode } from '../types';
 export const remarkInsertCodeSnippetExports: Plugin = () => async (ast) => {
   const parent = ast as Parent;
 
-  visit(parent, 'code', (node: MiraNode, i: number, parent: Parent) => {
-    if (!node.mira) {
+  visit(parent, 'code', (node: MiraNode, i: number | null, parent: Parent) => {
+    if (!node.mira || typeof i !== 'number') {
       return;
     }
     if (node.mira.defaultExportNode) {

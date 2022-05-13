@@ -7,7 +7,7 @@ import { remarkTranspileCodeSnippets } from './plugin/remarkTranspileCodeSnippet
 export { codeSnippetsGlobalName, codeSnippetsCommentMarker } from './const';
 export { DependencyManager } from './dependency';
 export { transpileCode, bundleCode } from './transpiler';
-export type { Node, MiraNode } from './types';
+export * from './types';
 export {
   remarkCollectCodeSnippets,
   remarkTranspileCodeSnippets,

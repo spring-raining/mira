@@ -1,12 +1,12 @@
 import { scanModuleSpecifier, stringifyImportDefinition } from '@mirajs/util';
 import type { OnLoadResult, Loader } from 'esbuild';
 import { Plugin } from 'unified';
-import { Parent } from 'unist';
+import { Literal, Parent } from 'unist';
 import { visit } from 'unist-util-visit';
 import { codeSnippetsCommentMarker, codeSnippetsGlobalName } from '../const';
 import { DependencyManager } from '../dependency';
 import { bundleCode } from '../transpiler';
-import { MiraNode } from '../types';
+import { MiraNode, MdxJsxElement, MdxJsxFlowElement } from '../types';
 
 type Snippets = {
   [name: string]: {
@@ -157,7 +157,7 @@ const setComponentNameForCodeBlock = (
       node.mira.defaultExportNode = {
         type: 'mdxJsxFlowElement',
         name: componentName,
-        attributes: [],
+        attributes: [] as MdxJsxElement['attributes'],
       };
     }
   });
@@ -174,7 +174,7 @@ export const remarkTranspileCodeSnippets: Plugin = () => async (ast) => {
   parent.children.forEach((node, i) => {
     if (node.type === 'miraCodeDeclaration') {
       snippetNode[i] = (node as Parent).children.filter(
-        (n): n is MiraNode => !!n.mira,
+        (n): n is MiraNode => !!(n as MiraNode).mira,
       );
     }
   });
@@ -206,6 +206,6 @@ export const remarkTranspileCodeSnippets: Plugin = () => async (ast) => {
           ],
         },
       },
-    });
+    } as Literal);
   }
 };
