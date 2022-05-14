@@ -49,7 +49,7 @@
       "eslint --fix"
     ]
   },
-  "packageManager": "pnpm@7.0.1",
+  "packageManager": "pnpm@7.1.0",
   "engines": {
     "node": ">=14.6"
   },
