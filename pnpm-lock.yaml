@@ -170,6 +170,7 @@ importers:
       '@mirajs/util': workspace:*
       '@popperjs/core': 2.10.2
       '@types/cssesc': 3.0.0
+      '@types/hast': ^2.3.4
       '@types/mdast': ^3.0.10
       '@types/react': ^17.0.0
       '@types/react-dom': ^17.0.0
@@ -185,6 +186,7 @@ importers:
       framer-motion: 4.1.11
       hast-to-hyperscript: 9.0.1
       mdast-util-mdx: ^2.0.0
+      mdast-util-to-hast: ^12.1.0
       mdast-util-to-markdown: ^1.0.0
       nanoid: 3.1.20
       npm-run-all: ^4.1.5
@@ -224,6 +226,7 @@ importers:
       '@emotion/styled': 11.3.0_e2ytsnmkutm3qp42etn3o5a6va
       '@popperjs/core': 2.10.2
       '@types/cssesc': 3.0.0
+      '@types/hast': 2.3.4
       '@types/mdast': 3.0.10
       '@types/react': 17.0.2
       '@types/react-dom': 17.0.1
@@ -237,6 +240,7 @@ importers:
       cssesc: 3.0.0
       event-target-shim: 6.0.2
       framer-motion: 4.1.11_sfoxds7t5ydpegc3knd667wn6m
+      mdast-util-to-hast: 12.1.1
       npm-run-all: 4.1.5
       postcss: 8.4.12
       prism-react-renderer: 1.2.1_react@17.0.2
