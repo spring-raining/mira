@@ -69,7 +69,8 @@ jobs:
       - name: Create release pull request or publish
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version
+          # Note: pnpm install after versioning is necessary to refresh lockfile
+          version: pnpm changeset version && pnpm install
           publish: pnpm changeset publish
           commit: '[ci] Release'
           title: '[ci] Release'
