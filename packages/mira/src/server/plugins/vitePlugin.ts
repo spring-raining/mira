@@ -1,12 +1,11 @@
 import { createRequire } from 'module';
+import path from 'path';
 import type { Framework } from '@mirajs/util';
 import { Plugin, Middleware, DevServerCoreConfig } from '@web/dev-server-core';
 import { createServer, UserConfig } from 'vite';
 import { MIDDLEWARE_PATH_PREFIX } from '../../constants';
 import { hmrVitePlugin } from './vite/hmrPlugin';
 import { htmlVitePlugin } from './vite/htmlPlugin';
-
-const require = createRequire(import.meta.url);
 
 const VITE_BASE = `${MIDDLEWARE_PATH_PREFIX}-/`;
 
@@ -23,6 +22,7 @@ export async function vitePluginFactory(
   vitePlugin: Plugin;
   viteMiddleware: Middleware;
 }> {
+  const require = createRequire(path.join(coreConfig.rootDir, '/'));
   // TODO: Read arbitrary framework
   const { viteConfig: frameworkConfig }: Framework = await import(
     require.resolve('@mirajs/framework-react/viteConfig.js')

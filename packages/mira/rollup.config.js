@@ -20,14 +20,7 @@ const output = [
         sourcemap: true,
       },
     ],
-    external: [
-      ...Object.keys(packageJson.dependencies),
-      '@babel/code-frame',
-      '@web/dev-server-core',
-      'debounce',
-      'ip',
-      'ws',
-    ],
+    external: [...Object.keys(packageJson.dependencies)],
     plugins: commonPlugins,
   },
   {

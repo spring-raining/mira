@@ -1,16 +1,22 @@
+import path from 'path';
 import createApp, { WorkspaceRepository } from '@mirajs/mira-workspace';
 import { Plugin, Middleware } from '@web/dev-server-core';
+import { ProjectConfig } from '../../config';
 
 export async function workspaceServerPluginFactory({
+  config,
   workspaceRepository,
 }: {
+  config: ProjectConfig;
   workspaceRepository: WorkspaceRepository;
 }): Promise<{
   workspaceServerPlugin: Plugin;
   workspaceServerMiddleware: Middleware;
 }> {
+  const rootDir = path.join(config.server.rootDir, '/');
   const { app } = createApp(
     {
+      rootDir,
       workspaceRepository,
     },
     {

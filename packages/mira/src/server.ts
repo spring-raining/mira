@@ -17,6 +17,7 @@ export async function startServer(args: CliArgs) {
     );
     const { workspaceServerPlugin, workspaceServerMiddleware } =
       await workspaceServerPluginFactory({
+        config,
         workspaceRepository: getWorkspaceRepository({ config }),
       });
     const plugins: Plugin[] = [

@@ -4,11 +4,6 @@
   "private": true,
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "exports": {
-    ".": {
-      "default": "./dist/index.mjs"
-    }
-  },
   "types": "./dist/module/index.d.ts",
   "scripts": {
     "prebuild": "shx rm -rf dist",
