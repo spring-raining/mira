@@ -5,7 +5,6 @@ import { remarkInsertCodeSnippetExports } from './plugin/remarkInsertCodeSnippet
 import { remarkTranspileCodeSnippets } from './plugin/remarkTranspileCodeSnippets';
 
 export { codeSnippetsGlobalName, codeSnippetsCommentMarker } from './const';
-export { DependencyManager } from './dependency';
 export { transpileCode, bundleCode } from './transpiler';
 export * from './types';
 export {

@@ -1,12 +1,15 @@
-import { scanModuleSpecifier, stringifyImportDefinition } from '@mirajs/util';
+import {
+  scanModuleSpecifier,
+  stringifyImportDefinition,
+  DependencyManager,
+} from '@mirajs/util';
 import type { OnLoadResult, Loader } from 'esbuild';
 import { Plugin } from 'unified';
 import { Literal, Parent } from 'unist';
 import { visit } from 'unist-util-visit';
 import { codeSnippetsCommentMarker, codeSnippetsGlobalName } from '../const';
-import { DependencyManager } from '../dependency';
-import { bundleCode } from '../transpiler';
-import { MiraNode, MdxJsxElement, MdxJsxFlowElement } from '../types';
+import { bundleCode, transpileCode } from '../transpiler';
+import { MiraNode, MdxJsxElement } from '../types';
 
 type Snippets = {
   [name: string]: {
@@ -40,8 +43,22 @@ const detectLoaderLanguage = (lang: unknown): Loader => {
   }
 };
 
+const transpiler = async (code: string) => {
+  const transformed = await transpileCode({
+    code,
+    bundle: false,
+    sourcemap: false,
+  });
+  const transformedCode = transformed.result?.[0].text;
+  if (transformed.errorObject || typeof transformedCode !== 'string') {
+    // Failed to transform
+    throw transformed.errorObject ?? new Error('Failed to parse code');
+  }
+  return transformedCode;
+};
+
 const calcDependency = async (snippets: Snippets) => {
-  const dependency = new DependencyManager();
+  const dependency = new DependencyManager({ transpiler });
   for (const name in snippets) {
     await dependency.upsertSnippet(name, snippets[name].value);
   }

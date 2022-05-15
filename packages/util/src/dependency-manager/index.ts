@@ -1,11 +1,8 @@
-import {
-  parseImportStatement,
-  scanModuleSpecifier,
-  scanDeclarations,
-  DeclarationParser,
-  ImportDefinition,
-} from '@mirajs/util';
-import { transpileCode } from './transpiler';
+import { scanDeclarations } from '../declaration-parser';
+import { ExportDefaultDeclaration } from '../declaration-parser/types';
+import { parseImportStatement, scanModuleSpecifier } from '../ecma-import';
+import { ImportDefinition } from '../ecma-import/types';
+import { TranspileOptions } from './types';
 
 const intersection = <T extends string | number>(
   a: readonly T[],
@@ -34,16 +31,23 @@ export class DependencyManager<ID extends string | number = string | number> {
   _valDependency: Record<string, Set<string>> = {};
   _definedValues: Set<string> = new Set();
 
+  private transpiler: (
+    input: string,
+    options?: TranspileOptions,
+  ) => Promise<string>;
   private onDependencyUpdate?: (id: ID) => void;
   private onRenderParamsUpdate?: (id: ID) => void;
 
   constructor({
+    transpiler,
     onDependencyUpdate,
     onRenderParamsUpdate,
   }: {
+    transpiler: (input: string, options?: TranspileOptions) => Promise<string>;
     onDependencyUpdate?: (id: ID) => void;
     onRenderParamsUpdate?: (id: ID) => void;
-  } = {}) {
+  }) {
+    this.transpiler = transpiler;
     this.onDependencyUpdate = onDependencyUpdate;
     this.onRenderParamsUpdate = onRenderParamsUpdate;
   }
@@ -87,16 +91,7 @@ export class DependencyManager<ID extends string | number = string | number> {
     let nextDefaultParams: readonly string[] | null = null;
     let hasDefaultExport = false;
     try {
-      const transformed = await transpileCode({
-        code,
-        bundle: false,
-        sourcemap: false,
-      });
-      const transformedCode = transformed.result?.[0].text;
-      if (transformed.errorObject || typeof transformedCode !== 'string') {
-        // Failed to transform
-        throw new Error('Failed to parse code');
-      }
+      const transformedCode = await this.transpiler(code);
       const [declaration, [imports, exports]] = await Promise.all([
         scanDeclarations(transformedCode),
         scanModuleSpecifier(transformedCode),
@@ -124,7 +119,7 @@ export class DependencyManager<ID extends string | number = string | number> {
       nextExports = namedExportVal;
 
       const defaultExport = declaration.exportDeclarations.find(
-        (e): e is DeclarationParser.ExportDefaultDeclaration =>
+        (e): e is ExportDefaultDeclaration =>
           e.type === 'ExportDefaultDeclaration',
       );
       if (defaultExport) {
