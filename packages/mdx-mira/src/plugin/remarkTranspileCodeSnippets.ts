@@ -58,7 +58,10 @@ const transpiler = async (code: string) => {
 };
 
 const calcDependency = async (snippets: Snippets) => {
-  const dependency = new DependencyManager({ transpiler });
+  const dependency = new DependencyManager({
+    transpiler,
+    throwsOnTaskFail: true,
+  });
   for (const name in snippets) {
     await dependency.upsertSnippet(name, snippets[name].value);
   }

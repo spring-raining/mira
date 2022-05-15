@@ -92,3 +92,25 @@ export const buildCode = async ({
   });
   return built;
 };
+
+export const transpileCode = async (code: string) => {
+  const transpiler = await _transpiler;
+  const transformed = await transpiler.build({
+    stdin: {
+      contents: code,
+      loader: 'jsx',
+      sourcefile: '[Mira]',
+    },
+    bundle: false,
+    write: false,
+    platform: 'neutral',
+    target: 'es2020',
+    logLevel: 'silent',
+  });
+  const transformedCode = transformed.result?.[0].text;
+  if (transformed.errorObject || typeof transformedCode !== 'string') {
+    // Failed to transform
+    throw transformed.errorObject ?? new Error('Failed to parse code');
+  }
+  return transformedCode;
+};

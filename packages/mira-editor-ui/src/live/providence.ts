@@ -19,7 +19,7 @@ import {
   RenderParamsUpdateEvent,
 } from './dependency';
 import { setupRuntime } from './runtime';
-import { buildCode } from './transpiler';
+import { buildCode, transpileCode } from './transpiler';
 
 export interface Providence {
   dispatchCodeUpdates: ({
@@ -293,23 +293,36 @@ export const setupProvidence = ({
     store.dependency?.refreshModule(event);
   };
 
-  let isPaused = false;
+  // let isPaused = false;
 
+  // const pauseCodeUpdates = () => {
+  //   if (!isPaused) {
+  //     isPaused = true;
+  //     store.dependency?.pauseUpdateEvent();
+  //   }
+  // };
+
+  // const resumeCodeUpdates = () => {
+  //   if (isPaused) {
+  //     isPaused = false;
+  //     store.dependency?.resumeUpdateEvent();
+  //   }
+  // };
+  let resume: (() => void) | undefined;
   const pauseCodeUpdates = () => {
-    if (!isPaused) {
-      isPaused = true;
-      store.dependency?.pauseUpdateEvent();
+    if (!resume) {
+      resume = store.dependency?.pauseTask();
     }
   };
-
   const resumeCodeUpdates = () => {
-    if (isPaused) {
-      isPaused = false;
-      store.dependency?.resumeUpdateEvent();
+    if (resume) {
+      resume();
+      resume = undefined;
     }
   };
 
   store.dependency = new DependencyManager<BrickId>({
+    transpiler: transpileCode,
     base,
     depsContext,
     importerContext: mdxPath,
