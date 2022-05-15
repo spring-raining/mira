@@ -36,7 +36,7 @@ jobs:
         uses: changesets/action@v1
         with:
           # Note: pnpm install after versioning is necessary to refresh lockfile
-          version: pnpm changeset version && pnpm install
+          version: pnpm exec changeset version && pnpm install
           publish: pnpm changeset publish
           commit: '[ci] Release'
           title: '[ci] Release'
