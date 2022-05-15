@@ -1,6 +1,13 @@
 {
   "name": "@mirajs/mira-workspace",
   "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spring-raining/mira.git",
+    "directory": "packages/mira-workspace"
+  },
+  "homepage": "https://github.com/spring-raining/mira",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/module/index.d.ts",

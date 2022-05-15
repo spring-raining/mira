@@ -1,6 +1,13 @@
 {
   "name": "@mirajs/mira",
   "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spring-raining/mira.git",
+    "directory": "packages/mira"
+  },
+  "homepage": "https://github.com/spring-raining/mira",
   "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -8,7 +15,6 @@
   "bin": {
     "mira": "bin/mira.js"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=12.22.0"
   },
