@@ -1,6 +1,13 @@
 {
   "name": "@mirajs/util",
   "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spring-raining/mira.git",
+    "directory": "packages/util"
+  },
+  "homepage": "https://github.com/spring-raining/mira",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -10,7 +17,6 @@
     }
   },
   "types": "./dist/index.d.ts",
-  "license": "MIT",
   "scripts": {
     "prebuild": "shx rm -rf dist",
     "build": "run-s build:*",

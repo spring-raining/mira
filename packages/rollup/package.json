@@ -1,11 +1,17 @@
 {
   "name": "@mirajs/rollup",
   "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spring-raining/mira.git",
+    "directory": "packages/rollup"
+  },
+  "homepage": "https://github.com/spring-raining/mira",
   "type": "module",
   "main": "./index.js",
   "module": "./index.js",
   "types": "./index.d.ts",
-  "license": "MIT",
   "scripts": {
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
