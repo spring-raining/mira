@@ -1,7 +1,6 @@
 {
   "name": "@mirajs/mira-workspace",
   "version": "0.0.1",
-  "private": true,
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/module/index.d.ts",
@@ -15,6 +14,9 @@
     "start": "next start",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.13.15",

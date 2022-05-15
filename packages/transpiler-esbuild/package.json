@@ -27,6 +27,9 @@
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@mirajs/util": "workspace:*",
     "esbuild": "0.14.38",

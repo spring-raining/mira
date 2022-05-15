@@ -11,6 +11,9 @@
     "lint:fix": "eslint . --ext .js --fix",
     "test": "jest"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "rollup": ">=2"
   },
