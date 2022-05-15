@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build
+  release:
+    name: Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,40 +31,6 @@ jobs:
 
       - name: Build Packages
         run: pnpm build
-
-      - name: Upload package artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts
-          path: |
-            packages/*/dist/**
-            packages/*/.next/**
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: pnpm
-
-      - name: Download package artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Create release pull request or publish
         uses: changesets/action@v1
