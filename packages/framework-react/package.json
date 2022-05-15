@@ -31,7 +31,6 @@
     "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
     "dev": "rollup -c -w --no-watch.clearScreen --environment DEV",
     "test": "npm run build && jest",
-    "prepublish": "npm run build",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
