@@ -8,6 +8,8 @@
     "changeset": "changeset",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel --no-cache",
+    "test": "turbo run test",
+    "test:dev": "turbo run test:dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix"
   },

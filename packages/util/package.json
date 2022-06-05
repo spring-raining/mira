@@ -23,7 +23,8 @@
     "build:rollup": "rollup -c",
     "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
     "dev": "rollup -c -w --no-watch.clearScreen --environment DEV",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:dev": "vitest dev",
     "lint": "eslint . --ext .ts,tsx",
     "lint:fix": "eslint . --ext .ts,tsx --fix"
   },
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@types/strip-comments": "^2.0.0",
+    "esbuild": "0.14.38",
     "vitest": "0.13.1"
   }
 }

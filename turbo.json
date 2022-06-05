@@ -10,6 +10,10 @@
       "cache": false,
       "dependsOn": ["@mirajs/mira-workspace#build"]
     },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "test:dev": {},
     "lint": {},
     "lint:fix": {}
   },

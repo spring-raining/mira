@@ -12,7 +12,7 @@ export interface ImportDefinition {
   all: boolean;
   default: boolean;
   namespace: boolean;
-  named: string[];
+  named: readonly string[];
   importBinding: { [key: string]: string };
   namespaceImport: string | null;
 }

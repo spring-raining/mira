@@ -150,30 +150,34 @@ export const importModules = async (
   return modules;
 };
 
-export const stringifyImportDefinition = (definition: ImportDefinition) => {
+export const stringifyImportDefinition = ({
+  specifier,
+  all,
+  default: exportDefault,
+  named = [],
+  importBinding = {},
+  namespaceImport,
+}: Partial<ImportDefinition> & { specifier: string }) => {
   let statement = 'import';
-  if (definition.all) {
-    statement += ` ${JSON.stringify(definition.specifier)};`;
+  if (all) {
+    statement += ` ${JSON.stringify(specifier)};`;
   } else {
-    const defaultBinding =
-      definition.default && definition.importBinding['default'];
+    const defaultBinding = exportDefault && importBinding['default'];
     if (defaultBinding) {
       statement += ` ${defaultBinding}`;
     }
-    if (definition.namespaceImport) {
-      statement += `${defaultBinding ? ', ' : ''} * as ${
-        definition.namespaceImport
-      }`;
+    if (namespaceImport) {
+      statement += `${defaultBinding ? ', ' : ''} * as ${namespaceImport}`;
     }
-    const importList = definition.named.map((name) =>
-      definition.importBinding[name] && name !== definition.importBinding[name]
-        ? `${name} as ${definition.importBinding[name]}`
+    const importList = named.map((name) =>
+      importBinding[name] && name !== importBinding[name]
+        ? `${name} as ${importBinding[name]}`
         : name,
     );
     if (importList.length > 0) {
       statement += `${defaultBinding ? ', ' : ''} { ${importList.join(', ')} }`;
     }
-    statement += ` from ${JSON.stringify(definition.specifier)};`;
+    statement += ` from ${JSON.stringify(specifier)};`;
   }
   return statement;
 };

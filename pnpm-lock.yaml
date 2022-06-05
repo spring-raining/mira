@@ -313,6 +313,7 @@ importers:
     specifiers:
       '@types/strip-comments': ^2.0.0
       es-module-lexer: 0.4.1
+      esbuild: 0.14.38
       strip-comments: 2.0.1
       vitest: 0.13.1
     dependencies:
@@ -320,6 +321,7 @@ importers:
       strip-comments: 2.0.1
     devDependencies:
       '@types/strip-comments': 2.0.1
+      esbuild: 0.14.38
       vitest: 0.13.1
 
 packages:
