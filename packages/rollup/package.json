@@ -14,8 +14,7 @@
   "types": "./index.d.ts",
   "scripts": {
     "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
-    "test": "jest"
+    "lint:fix": "eslint . --ext .js --fix"
   },
   "publishConfig": {
     "access": "public"

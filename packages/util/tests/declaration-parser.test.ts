@@ -1,6 +1,7 @@
-import { parse } from 'sucrase/dist/parser';
+import { it, expect } from 'vitest';
 import { scanDeclarations } from '../src/declaration-parser';
 import { Scanner } from '../src/declaration-parser/scanner';
+import { parse } from '../src/vendor/sucrase/parser';
 
 it('scanFunctionDeclaration', async () => {
   const source = `
