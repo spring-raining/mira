@@ -1,6 +1,6 @@
-import TokenProcessor from 'sucrase/dist/TokenProcessor';
-import { IdentifierRole, Token } from 'sucrase/dist/parser/tokenizer';
-import { TokenType as tt } from 'sucrase/dist/parser/tokenizer/types';
+import TokenProcessor from '../vendor/sucrase/TokenProcessor';
+import { IdentifierRole, Token } from '../vendor/sucrase/parser/tokenizer';
+import { TokenType as tt } from '../vendor/sucrase/parser/tokenizer/types';
 import { assignmentExpressionTokens } from './const';
 import {
   Identifier,

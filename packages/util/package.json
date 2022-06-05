@@ -32,8 +32,7 @@
   },
   "dependencies": {
     "es-module-lexer": "0.4.1",
-    "strip-comments": "2.0.1",
-    "sucrase": "3.20.3"
+    "strip-comments": "2.0.1"
   },
   "devDependencies": {
     "@types/strip-comments": "^2.0.0"

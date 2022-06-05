@@ -1,4 +1,4 @@
-import { TokenType as tt } from 'sucrase/dist/parser/tokenizer/types';
+import { TokenType as tt } from '../vendor/sucrase/parser/tokenizer/types';
 
 export const leftHandSideExpressionTokens = [
   tt.num,

@@ -1,4 +1,4 @@
-import { parse } from 'sucrase/dist/parser';
+import { parse } from '../vendor/sucrase/parser';
 import { Scanner } from './scanner';
 import {
   ClassDeclaration,
