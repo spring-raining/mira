@@ -7,30 +7,7 @@ const _transpiler = (async () => {
   await transpiler.init({ transpilerPlatform: 'node' });
   return transpiler;
 })();
-
-export const transpileCode = async ({
-  code,
-}: {
-  code: string;
-  resolvedValues?: readonly [string, string[]][];
-  importDefinitions?: readonly ImportDefinition[];
-  bundle?: boolean;
-  sourcemap?: boolean;
-}): Promise<BuildResult | BuildFailure> => {
-  const transpiler = await _transpiler;
-  return await transpiler.build({
-    stdin: {
-      contents: code,
-      loader: 'jsx',
-      sourcefile: '[Mira]',
-    },
-    bundle: false,
-    write: false,
-    platform: 'neutral',
-    target: 'es2020',
-    logLevel: 'silent',
-  });
-};
+export const getTranspiler = async () => await _transpiler;
 
 export const bundleCode = async ({
   code,

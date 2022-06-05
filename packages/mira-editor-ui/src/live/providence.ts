@@ -1,4 +1,4 @@
-import { ImportDefinition } from '@mirajs/util';
+import { ImportDefinition, MiraTranspilerBase } from '@mirajs/util';
 import { ProvidenceStore } from '../hooks/providence/context';
 import {
   Mira,
@@ -19,7 +19,7 @@ import {
   RenderParamsUpdateEvent,
 } from './dependency';
 import { setupRuntime } from './runtime';
-import { buildCode, transpileCode } from './transpiler';
+import { getTranspiler, buildCode } from './transpiler';
 
 export interface Providence {
   dispatchCodeUpdates: ({
@@ -321,19 +321,29 @@ export const setupProvidence = ({
     }
   };
 
-  store.dependency = new DependencyManager<BrickId>({
-    transpiler: transpileCode,
-    base,
-    depsContext,
-    importerContext: mdxPath,
-    moduleLoader,
-  });
-  store.dependency.addEventListener('dependencyUpdate', handleDependencyUpdate);
-  store.dependency.addEventListener('moduleUpdate', handleModuleUpdate);
-  store.dependency.addEventListener(
-    'renderParamsUpdate',
-    handleRenderParamsUpdate,
-  );
+  let isAborted = false;
+  (async () => {
+    const transpiler = await getTranspiler();
+    if (isAborted) {
+      return;
+    }
+    store.dependency = new DependencyManager<BrickId>({
+      transpiler,
+      base,
+      depsContext,
+      importerContext: mdxPath,
+      moduleLoader,
+    });
+    store.dependency.addEventListener(
+      'dependencyUpdate',
+      handleDependencyUpdate,
+    );
+    store.dependency.addEventListener('moduleUpdate', handleModuleUpdate);
+    store.dependency.addEventListener(
+      'renderParamsUpdate',
+      handleRenderParamsUpdate,
+    );
+  })();
 
   return {
     dispatchCodeUpdates,
@@ -342,6 +352,7 @@ export const setupProvidence = ({
     pauseCodeUpdates,
     resumeCodeUpdates,
     teardown: () => {
+      isAborted = true;
       store.dependency?.removeEventListener(
         'dependencyUpdate',
         handleDependencyUpdate,

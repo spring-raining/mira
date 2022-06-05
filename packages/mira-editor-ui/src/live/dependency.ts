@@ -1,6 +1,6 @@
 import {
   DependencyManager as DependencyManagerBase,
-  TranspileOptions,
+  MiraTranspilerBase,
 } from '@mirajs/util';
 import { EventTarget, Event } from 'event-target-shim';
 import {
@@ -65,7 +65,7 @@ export class DependencyManager<ID extends string>
     importerContext,
     moduleLoader,
   }: {
-    transpiler: (input: string, options?: TranspileOptions) => Promise<string>;
+    transpiler: MiraTranspilerBase;
     base: string;
     depsContext: string;
     importerContext: string;
@@ -168,7 +168,7 @@ export class DependencyManager<ID extends string>
   }
   private async _effectRenderParams(id: ID) {
     const params = new Map<string, unknown>();
-    this._snippetDefaultFunctionParams[id]?.forEach((p) => {
+    this._snippetData[id]?.defaultFunctionParams?.forEach((p) => {
       if (this._exportVal.has(p)) {
         params.set(p, this._exportVal.get(p));
       }

@@ -8,7 +8,7 @@ import { Plugin } from 'unified';
 import { Literal, Parent } from 'unist';
 import { visit } from 'unist-util-visit';
 import { codeSnippetsCommentMarker, codeSnippetsGlobalName } from '../const';
-import { bundleCode, transpileCode } from '../transpiler';
+import { bundleCode, getTranspiler } from '../transpiler';
 import { MiraNode, MdxJsxElement } from '../types';
 
 type Snippets = {
@@ -43,23 +43,9 @@ const detectLoaderLanguage = (lang: unknown): Loader => {
   }
 };
 
-const transpiler = async (code: string) => {
-  const transformed = await transpileCode({
-    code,
-    bundle: false,
-    sourcemap: false,
-  });
-  const transformedCode = transformed.result?.[0].text;
-  if (transformed.errorObject || typeof transformedCode !== 'string') {
-    // Failed to transform
-    throw transformed.errorObject ?? new Error('Failed to parse code');
-  }
-  return transformedCode;
-};
-
 const calcDependency = async (snippets: Snippets) => {
   const dependency = new DependencyManager({
-    transpiler,
+    transpiler: await getTranspiler(),
     throwsOnTaskFail: true,
   });
   for (const name in snippets) {
@@ -85,8 +71,8 @@ const transpileToExecutableCode = async (
     {} as { [key: string]: string },
   );
   const importDef = Object.keys(snippets).reduce((acc, name) => {
-    const exportDef = dependency._snippetExportDef[name] ?? [];
-    if (exportDef.length === 0) {
+    const exportDef = dependency._snippetData[name]?.exportValues ?? new Set();
+    if (exportDef.size === 0) {
       return acc;
     }
     const path = `#${name}`;
@@ -129,8 +115,10 @@ const transpileToExecutableCode = async (
     .flatMap((name) => {
       const path = `#${name}`;
       const defaultComponent =
-        dependency._snippetHasDefaultExport[name] && getComponentName(name);
-      const exportDef = dependency._snippetExportDef[name] ?? [];
+        dependency._snippetData[name]?.hasDefaultExport &&
+        getComponentName(name);
+      const exportDef =
+        dependency._snippetData[name]?.exportValues ?? new Set();
       if (!defaultComponent && exports.length === 0) {
         return [];
       }
@@ -170,7 +158,7 @@ const setComponentNameForCodeBlock = (
     if (!node.mira) {
       return;
     }
-    if (dependency._snippetHasDefaultExport[node.mira.id]) {
+    if (dependency._snippetData[node.mira.id]?.hasDefaultExport) {
       const componentName = `${codeSnippetsGlobalName}.${getComponentName(
         node.mira.id,
       )}`;
