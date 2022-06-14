@@ -153,30 +153,46 @@ describe('Dependency manager tests', () => {
     await dep.taskPromise;
     expect(onDependencyUpdate).toBeCalledTimes(3);
     expect(onDependencyUpdate.mock.calls.slice(1, 3)).toEqual(
-      expect.arrayContaining([['A'], ['B']]),
+      expect.arrayContaining([
+        [expect.objectContaining({ id: 'A' })],
+        [expect.objectContaining({ id: 'B' })],
+      ]),
     );
 
     await dep.upsertSnippet('C', `export const c = 1;`);
     await dep.taskPromise;
     expect(onDependencyUpdate).toBeCalledTimes(6);
     expect(onDependencyUpdate.mock.calls.slice(3, 6)).toEqual(
-      expect.arrayContaining([['A'], ['B'], ['C']]),
+      expect.arrayContaining([
+        [expect.objectContaining({ id: 'A' })],
+        [expect.objectContaining({ id: 'B' })],
+        [expect.objectContaining({ id: 'C' })],
+      ]),
     );
 
     await dep.deleteSnippet('B');
     await dep.taskPromise;
     expect(onDependencyUpdate).toBeCalledTimes(8);
     expect(onDependencyUpdate.mock.calls.slice(6, 8)).toEqual(
-      expect.arrayContaining([['A'], ['B']]),
+      expect.arrayContaining([
+        [expect.objectContaining({ id: 'A' })],
+        [expect.objectContaining({ id: 'B' })],
+      ]),
     );
   });
 
   it('Handle snippet exports update', async () => {
+    let numToCallSourceBuilder = 0;
+    const snippetSourceBuilder = vi.fn().mockImplementation((id) => {
+      numToCallSourceBuilder++;
+      return `#${id}:${numToCallSourceBuilder}`;
+    });
     const onDependencyUpdate = vi.fn();
     const onSourceRevoke = vi.fn();
     const dep = new DependencyManager({
       transpiler,
       throwsOnTaskFail: true,
+      snippetSourceBuilder,
       onDependencyUpdate,
       onSourceRevoke,
     });
@@ -184,36 +200,44 @@ describe('Dependency manager tests', () => {
     await dep.upsertSnippet('B', `export const b = a;`);
     await dep.taskPromise;
     expect(onDependencyUpdate).toBeCalledTimes(2);
-    await dep.updateSnippetExports('A', 'foo', new Map([['a', 1]]));
+    await dep.updateSnippetExports('A', new Map([['a', 1]]));
     await dep.taskPromise;
-    expect(dep._snippetSource).toMatchObject({ A: 'foo' });
-    expect(dep._exportVal).toMatchObject(new Map([['a', 1]]));
+    expect(dep._snippetSource).toEqual({ A: '#A:1', B: '#B:2' });
+    expect(dep._exportVal).toEqual(new Map([['a', 1]]));
     expect(onDependencyUpdate).toBeCalledTimes(3);
-    expect(onDependencyUpdate).lastCalledWith('B');
+    expect(onDependencyUpdate).lastCalledWith(
+      expect.objectContaining({ id: 'B' }),
+    );
+    expect(snippetSourceBuilder).lastCalledWith(
+      'B',
+      `import { a } from "#A:1";\nexport const b = a;\n`,
+    );
 
-    await dep.updateSnippetExports('A', 'bar', new Map([['a', 2]]));
+    await dep.updateSnippetExports('A', new Map([['a', 2]]));
     await dep.taskPromise;
-    expect(dep._snippetSource).toMatchObject({ A: 'bar' });
-    expect(dep._exportVal).toMatchObject(new Map([['a', 2]]));
+    expect(dep._exportVal).toEqual(new Map([['a', 2]]));
     expect(onDependencyUpdate).toBeCalledTimes(4);
-    expect(onDependencyUpdate).lastCalledWith('B');
-    expect(onSourceRevoke).lastCalledWith('foo');
+    expect(onDependencyUpdate).lastCalledWith(
+      expect.objectContaining({ id: 'B' }),
+    );
 
     await dep.upsertSnippet('A', `export const c = 1;`);
     await dep.taskPromise;
-    expect(dep._exportVal).toMatchObject(new Map());
+    expect(dep._snippetSource).toEqual({ A: '#A:3', B: '#B:4' });
+    expect(dep._exportVal).toEqual(new Map());
     expect(onDependencyUpdate).toBeCalledTimes(6);
+    expect(onSourceRevoke).lastCalledWith({ id: 'B', source: '#B:2' });
+    expect(snippetSourceBuilder).lastCalledWith('B', `export const b = a;\n`);
 
-    await dep.updateSnippetExports('A', 'baz', new Map([['c', 1]]));
+    await dep.updateSnippetExports('A', new Map([['c', 1]]));
     await dep.taskPromise;
     expect(onDependencyUpdate).toBeCalledTimes(6);
-    expect(dep._exportVal).toMatchObject(new Map([['c', 1]]));
-    expect(onSourceRevoke).lastCalledWith('bar');
+    expect(dep._exportVal).toEqual(new Map([['c', 1]]));
 
     await dep.deleteSnippet('A');
     await dep.taskPromise;
-    expect(dep._snippetSource).toMatchObject({});
-    expect(dep._exportVal).toMatchObject(new Map());
-    expect(onSourceRevoke).lastCalledWith('baz');
+    expect(dep._snippetSource).toEqual({ B: '#B:4' });
+    expect(dep._exportVal).toEqual(new Map());
+    expect(onSourceRevoke).lastCalledWith({ id: 'A', source: '#A:3' });
   });
 });

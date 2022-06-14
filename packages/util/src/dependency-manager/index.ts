@@ -8,6 +8,7 @@ import {
 import { ImportDefinition } from '../ecma-import/types';
 import { MiraTranspilerBase } from '../types';
 import { transformCode } from './transpiler';
+import { SnippetData } from './types';
 
 const intersection = <T extends string | number>(
   a: readonly T[],
@@ -27,15 +28,6 @@ const checkImportDeps = (
   );
 };
 
-interface SnippetData {
-  transformedCode: string;
-  importDefs: readonly ImportDefinition[];
-  exportValues: Set<string>;
-  dependentValues: Set<string>;
-  hasDefaultExport: boolean;
-  defaultFunctionParams: readonly string[] | null;
-}
-
 export class DependencyManager<ID extends string = string> {
   _snippetCode = {} as Record<ID, string>;
   _snippetData = {} as Record<ID, SnippetData>;
@@ -46,25 +38,43 @@ export class DependencyManager<ID extends string = string> {
   _definedValues: Set<string> = new Set();
 
   transpiler: MiraTranspilerBase;
-  private _onDependencyUpdate?: (id: ID) => void;
-  private _onRenderParamsUpdate?: (id: ID) => void;
-  private _onSourceRevoke?: (source: string) => void;
+  private _snippetSourceBuilder: (
+    id: ID,
+    snippet: string,
+  ) => string | Promise<string>;
+  private _onDependencyUpdate?: (arg: {
+    id: ID;
+    snippet?: SnippetData;
+    source?: string;
+  }) => void;
+  private _onRenderParamsUpdate?: (arg: { id: ID }) => void;
+  private _onSourceRevoke?: (arg: { id: ID; source: string }) => void;
   throwsOnTaskFail: boolean;
 
   constructor({
     transpiler,
+    snippetSourceBuilder = (id) => `#${id}`,
     onDependencyUpdate,
     onRenderParamsUpdate,
     onSourceRevoke,
     throwsOnTaskFail = false,
   }: {
     transpiler: MiraTranspilerBase;
-    onDependencyUpdate?: (id: ID) => void;
-    onRenderParamsUpdate?: (id: ID) => void;
-    onSourceRevoke?: (source: string) => void;
+    snippetSourceBuilder?: (
+      id: ID,
+      snippet: string,
+    ) => string | Promise<string>;
+    onDependencyUpdate?: (arg: {
+      id: ID;
+      snippet?: SnippetData;
+      source?: string;
+    }) => void;
+    onRenderParamsUpdate?: (arg: { id: ID }) => void;
+    onSourceRevoke?: (arg: { id: ID; source: string }) => void;
     throwsOnTaskFail?: boolean;
   }) {
     this.transpiler = transpiler;
+    this._snippetSourceBuilder = snippetSourceBuilder;
     this._onDependencyUpdate = onDependencyUpdate;
     this._onRenderParamsUpdate = onRenderParamsUpdate;
     this._onSourceRevoke = onSourceRevoke;
@@ -122,7 +132,11 @@ export class DependencyManager<ID extends string = string> {
     return this.serialTask(
       `dispatchDependencyUpdate:${id}`,
       async function dispatchDependencyUpdate(this: DependencyManager<ID>) {
-        this._onDependencyUpdate?.(id);
+        this._onDependencyUpdate?.({
+          id,
+          snippet: this._snippetData[id],
+          source: this._snippetSource[id],
+        });
       }.bind(this),
     );
   }
@@ -131,16 +145,22 @@ export class DependencyManager<ID extends string = string> {
     return this.serialTask(
       `dispatchRenderParamsUpdate:${id}`,
       async function dispatchRenderParamsUpdate(this: DependencyManager<ID>) {
-        this._onRenderParamsUpdate?.(id);
+        this._onRenderParamsUpdate?.({ id });
       }.bind(this),
     );
   }
 
-  dispatchSourceRevoke(source: string): Promise<void> {
+  dispatchSourceRevoke({
+    id,
+    source,
+  }: {
+    id: ID;
+    source: string;
+  }): Promise<void> {
     return this.serialTask(
-      `dispatchSourceRevoke:${source}`,
+      `dispatchSourceRevoke:${id}:${source}`,
       async function dispatchSourceRevoke(this: DependencyManager<ID>) {
-        this._onSourceRevoke?.(source);
+        this._onSourceRevoke?.({ id, source });
       }.bind(this),
     );
   }
@@ -152,7 +172,7 @@ export class DependencyManager<ID extends string = string> {
     delete this._snippetDependencyError[id];
     delete this._snippetCode[id];
     if (disposableSource) {
-      this.dispatchSourceRevoke(disposableSource);
+      this.dispatchSourceRevoke({ id, source: disposableSource });
     }
   }
 
@@ -184,25 +204,16 @@ export class DependencyManager<ID extends string = string> {
     this.dispatchDependencyUpdate(id);
   }
 
-  updateSnippetExports(
-    id: ID,
-    source: string,
-    exportVal: Map<string, unknown>,
-  ): Promise<void> {
+  updateSnippetExports(id: ID, exportVal: Map<string, unknown>): Promise<void> {
     return this.serialTask(
       `snippetExportsChange:${id}`,
       function updateSnippetExports(this: DependencyManager<ID>) {
-        return this._updateSnippetExports(id, source, exportVal);
+        return this._updateSnippetExports(exportVal);
       }.bind(this),
     );
   }
-  private async _updateSnippetExports(
-    id: ID,
-    source: string,
-    exportVal: Map<string, unknown>,
-  ) {
-    const disposableSource = this._snippetSource[id];
-    this._snippetSource[id] = source;
+  private async _updateSnippetExports(exportVal: Map<string, unknown>) {
+    // const disposableSource = this._snippetSource[id];
     const changedVal = [...exportVal.entries()]
       .filter(
         ([k, v]) => !this._exportVal.has(k) || v !== this._exportVal.get(k),
@@ -220,9 +231,9 @@ export class DependencyManager<ID extends string = string> {
         this.dispatchRenderParamsUpdate(id);
       }
     });
-    if (disposableSource) {
-      this.dispatchSourceRevoke(disposableSource);
-    }
+    // if (disposableSource) {
+    //   this.dispatchSourceRevoke(disposableSource);
+    // }
   }
 
   protected async calcDependency() {
@@ -288,6 +299,16 @@ export class DependencyManager<ID extends string = string> {
     });
     this._definedValues = nextDefinedValues;
     this._valDependency = nextValDependency;
+
+    await Promise.all(
+      [...affectedSnippet].map(async (id: ID) => {
+        await this.renewSnippetSource(
+          id,
+          this._snippetData[id]?.transformedCode,
+        );
+      }),
+    );
+
     // Repeat calcDependency until a set of definedValues doesn't change
     if (
       affectedSnippet.size > 0 ||
@@ -309,10 +330,13 @@ export class DependencyManager<ID extends string = string> {
     code: string,
   ): Promise<string> {
     const codePre = Object.entries<SnippetData>(this._snippetData)
-      .filter(([, { exportValues }]) => exportValues.size > 0)
+      .filter(
+        ([id, { exportValues }]) =>
+          exportValues.size > 0 && this._snippetSource[id as ID],
+      )
       .map(([id, { exportValues }]) =>
         stringifyImportDefinition({
-          specifier: `#${id}`,
+          specifier: this._snippetSource[id as ID],
           named: [...exportValues],
         }),
       )
@@ -415,5 +439,17 @@ export class DependencyManager<ID extends string = string> {
       hasDefaultExport,
       defaultFunctionParams,
     };
+  }
+
+  protected async renewSnippetSource(id: ID, source: string | undefined) {
+    const disposableSource = this._snippetSource[id];
+    if (typeof source === 'string') {
+      this._snippetSource[id] = await this._snippetSourceBuilder(id, source);
+    } else {
+      delete this._snippetSource[id];
+    }
+    if (disposableSource) {
+      this.dispatchSourceRevoke({ id, source: disposableSource });
+    }
   }
 }

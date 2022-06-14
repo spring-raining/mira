@@ -1,4 +1,4 @@
-import { ImportDefinition, MiraTranspilerBase } from '@mirajs/util';
+import { ImportDefinition } from '@mirajs/util';
 import { ProvidenceStore } from '../hooks/providence/context';
 import {
   Mira,
@@ -124,7 +124,7 @@ export const setupProvidence = ({
         }
         exportVal.set(k, v);
       }
-      store.dependency?.updateSnippetExports(id, source, exportVal);
+      store.dependency?.updateSnippetExports(id, exportVal);
       return {
         id: miraId,
         environment,

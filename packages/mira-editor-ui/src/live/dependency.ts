@@ -1,3 +1,4 @@
+import { snippets } from '@codemirror/lang-javascript';
 import {
   DependencyManager as DependencyManagerBase,
   MiraTranspilerBase,
@@ -73,13 +74,18 @@ export class DependencyManager<ID extends string>
   }) {
     super({
       transpiler,
-      onDependencyUpdate: (id) => {
+      snippetSourceBuilder: (id, snippet) => {
+        const blob = new Blob([snippet], { type: 'application/javascript' });
+        const source = URL.createObjectURL(blob);
+        return source;
+      },
+      onDependencyUpdate: ({ id }) => {
         this.effectDependency(id);
       },
-      onRenderParamsUpdate: (id) => {
+      onRenderParamsUpdate: ({ id }) => {
         this.effectRenderParams(id);
       },
-      onSourceRevoke: (source) => {
+      onSourceRevoke: ({ source }) => {
         URL.revokeObjectURL(source);
       },
     });

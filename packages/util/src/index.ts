@@ -11,7 +11,7 @@ export { scanDeclarations } from './declaration-parser';
 export * as DeclarationParser from './declaration-parser/types';
 
 export { DependencyManager } from './dependency-manager';
-export type { TranspileOptions } from './dependency-manager/types';
+export type { SnippetData } from './dependency-manager/types';
 
 export type {
   MiraConfig,

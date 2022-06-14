@@ -6,12 +6,15 @@ import {
   ImportDefinition,
 } from '@mirajs/util';
 
-const _transpiler = (async () => {
-  const transpiler = new EsbuildTranspiler();
-  await transpiler.init({ transpilerPlatform: 'browser' });
-  return transpiler;
-})();
-export const getTranspiler = async () => await _transpiler;
+const _transpiler = new EsbuildTranspiler();
+export const getTranspiler = async () => {
+  if (!_transpiler.isInitialized) {
+    await _transpiler.init({
+      transpilerPlatform: 'browser',
+    });
+  }
+  return _transpiler;
+};
 
 export const buildCode = async ({
   code,
@@ -26,12 +29,7 @@ export const buildCode = async ({
   bundle?: boolean;
   sourcemap?: boolean;
 }): Promise<BuildResult | BuildFailure> => {
-  const transpiler = await _transpiler;
-  if (!transpiler.isInitialized) {
-    await transpiler.init({
-      transpilerPlatform: 'browser',
-    });
-  }
+  const transpiler = await getTranspiler();
   const built = await transpiler.build({
     stdin: {
       contents: code,
