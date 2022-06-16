@@ -11,7 +11,12 @@ export { scanDeclarations } from './declaration-parser';
 export * as DeclarationParser from './declaration-parser/types';
 
 export { DependencyManager } from './dependency-manager';
-export type { SnippetData } from './dependency-manager/types';
+export type {
+  SnippetData,
+  DependencyUpdateEventData,
+  RenderParamsUpdateEventData,
+  SourceRevokeEventData,
+} from './dependency-manager/types';
 
 export type {
   MiraConfig,
@@ -24,9 +29,9 @@ export type {
   MessageLocation,
   Message,
   BuildOutputFile,
-  BuildResult,
+  BuildSuccess,
   BuildFailure,
-  TransformResult,
+  TransformSuccess,
   TransformFailure,
   MiraTranspilerBase,
 } from './types';

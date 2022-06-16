@@ -76,7 +76,7 @@ export interface BuildOutputFile {
   text: string;
 }
 
-export interface BuildResult {
+export interface BuildSuccess {
   result: BuildOutputFile[];
   errorObject?: undefined;
   errors: Message[];
@@ -90,7 +90,7 @@ export interface BuildFailure {
   warnings: Message[];
 }
 
-export interface TransformResult {
+export interface TransformSuccess {
   result: {
     code: string;
     map?: string | null;
@@ -114,9 +114,9 @@ export abstract class MiraTranspilerBase<
 > {
   abstract get isInitialized(): boolean;
   abstract init(options: InitOptions): Promise<void>;
-  abstract build(options: BuildOptions): Promise<BuildResult | BuildFailure>;
+  abstract build(options: BuildOptions): Promise<BuildSuccess | BuildFailure>;
   abstract transform(
     input: string,
     options?: TransformOptions,
-  ): Promise<TransformResult | TransformFailure>;
+  ): Promise<TransformSuccess | TransformFailure>;
 }

@@ -149,11 +149,9 @@ export const ProvidenceObserver = ({
 
   useEffect(() => {
     if (evaluatePaused) {
-      providence.current?.pauseCodeUpdates();
-    } else {
-      providence.current?.resumeCodeUpdates();
+      return providence.current?.pauseCodeUpdates();
     }
-  }, [providence, evaluatePaused]);
+  }, [evaluatePaused]);
 
   return null;
 };

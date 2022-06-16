@@ -1,7 +1,8 @@
-import { snippets } from '@codemirror/lang-javascript';
+import { EsbuildTranspiler } from '@mirajs/transpiler-esbuild/browser';
 import {
   DependencyManager as DependencyManagerBase,
-  MiraTranspilerBase,
+  DependencyUpdateEventData,
+  RenderParamsUpdateEventData,
 } from '@mirajs/util';
 import { EventTarget, Event } from 'event-target-shim';
 import {
@@ -60,30 +61,41 @@ export class DependencyManager<ID extends string>
   private _eventTarget = new EventTarget();
 
   constructor({
-    transpiler,
     base,
     depsContext,
     importerContext,
     moduleLoader,
   }: {
-    transpiler: MiraTranspilerBase;
     base: string;
     depsContext: string;
     importerContext: string;
     moduleLoader: (specifier: string) => Promise<unknown>;
   }) {
     super({
-      transpiler,
+      transpiler: new EsbuildTranspiler(),
       snippetSourceBuilder: (id, snippet) => {
         const blob = new Blob([snippet], { type: 'application/javascript' });
         const source = URL.createObjectURL(blob);
         return source;
       },
-      onDependencyUpdate: ({ id }) => {
-        this.effectDependency(id);
+      transpilerInitOption: {
+        transpilerPlatform: 'browser',
       },
-      onRenderParamsUpdate: ({ id }) => {
-        this.effectRenderParams(id);
+      transpilerTransformOption: {
+        // loader should be tsx even if the code is JavaScript to strip unused imports
+        loader: 'tsx',
+        sourcefile: '[Mira]',
+        treeShaking: true,
+        target: 'es2020',
+        logLevel: 'silent',
+        jsxFactory: '$jsxFactory',
+        jsxFragment: '$jsxFragmentFactory',
+      },
+      onDependencyUpdate: (event) => {
+        this.effectDependency(event);
+      },
+      onRenderParamsUpdate: (event) => {
+        this.effectRenderParams(event);
       },
       onSourceRevoke: ({ source }) => {
         URL.revokeObjectURL(source);
@@ -119,60 +131,15 @@ export class DependencyManager<ID extends string>
     return this._eventTarget.dispatchEvent(event);
   }
 
-  effectDependency(id: ID): Promise<void> {
-    return this.serialTask(
-      `dependencyUpdate:${id}`,
-      function effectDependency(this: DependencyManager<ID>) {
-        return this._effectDependency(id);
-      }.bind(this),
-    );
-  }
-  private async _effectDependency(id: ID) {
-    // const resolvedValues = Object.entries(
-    //   [...this.miraExportVal.keys()].reduce((acc, key) => {
-    //     const source = this.miraExportSource.get(key);
-    //     if (!source) {
-    //       return acc;
-    //     }
-    //     if (source in acc) {
-    //       acc[source].push(key);
-    //     } else {
-    //       acc[source] = [key];
-    //     }
-    //     return acc;
-    //   }, {} as Record<string, string[]>),
-    // );
-    // const importDefinitions = (
-    //   Object.entries(this.miraBrickModuleImportDef) as [
-    //     ID,
-    //     ModuleImportDefinition,
-    //   ][]
-    // ).flatMap(([id, def]) =>
-    //   this.miraBrickModuleImportError[id] ? [] : def.importDefinition,
-    // );
+  async effectDependency(data: DependencyUpdateEventData<ID>) {
     const event: DependencyUpdateEvent<ID> = new CustomEvent(
       'dependencyUpdate',
-      {
-        detail: {
-          id,
-          resolvedValues: [],
-          importDefinitions: [],
-          dependencyError: this._snippetDependencyError[id],
-        },
-      },
+      { detail: data },
     );
     this.dispatchEvent(event);
   }
 
-  effectRenderParams(id: ID): Promise<void> {
-    return this.serialTask(
-      `renderParamsUpdate:${id}`,
-      function effectRenderParams(this: DependencyManager<ID>) {
-        return this._effectRenderParams(id);
-      }.bind(this),
-    );
-  }
-  private async _effectRenderParams(id: ID) {
+  async effectRenderParams({ id }: RenderParamsUpdateEventData<ID>) {
     const params = new Map<string, unknown>();
     this._snippetData[id]?.defaultFunctionParams?.forEach((p) => {
       if (this._exportVal.has(p)) {

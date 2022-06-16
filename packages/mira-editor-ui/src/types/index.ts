@@ -2,6 +2,7 @@ import {
   RuntimeEnvironment as CoreRuntimeEnvironment,
   Message,
   ImportDefinition,
+  DependencyUpdateEventData,
 } from '@mirajs/util';
 import { Update } from 'vite';
 
@@ -74,7 +75,7 @@ export interface EvaluatedResult {
   id: MiraId;
   environment: RuntimeEnvironment;
   hasDefaultExport: boolean;
-  code?: string;
+  // code?: string;
   source?: string;
   error?: Error;
   errorMarkers?: Message[];
@@ -103,12 +104,8 @@ export type ModuleImportInfo<ID extends string> = {
   importError: Record<ID, Error>;
 };
 
-export type DependencyUpdateInfo<ID extends string> = {
-  id: ID;
-  resolvedValues: readonly [string, string[]][];
-  importDefinitions: readonly ImportDefinition[];
-  dependencyError: Error | undefined;
-};
+export type DependencyUpdateInfo<ID extends string> =
+  DependencyUpdateEventData<ID>;
 
 export type RenderParamsUpdateInfo<ID extends string> = {
   id: ID;

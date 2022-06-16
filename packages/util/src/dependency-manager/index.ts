@@ -6,9 +6,19 @@ import {
   stringifyImportDefinition,
 } from '../ecma-import';
 import { ImportDefinition } from '../ecma-import/types';
-import { MiraTranspilerBase } from '../types';
-import { transformCode } from './transpiler';
-import { SnippetData } from './types';
+import {
+  Message,
+  MiraTranspilerBase,
+  TransformFailure,
+  TransformSuccess,
+} from '../types';
+import { defaultInitOption, defaultTransformOption } from './transpiler';
+import {
+  DependencyUpdateEventData,
+  RenderParamsUpdateEventData,
+  SnippetData,
+  SourceRevokeEventData,
+} from './types';
 
 const intersection = <T extends string | number>(
   a: readonly T[],
@@ -28,53 +38,91 @@ const checkImportDeps = (
   );
 };
 
-export class DependencyManager<ID extends string = string> {
+export class DependencyManager<
+  ID extends string = string,
+  InitOptions extends Record<string, unknown> = Record<string, unknown>,
+  BuildOptions extends Record<string, unknown> = Record<string, unknown>,
+  TransformOptions extends Record<string, unknown> = Record<string, unknown>,
+  Transpiler extends MiraTranspilerBase<
+    InitOptions,
+    BuildOptions,
+    TransformOptions
+  > = MiraTranspilerBase<InitOptions, BuildOptions, TransformOptions>,
+> {
   _snippetCode = {} as Record<ID, string>;
   _snippetData = {} as Record<ID, SnippetData>;
   _snippetSource = {} as Record<ID, string>;
-  _snippetDependencyError = {} as Record<ID, Error>;
+  _snippetTransformResult = {} as Record<
+    ID,
+    TransformSuccess | TransformFailure
+  >;
   _exportVal: Map<string, unknown> = new Map();
   _valDependency: Record<string, Set<string>> = {};
   _definedValues: Set<string> = new Set();
 
-  transpiler: MiraTranspilerBase;
+  private _transpiler: Transpiler;
   private _snippetSourceBuilder: (
     id: ID,
     snippet: string,
   ) => string | Promise<string>;
-  private _onDependencyUpdate?: (arg: {
-    id: ID;
-    snippet?: SnippetData;
-    source?: string;
-  }) => void;
-  private _onRenderParamsUpdate?: (arg: { id: ID }) => void;
-  private _onSourceRevoke?: (arg: { id: ID; source: string }) => void;
+  private _getTranspilerInitOption: () => InitOptions | Promise<InitOptions>;
+  private _getTranspilerBuildOption: (
+    input: string,
+  ) => BuildOptions | Promise<BuildOptions>;
+  private _getTranspilerTransformOption: (
+    input: string,
+  ) => TransformOptions | Promise<TransformOptions>;
+  private _onDependencyUpdate?: (event: DependencyUpdateEventData<ID>) => void;
+  private _onRenderParamsUpdate?: (
+    event: RenderParamsUpdateEventData<ID>,
+  ) => void;
+  private _onSourceRevoke?: (arg: SourceRevokeEventData<ID>) => void;
   throwsOnTaskFail: boolean;
 
   constructor({
     transpiler,
     snippetSourceBuilder = (id) => `#${id}`,
+    transpilerInitOption = defaultInitOption as unknown as InitOptions,
+    transpilerBuildOption = {} as BuildOptions,
+    transpilerTransformOption = defaultTransformOption as unknown as TransformOptions,
     onDependencyUpdate,
     onRenderParamsUpdate,
     onSourceRevoke,
     throwsOnTaskFail = false,
   }: {
-    transpiler: MiraTranspilerBase;
+    transpiler: Transpiler;
     snippetSourceBuilder?: (
       id: ID,
       snippet: string,
     ) => string | Promise<string>;
-    onDependencyUpdate?: (arg: {
-      id: ID;
-      snippet?: SnippetData;
-      source?: string;
-    }) => void;
-    onRenderParamsUpdate?: (arg: { id: ID }) => void;
-    onSourceRevoke?: (arg: { id: ID; source: string }) => void;
+    transpilerInitOption?:
+      | InitOptions
+      | (() => InitOptions | Promise<InitOptions>);
+    transpilerBuildOption?:
+      | BuildOptions
+      | ((input: string) => BuildOptions | Promise<BuildOptions>);
+    transpilerTransformOption?:
+      | TransformOptions
+      | ((input: string) => TransformOptions | Promise<TransformOptions>);
+    onDependencyUpdate?: (event: DependencyUpdateEventData<ID>) => void;
+    onRenderParamsUpdate?: (event: RenderParamsUpdateEventData<ID>) => void;
+    onSourceRevoke?: (arg: SourceRevokeEventData<ID>) => void;
     throwsOnTaskFail?: boolean;
   }) {
-    this.transpiler = transpiler;
+    this._transpiler = transpiler;
     this._snippetSourceBuilder = snippetSourceBuilder;
+    this._getTranspilerInitOption = () =>
+      typeof transpilerInitOption === 'function'
+        ? transpilerInitOption()
+        : transpilerInitOption;
+    this._getTranspilerBuildOption = (input: string) =>
+      typeof transpilerBuildOption === 'function'
+        ? transpilerBuildOption(input)
+        : transpilerBuildOption;
+    this._getTranspilerTransformOption = (input: string) =>
+      typeof transpilerTransformOption === 'function'
+        ? transpilerTransformOption(input)
+        : transpilerTransformOption;
     this._onDependencyUpdate = onDependencyUpdate;
     this._onRenderParamsUpdate = onRenderParamsUpdate;
     this._onSourceRevoke = onSourceRevoke;
@@ -134,6 +182,7 @@ export class DependencyManager<ID extends string = string> {
       async function dispatchDependencyUpdate(this: DependencyManager<ID>) {
         this._onDependencyUpdate?.({
           id,
+          transform: this._snippetTransformResult[id],
           snippet: this._snippetData[id],
           source: this._snippetSource[id],
         });
@@ -169,7 +218,7 @@ export class DependencyManager<ID extends string = string> {
     const disposableSource = this._snippetSource[id];
     delete this._snippetData[id];
     delete this._snippetSource[id];
-    delete this._snippetDependencyError[id];
+    delete this._snippetTransformResult[id];
     delete this._snippetCode[id];
     if (disposableSource) {
       this.dispatchSourceRevoke({ id, source: disposableSource });
@@ -213,7 +262,6 @@ export class DependencyManager<ID extends string = string> {
     );
   }
   private async _updateSnippetExports(exportVal: Map<string, unknown>) {
-    // const disposableSource = this._snippetSource[id];
     const changedVal = [...exportVal.entries()]
       .filter(
         ([k, v]) => !this._exportVal.has(k) || v !== this._exportVal.get(k),
@@ -231,9 +279,6 @@ export class DependencyManager<ID extends string = string> {
         this.dispatchRenderParamsUpdate(id);
       }
     });
-    // if (disposableSource) {
-    //   this.dispatchSourceRevoke(disposableSource);
-    // }
   }
 
   protected async calcDependency() {
@@ -250,19 +295,28 @@ export class DependencyManager<ID extends string = string> {
       Object.entries<string>(this._snippetCode).map(async ([_id, code]) => {
         const id = _id as ID;
         try {
-          const inspectResult = await this.inspectSnippet(id, code);
+          const transformed = await this.transformWithDependencyContext(code);
+          const inspectResult = await this.inspectSnippet(
+            id,
+            transformed.result.code,
+          );
           if (
             inspectResult.transformedCode !==
             this._snippetData[id]?.transformedCode
           ) {
             affectedSnippet.add(id);
           }
+          this._snippetTransformResult[id] = transformed;
           this._snippetData[id] = inspectResult;
-          delete this._snippetDependencyError[id];
           return inspectResult;
-        } catch (error) {
-          this._snippetDependencyError[id] =
-            error instanceof Error ? error : new Error();
+        } catch (error: any) {
+          const errors: Message[] = 'errors' in error ? error.errors : [];
+          const warnings: Message[] = 'warnings' in error ? error.warnings : [];
+          this._snippetTransformResult[id] = {
+            errorObject: error,
+            errors,
+            warnings,
+          };
           if (this._snippetData[id]) {
             delete this._snippetData[id];
             affectedSnippet.add(id);
@@ -274,7 +328,7 @@ export class DependencyManager<ID extends string = string> {
     const firstError = settled
       .map((v) => v.status === 'rejected' && v.reason)
       .find((v) => !!v);
-    if (firstError) {
+    if (firstError && this.throwsOnTaskFail) {
       throw firstError;
     }
 
@@ -328,7 +382,8 @@ export class DependencyManager<ID extends string = string> {
 
   protected async transformWithDependencyContext(
     code: string,
-  ): Promise<string> {
+  ): Promise<TransformSuccess> {
+    const transpiler = await this.getInitializedTranspiler();
     const codePre = Object.entries<SnippetData>(this._snippetData)
       .filter(
         ([id, { exportValues }]) =>
@@ -339,13 +394,23 @@ export class DependencyManager<ID extends string = string> {
           specifier: this._snippetSource[id as ID],
           named: [...exportValues],
         }),
-      )
-      .join('\n');
-    const transformedCode = await transformCode({
-      transpiler: this.transpiler,
-      code: `${codePre}\n${code}`,
-    });
-    return transformedCode;
+      );
+    const option = await this._getTranspilerTransformOption(code);
+
+    let transformed = await transpiler.transform(code, option);
+    // Transform again and three-shaking import definitions
+    if (!transformed.errorObject && codePre.length > 0) {
+      transformed = await transpiler.transform(
+        `${codePre.join('\n')}\n${code}`,
+        option,
+      );
+    }
+    if (transformed.errorObject) {
+      (transformed.errorObject as any).errors = transformed.errors;
+      (transformed.errorObject as any).warnings = transformed.warnings;
+      throw transformed.errorObject;
+    }
+    return transformed;
   }
 
   protected async inspectSnippet(id: ID, code: string): Promise<SnippetData> {
@@ -374,13 +439,12 @@ export class DependencyManager<ID extends string = string> {
     };
 
     const prevExports = this._snippetData[id]?.exportValues ?? new Set();
-    const transformedCode = await this.transformWithDependencyContext(code);
     const [declaration, [imports, exports]] = await Promise.all([
-      scanDeclarations(transformedCode),
-      scanModuleSpecifier(transformedCode),
+      scanDeclarations(code),
+      scanModuleSpecifier(code),
     ] as const);
     const importDefs = imports.flatMap(
-      (imp) => parseImportStatement(transformedCode, imp) ?? [],
+      (imp) => parseImportStatement(code, imp) ?? [],
     );
     const namedImportVal = importDefs.flatMap((def) => def.named);
     const namedExportVal = exports.filter((val) => val !== 'default');
@@ -432,7 +496,7 @@ export class DependencyManager<ID extends string = string> {
     }
 
     return {
-      transformedCode,
+      transformedCode: code,
       importDefs,
       exportValues: new Set(namedExportVal),
       dependentValues,
@@ -451,5 +515,12 @@ export class DependencyManager<ID extends string = string> {
     if (disposableSource) {
       this.dispatchSourceRevoke({ id, source: disposableSource });
     }
+  }
+
+  protected async getInitializedTranspiler(): Promise<Transpiler> {
+    if (!this._transpiler.isInitialized) {
+      await this._transpiler.init(await this._getTranspilerInitOption());
+    }
+    return this._transpiler;
   }
 }
