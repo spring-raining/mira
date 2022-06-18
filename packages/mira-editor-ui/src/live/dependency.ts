@@ -5,11 +5,9 @@ import {
   RenderParamsUpdateEventData,
 } from '@mirajs/util';
 import { EventTarget, Event } from 'event-target-shim';
-import { RenderParamsUpdateInfo, RefreshModuleEvent } from '../types';
+import { RenderParamsUpdateInfo } from '../types';
 import { ModuleUpdateEventData } from './../../../util/src/dependency-manager/types';
 import { resolveImportSpecifier } from './../mdx/imports';
-
-// const stripUrlParam = (url: string): string => url.split('?', 1)[0];
 
 class CustomEvent<T extends string = string, S = unknown> extends Event<T> {
   public detail: S;
@@ -74,7 +72,7 @@ export class DependencyManager<ID extends string>
         const source = URL.createObjectURL(blob);
         return source;
       },
-      moduleImportSpecifierBuilder: (id, specifier) =>
+      moduleImportSpecifierBuilder: (specifier) =>
         resolveImportSpecifier({
           specifier,
           base,
@@ -169,97 +167,5 @@ export class DependencyManager<ID extends string>
       },
     );
     this.dispatchEvent(event);
-  }
-
-  refreshModule({
-    url: refreshedModuleUrl,
-    module,
-    viteUpdate,
-  }: RefreshModuleEvent) {
-    // TODO
-    // this.deferUpdateEvent(async () => {
-    //   const url = stripUrlParam(refreshedModuleUrl);
-    //   const nextSpecifier = (() => {
-    //     const { origin, pathname, search, hash } = new URL(refreshedModuleUrl);
-    //     let s = search;
-    //     const newTimestampQuery = `t=${viteUpdate.timestamp}`;
-    //     const timestampQueryMatch = s.match(/(t=\d+)/);
-    //     if (timestampQueryMatch) {
-    //       const { index, 1: str } = timestampQueryMatch;
-    //       s =
-    //         s.slice(0, index ?? 0) +
-    //         newTimestampQuery +
-    //         s.slice((index ?? 0) + str.length);
-    //     } else {
-    //       s += (s ? '&' : '?') + newTimestampQuery;
-    //     }
-    //     return `${origin}${pathname}${s}${hash}`;
-    //   })();
-    //   const affectedModuleImportDef = (
-    //     Object.entries(this.miraBrickModuleImportDef) as [
-    //       ID,
-    //       ModuleImportDefinition,
-    //     ][]
-    //   ).filter(([, { importDefinition }]) =>
-    //     importDefinition.some((s) => stripUrlParam(s.specifier) === url),
-    //   );
-    //   if (affectedModuleImportDef.length === 0) {
-    //     return;
-    //   }
-    //   this.moduleProperties[stripUrlParam(nextSpecifier)] = new Set(
-    //     Object.keys((module ?? {}) as Record<string, unknown>),
-    //   );
-    //   let nextImportMapping = { ...this.moduleImportMapping };
-    //   affectedModuleImportDef.forEach(
-    //     ([id, { mappedName, importDefinition }]) => {
-    //       let mapping: ReturnType<typeof mapModuleValues> = {};
-    //       mappedName.forEach((name) => {
-    //         delete nextImportMapping[name];
-    //       });
-    //       const nextImportDefinition = importDefinition.map((definition) =>
-    //         stripUrlParam(definition.specifier) === url
-    //           ? { ...definition, specifier: nextSpecifier }
-    //           : definition,
-    //       );
-    //       try {
-    //         mapping = nextImportDefinition.reduce(
-    //           (acc, definition) => ({
-    //             ...acc,
-    //             ...mapModuleValues({
-    //               moduleProperties:
-    //                 this.moduleProperties[stripUrlParam(definition.specifier)],
-    //               definition,
-    //             }),
-    //           }),
-    //           mapping,
-    //         );
-    //         delete this.miraBrickModuleImportError[id];
-    //       } catch (error) {
-    //         if (error instanceof Error) {
-    //           this.miraBrickModuleImportError[id] = error;
-    //         }
-    //       }
-    //       nextImportMapping = Object.keys(mapping).reduce(
-    //         (acc, k) => ({
-    //           ...acc,
-    //           [k]: {
-    //             ...mapping[k],
-    //             url: stripUrlParam(mapping[k].specifier),
-    //           },
-    //         }),
-    //         nextImportMapping,
-    //       );
-    //       this.miraBrickModuleImportDef[id] = {
-    //         mappedName: Object.keys(mapping),
-    //         importDefinition: nextImportDefinition,
-    //       };
-    //     },
-    //   );
-    //   this.moduleImportMapping = nextImportMapping;
-    //   this.effectModuleUpdate();
-    //   (Object.keys(this.miraBrickSnippetSource) as ID[]).forEach((id) => {
-    //     this.effectDependency(id);
-    //   });
-    // });
   }
 }

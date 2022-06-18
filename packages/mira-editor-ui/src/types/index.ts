@@ -2,7 +2,6 @@ import {
   RuntimeEnvironment as CoreRuntimeEnvironment,
   Message,
   ImportDefinition,
-  DependencyUpdateEventData,
 } from '@mirajs/util';
 import { Update } from 'vite';
 
@@ -97,15 +96,6 @@ export type ModuleImportMapping = {
   url: string;
   name: string | null;
 };
-
-// export type ModuleImportInfo<ID extends string> = {
-//   importMapping: Record<string, ModuleImportMapping>;
-//   importDef: Record<ID, ModuleImportDefinition>;
-//   importError: Record<ID, Error>;
-// };
-
-export type DependencyUpdateInfo<ID extends string> =
-  DependencyUpdateEventData<ID>;
 
 export type RenderParamsUpdateInfo<ID extends string> = {
   id: ID;

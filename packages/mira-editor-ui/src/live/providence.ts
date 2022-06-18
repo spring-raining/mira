@@ -18,7 +18,6 @@ import {
   RenderParamsUpdateEvent,
 } from './dependency';
 import { setupRuntime } from './runtime';
-// import { transpiler } from './transpiler';
 
 export interface Providence {
   dispatchCodeUpdates: ({
@@ -241,7 +240,30 @@ export const setupProvidence = ({
   };
 
   const refreshModule = async (event: RefreshModuleEvent) => {
-    dependency.refreshModule(event);
+    const { timestamp } = event.viteUpdate;
+    dependency.reloadModule((importMapping) => {
+      for (const [specifier, url] of importMapping) {
+        try {
+          const { origin, pathname, search, hash } = new URL(url);
+          let s = search;
+          const newTimestampQuery = `t=${timestamp}`;
+          const timestampQueryMatch = s.match(/(t=\d+)/);
+          if (timestampQueryMatch) {
+            const { index, 1: str } = timestampQueryMatch;
+            s =
+              s.slice(0, index ?? 0) +
+              newTimestampQuery +
+              s.slice((index ?? 0) + str.length);
+          } else {
+            s += (s ? '&' : '?') + newTimestampQuery;
+          }
+          importMapping.set(specifier, `${origin}${pathname}${s}${hash}`);
+        } catch {
+          continue;
+        }
+      }
+      return importMapping;
+    });
   };
 
   const pauseCodeUpdates = () => {

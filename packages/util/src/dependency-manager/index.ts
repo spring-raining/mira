@@ -66,6 +66,7 @@ export class DependencyManager<
   _definedValues: Set<string> = new Set();
   _transformedCache: Map<number, TransformSuccess | TransformFailure> =
     new Map();
+  _importSpecifierMapping: Map<string, string> = new Map();
 
   private _transpiler: Transpiler;
   private _snippetSourceBuilder: (
@@ -73,7 +74,6 @@ export class DependencyManager<
     snippet: string,
   ) => string | Promise<string>;
   private _moduleImportSpecifierBuilder: (
-    id: ID,
     originalSpecifier: string,
   ) => string | Promise<string>;
   private _getTranspilerInitOption: () => InitOptions | Promise<InitOptions>;
@@ -110,7 +110,7 @@ export class DependencyManager<
   constructor({
     transpiler,
     snippetSourceBuilder = (id) => `#${id}`,
-    moduleImportSpecifierBuilder = (_, specifier) => specifier,
+    moduleImportSpecifierBuilder = (specifier) => specifier,
     transpilerInitOption = defaultInitOption as unknown as InitOptions,
     transpilerBuildOption = {} as BuildOptions,
     transpilerTransformOption = defaultTransformOption as unknown as TransformOptions,
@@ -126,7 +126,6 @@ export class DependencyManager<
       snippet: string,
     ) => string | Promise<string>;
     moduleImportSpecifierBuilder?: (
-      id: ID,
       originalSpecifier: string,
     ) => string | Promise<string>;
     transpilerInitOption?:
@@ -358,15 +357,6 @@ export class DependencyManager<
       } else {
         importDefs = code;
       }
-      importDefs = await Promise.all(
-        importDefs.map(async (def) => ({
-          ...def,
-          specifier: await this._moduleImportSpecifierBuilder(
-            id,
-            def.specifier,
-          ),
-        })),
-      );
       const exportValues = new Set(
         importDefs.flatMap((def) => [
           ...Object.values(def.importBinding),
@@ -400,6 +390,25 @@ export class DependencyManager<
     this.dispatchModuleUpdate(id);
   }
 
+  reloadModule(
+    moduleMapFn: (mapping: Map<string, string>) => Map<string, string>,
+  ): Promise<void> {
+    return this.serialTask(
+      `reloadModule`,
+      function reloadModule(this: DependencyManager<ID>) {
+        return this._reloadModule(moduleMapFn);
+      }.bind(this),
+    );
+  }
+  private async _reloadModule(
+    moduleMapFn: (mapping: Map<string, string>) => Map<string, string>,
+  ) {
+    this._importSpecifierMapping = moduleMapFn(
+      new Map(this._importSpecifierMapping),
+    );
+    await this._calcDependency();
+  }
+
   protected async calcDependency() {
     return this.serialTask(
       `calcDependency`,
@@ -408,9 +417,11 @@ export class DependencyManager<
       }.bind(this),
     );
   }
-  private async _calcDependency(firstCall = true): Promise<Set<ID>> {
+  private async _calcDependency({
+    firstCall = true,
+  }: { firstCall?: boolean } = {}): Promise<Set<ID>> {
     let affectedSnippet = new Set<ID>();
-    const codePre = this.getDependencyImportCode();
+    const codePre = await this.getDependencyImportCode();
     const settled = await Promise.allSettled(
       Object.entries<string>(this._snippetCode).map(async ([_id, code]) => {
         const id = _id as ID;
@@ -495,7 +506,7 @@ export class DependencyManager<
     ) {
       affectedSnippet = new Set([
         ...affectedSnippet,
-        ...(await this._calcDependency(false)),
+        ...(await this._calcDependency({ firstCall: false })),
       ]);
     }
     if (firstCall) {
@@ -504,11 +515,21 @@ export class DependencyManager<
     return affectedSnippet;
   }
 
-  protected getDependencyImportCode(): string | null {
-    const moduleImports = Object.values<ModuleImportData>(
+  protected async getDependencyImportCode(): Promise<string | null> {
+    const moduleImportDefs = Object.values<ModuleImportData>(
       this._moduleImportData,
-    ).flatMap(({ importDefs }) =>
-      importDefs.map((v) => stringifyImportDefinition(v)),
+    ).flatMap(({ importDefs }) => importDefs);
+    const moduleImports = await Promise.all(
+      moduleImportDefs.map(async (def) => {
+        const mappedSpecifier =
+          this._importSpecifierMapping.get(def.specifier) ??
+          (await this._moduleImportSpecifierBuilder(def.specifier));
+        this._importSpecifierMapping.set(def.specifier, mappedSpecifier);
+        return stringifyImportDefinition({
+          ...def,
+          specifier: mappedSpecifier,
+        });
+      }),
     );
     const snippetImports = Object.entries<SnippetData>(this._snippetData)
       .filter(
