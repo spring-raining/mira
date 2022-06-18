@@ -313,13 +313,13 @@ importers:
     specifiers:
       '@types/murmurhash-js': ^1.0.3
       '@types/strip-comments': ^2.0.0
-      es-module-lexer: 0.4.1
+      es-module-lexer: 0.10.5
       esbuild: 0.14.38
       murmurhash-js: ^1.0.0
       strip-comments: 2.0.1
       vitest: 0.13.1
     dependencies:
-      es-module-lexer: 0.4.1
+      es-module-lexer: 0.10.5
       strip-comments: 2.0.1
     devDependencies:
       '@types/murmurhash-js': 1.0.3
@@ -4388,8 +4388,8 @@ packages:
       string.prototype.trimstart: 1.0.5
       unbox-primitive: 1.0.2
 
-  /es-module-lexer/0.4.1:
-    resolution: {integrity: sha512-ooYciCUtfw6/d2w56UVeqHPcoCFAiJdz5XOkYpv/Txl1HMUozpXjz/2RIQgqwKdXNDPSF1W7mJCFse3G+HDyAA==}
+  /es-module-lexer/0.10.5:
+    resolution: {integrity: sha512-+7IwY/kiGAacQfY+YBhKMvEmyAJnw5grTUgjG85Pe7vcUI/6b7pZjZG8nQ7+48YhzEAEqrEgD2dCz/JIK+AYvw==}
     dev: false
 
   /es-module-lexer/0.9.3:

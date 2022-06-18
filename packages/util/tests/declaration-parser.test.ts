@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { scanDeclarations } from '../src/declaration-parser';
+import { parseModuleDeclarations } from '../src/declaration-parser';
 import { Scanner } from '../src/declaration-parser/scanner';
 import { parse } from '../src/vendor/sucrase/parser';
 
@@ -518,7 +518,7 @@ it('Scan export declarations', async () => {
     export default class {}
     export default ({test}) => test;
   `;
-  const { exportDeclarations } = await scanDeclarations(source);
+  const { exportDeclarations } = await parseModuleDeclarations(source);
   expect(exportDeclarations).toMatchObject([
     {
       type: 'ExportNamedDeclaration',
@@ -740,7 +740,7 @@ it('Scan import declarations', async () => {
     import e, * as f from 'bar';
     import 'baz';
   `;
-  const { importDeclarations } = await scanDeclarations(source);
+  const { importDeclarations } = await parseModuleDeclarations(source);
   expect(importDeclarations).toMatchObject([
     {
       type: 'ImportDeclaration',

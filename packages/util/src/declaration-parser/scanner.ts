@@ -37,13 +37,6 @@ const getIdentifier = (name: string | null): Identifier | null =>
 
 export class Scanner {
   private tokens: TokenProcessor;
-  binding = new Map<
-    string,
-    VariableDeclarator | FunctionDeclaration | ClassDeclaration
-  >();
-  topLevelDeclarations: Array<
-    VariableDeclaration | FunctionDeclaration | ClassDeclaration
-  > = [];
   exportDeclarations: Array<
     ExportAllDeclaration | ExportDefaultDeclaration | ExportNamedDeclaration
   > = [];
@@ -73,16 +66,6 @@ export class Scanner {
         }
         if (token.type === tt._import) {
           this.processImportDeclaration();
-        }
-        if (
-          token.type === tt._var ||
-          token.type === tt._let ||
-          token.type === tt._const
-        ) {
-          this.processTopLevelVariableDeclaration();
-        }
-        if (token.identifierRole === IdentifierRole.TopLevelDeclaration) {
-          this.processTopLevelIdentifierDeclaration();
         }
       }
       this.tokens.nextToken();
@@ -238,51 +221,6 @@ export class Scanner {
         specifiers,
       });
     }
-  }
-
-  processTopLevelVariableDeclaration() {
-    const index = this.tokens.currentIndex();
-    const declaration = this.scanDeclaration(index);
-    if (!declaration || declaration.type !== 'VariableDeclaration') {
-      return;
-    }
-    this.topLevelDeclarations.push(declaration);
-    declaration.declarations.forEach((declarator) => {
-      if (declarator.id.type === 'Identifier') {
-        this.binding.set(declarator.id.name, declarator);
-      }
-      declarator.init;
-    });
-  }
-
-  processTopLevelIdentifierDeclaration() {
-    const index = this.tokens.currentIndex();
-    const identifier = this.tokens.identifierName();
-    const rawCodeB3 = index > 2 && this.tokens.identifierNameAtIndex(index - 3);
-    const rawCodeB2 = index > 1 && this.tokens.identifierNameAtIndex(index - 2);
-    const rawCodeB1 = index > 0 && this.tokens.identifierNameAtIndex(index - 1);
-    let declaration: FunctionDeclaration | ClassDeclaration;
-    if (
-      rawCodeB3 === 'async' &&
-      rawCodeB2 === 'function' &&
-      rawCodeB1 === '*'
-    ) {
-      declaration = this.scanFunctionDeclaration(index - 3);
-    } else if (
-      (rawCodeB2 === 'async' && rawCodeB1 === 'function') ||
-      (rawCodeB2 === 'function' && rawCodeB1 === '*')
-    ) {
-      declaration = this.scanFunctionDeclaration(index - 2);
-    } else if (rawCodeB1 === 'function') {
-      declaration = this.scanFunctionDeclaration(index - 1);
-    } else if (rawCodeB1 === 'class') {
-      declaration = this.scanClassDeclaration(index - 1);
-    } else {
-      // already scanned by TopLevelVariableDeclaration
-      return;
-    }
-    this.binding.set(identifier, declaration);
-    this.topLevelDeclarations.push(declaration);
   }
 
   scanClassDeclaration(startIndex: number): ClassDeclaration {

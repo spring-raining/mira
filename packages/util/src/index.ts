@@ -7,7 +7,7 @@ export {
 } from './ecma-import';
 export * from './ecma-import/types';
 
-export { scanDeclarations } from './declaration-parser';
+export { parseModuleDeclarations } from './declaration-parser';
 export * as DeclarationParser from './declaration-parser/types';
 
 export { DependencyManager } from './dependency-manager';

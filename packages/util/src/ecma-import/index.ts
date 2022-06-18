@@ -1,5 +1,7 @@
 import { init as initEsModuleLexer, parse } from 'es-module-lexer';
 import stripComments from 'strip-comments';
+import { parseModuleDeclarations } from '../declaration-parser';
+import { DestructuringPattern } from '../declaration-parser/types';
 import { ImportDefinition, ImportSpecifier } from './types';
 
 // http://www.ecma-international.org/ecma-262/6.0/#sec-imports
@@ -115,10 +117,81 @@ export const parseImportStatement = (
 
 export const scanModuleSpecifier = async (
   source: string,
-): Promise<[readonly ImportSpecifier[], readonly string[]]> => {
+): Promise<[readonly ImportSpecifier[], readonly string[], boolean]> => {
   await initEsModuleLexer;
-  const [imports, exports] = await parse(source);
-  return [imports, exports];
+  const [imports, exports, facade] = await parse(source);
+  return [imports, exports, facade];
+};
+
+export const scanExportDeclaration = async (
+  source: string,
+): Promise<Set<string>> => {
+  const { exportDeclarations } = await parseModuleDeclarations(source);
+
+  const mapToIdentifierName = (pattern: DestructuringPattern): string[] => {
+    if (pattern.type === 'Identifier') {
+      return [pattern.name];
+    }
+    if (pattern.type === 'ArrayPattern') {
+      return pattern.elements
+        .filter((e): e is DestructuringPattern => !!e)
+        .flatMap(mapToIdentifierName);
+    }
+    if (pattern.type === 'ObjectPattern') {
+      return pattern.properties.flatMap((p) => {
+        if (p.type === 'Property') {
+          if (p.key.type === 'Identifier') {
+            return p.key.name;
+          } else if (
+            p.key.type === 'Literal' &&
+            typeof p.key.value === 'string'
+          ) {
+            return p.key.value;
+          } else {
+            // Ignore NumberLiteral
+            return [];
+          }
+        }
+        return mapToIdentifierName(p);
+      });
+    }
+    if (pattern.type === 'AssignmentPattern') {
+      return mapToIdentifierName(pattern.left);
+    }
+    if (pattern.type === 'RestElement') {
+      return mapToIdentifierName(pattern.argument);
+    }
+    return [];
+  };
+  const identifiers = exportDeclarations.flatMap<string>((n) => {
+    if (n.type === 'ExportNamedDeclaration') {
+      let declarationVars: string[] = [];
+      if (
+        n.declaration?.type === 'ClassDeclaration' ||
+        n.declaration?.type === 'ClassExpression' ||
+        n.declaration?.type === 'FunctionDeclaration'
+      ) {
+        if (n.declaration.id?.name) {
+          declarationVars.push(n.declaration.id.name);
+        }
+      }
+      if (n.declaration?.type === 'VariableDeclaration') {
+        n.declaration.declarations;
+        declarationVars = n.declaration.declarations.flatMap((decr) =>
+          mapToIdentifierName(decr.id),
+        );
+      }
+      return [...declarationVars, ...n.specifiers.map((n) => n.exported.name)];
+    }
+    if (n.type === 'ExportAllDeclaration') {
+      return n.exported ? n.exported.name : [];
+    }
+    if (n.type === 'ExportDefaultDeclaration') {
+      return 'default';
+    }
+    return [];
+  });
+  return new Set(identifiers);
 };
 
 export const importModules = async (

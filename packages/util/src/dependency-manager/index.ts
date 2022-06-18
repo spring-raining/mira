@@ -1,8 +1,8 @@
 import murmur from 'murmurhash-js';
-import { scanDeclarations } from '../declaration-parser';
 import { ExportDefaultDeclaration } from '../declaration-parser/types';
 import {
   parseImportStatement,
+  scanExportDeclaration,
   scanModuleSpecifier,
   stringifyImportDefinition,
 } from '../ecma-import';
@@ -595,15 +595,15 @@ export class DependencyManager<
     };
 
     const prevExports = this._snippetData[id]?.exportValues ?? new Set();
-    const [declaration, [imports, exports]] = await Promise.all([
-      scanDeclarations(code),
+    const [[imports], exports] = await Promise.all([
       scanModuleSpecifier(code),
+      scanExportDeclaration(code),
     ] as const);
     const importDefs = imports.flatMap(
       (imp) => parseImportStatement(code, imp) ?? [],
     );
     const moduleExportValues = this._moduleExportValues;
-    const namedExportVal = exports.filter((val) => val !== 'default');
+    const namedExportVal = [...exports].filter((val) => val !== 'default');
 
     const anyAlreadyDefinedValue = namedExportVal.find(
       (val) =>
@@ -625,39 +625,39 @@ export class DependencyManager<
       importDefs.map((def) => def.specifier),
     );
 
-    let defaultFunctionParams: readonly string[] | null = null;
-    let hasDefaultExport = false;
-    const defaultExport = declaration.exportDeclarations.find(
-      (e): e is ExportDefaultDeclaration =>
-        e.type === 'ExportDefaultDeclaration',
-    );
-    if (defaultExport) {
-      hasDefaultExport = true;
-      const { declaration } = defaultExport;
-      if (
-        declaration.type === 'FunctionDeclaration' ||
-        declaration.type === 'FunctionExpression' ||
-        declaration.type === 'ArrowFunctionExpression'
-      ) {
-        const [firstParam] = declaration.params;
-        let defaultParams: string[] = [];
-        if (firstParam) {
-          const properties =
-            firstParam.type === 'ObjectPattern'
-              ? firstParam.properties
-              : firstParam.type === 'AssignmentPattern' &&
-                firstParam.left.type === 'ObjectPattern'
-              ? firstParam.left.properties
-              : [];
-          defaultParams = properties.flatMap((p) =>
-            p.type === 'Property' && p.key.type === 'Identifier'
-              ? [p.key.name]
-              : [],
-          );
-        }
-        defaultFunctionParams = defaultParams;
-      }
-    }
+    const defaultFunctionParams: readonly string[] | null = null;
+    const hasDefaultExport = exports.has('default');
+    // const defaultExport = declaration.exportDeclarations.find(
+    //   (e): e is ExportDefaultDeclaration =>
+    //     e.type === 'ExportDefaultDeclaration',
+    // );
+    // if (defaultExport) {
+    //   hasDefaultExport = true;
+    //   const { declaration } = defaultExport;
+    //   if (
+    //     declaration.type === 'FunctionDeclaration' ||
+    //     declaration.type === 'FunctionExpression' ||
+    //     declaration.type === 'ArrowFunctionExpression'
+    //   ) {
+    //     const [firstParam] = declaration.params;
+    //     let defaultParams: string[] = [];
+    //     if (firstParam) {
+    //       const properties =
+    //         firstParam.type === 'ObjectPattern'
+    //           ? firstParam.properties
+    //           : firstParam.type === 'AssignmentPattern' &&
+    //             firstParam.left.type === 'ObjectPattern'
+    //           ? firstParam.left.properties
+    //           : [];
+    //       defaultParams = properties.flatMap((p) =>
+    //         p.type === 'Property' && p.key.type === 'Identifier'
+    //           ? [p.key.name]
+    //           : [],
+    //       );
+    //     }
+    //     defaultFunctionParams = defaultParams;
+    //   }
+    // }
 
     return {
       transformedCode: code,

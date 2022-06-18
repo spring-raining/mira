@@ -333,12 +333,4 @@ describe('Dependency manager tests', () => {
       exportValues: new Set(['a']),
     });
   });
-
-  it('Fails on import module with invalid syntax', async () => {
-    const dep = new DependencyManager({ transpiler, throwsOnTaskFail: true });
-    await expect(async () => {
-      await dep.upsertModule('M1', `"`);
-    }).rejects.toThrow();
-    expect(dep._moduleImportError.M1).toBeInstanceOf(Error);
-  });
 });
