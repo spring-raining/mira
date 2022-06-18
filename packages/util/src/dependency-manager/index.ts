@@ -17,6 +17,7 @@ import { defaultInitOption, defaultTransformOption } from './transpiler';
 import {
   DependencyUpdateEventData,
   ModuleImportData,
+  ModuleUpdateEventData,
   RenderParamsUpdateEventData,
   SnippetData,
   SourceRevokeEventData,
@@ -59,6 +60,7 @@ export class DependencyManager<
     TransformSuccess | TransformFailure
   >;
   _moduleImportData = {} as Record<ID, ModuleImportData>;
+  _moduleImportError = {} as Record<ID, Error>;
   _exportVal: Map<string, unknown> = new Map();
   _valDependency: Record<string, Set<string>> = {};
   _definedValues: Set<string> = new Set();
@@ -70,6 +72,10 @@ export class DependencyManager<
     id: ID,
     snippet: string,
   ) => string | Promise<string>;
+  private _moduleImportSpecifierBuilder: (
+    id: ID,
+    originalSpecifier: string,
+  ) => string | Promise<string>;
   private _getTranspilerInitOption: () => InitOptions | Promise<InitOptions>;
   private _getTranspilerBuildOption: (
     input: string,
@@ -78,6 +84,7 @@ export class DependencyManager<
     input: string,
   ) => TransformOptions | Promise<TransformOptions>;
   private _onDependencyUpdate?: (event: DependencyUpdateEventData<ID>) => void;
+  private _onModuleUpdate?: (event: ModuleUpdateEventData<ID>) => void;
   private _onRenderParamsUpdate?: (
     event: RenderParamsUpdateEventData<ID>,
   ) => void;
@@ -92,14 +99,10 @@ export class DependencyManager<
     );
   }
 
-  protected get _moduleDefinedValues(): Set<string> {
+  protected get _moduleExportValues(): Set<string> {
     return new Set(
       Object.values<ModuleImportData>(this._moduleImportData).flatMap(
-        ({ importDefs }) =>
-          importDefs.flatMap((def) => [
-            ...Object.values(def.importBinding),
-            ...(def.namespaceImport ? [def.namespaceImport] : []),
-          ]),
+        ({ exportValues }) => [...exportValues],
       ),
     );
   }
@@ -107,10 +110,12 @@ export class DependencyManager<
   constructor({
     transpiler,
     snippetSourceBuilder = (id) => `#${id}`,
+    moduleImportSpecifierBuilder = (_, specifier) => specifier,
     transpilerInitOption = defaultInitOption as unknown as InitOptions,
     transpilerBuildOption = {} as BuildOptions,
     transpilerTransformOption = defaultTransformOption as unknown as TransformOptions,
     onDependencyUpdate,
+    onModuleUpdate,
     onRenderParamsUpdate,
     onSourceRevoke,
     throwsOnTaskFail = false,
@@ -119,6 +124,10 @@ export class DependencyManager<
     snippetSourceBuilder?: (
       id: ID,
       snippet: string,
+    ) => string | Promise<string>;
+    moduleImportSpecifierBuilder?: (
+      id: ID,
+      originalSpecifier: string,
     ) => string | Promise<string>;
     transpilerInitOption?:
       | InitOptions
@@ -130,12 +139,14 @@ export class DependencyManager<
       | TransformOptions
       | ((input: string) => TransformOptions | Promise<TransformOptions>);
     onDependencyUpdate?: (event: DependencyUpdateEventData<ID>) => void;
+    onModuleUpdate?: (event: ModuleUpdateEventData<ID>) => void;
     onRenderParamsUpdate?: (event: RenderParamsUpdateEventData<ID>) => void;
     onSourceRevoke?: (arg: SourceRevokeEventData<ID>) => void;
     throwsOnTaskFail?: boolean;
   }) {
     this._transpiler = transpiler;
     this._snippetSourceBuilder = snippetSourceBuilder;
+    this._moduleImportSpecifierBuilder = moduleImportSpecifierBuilder;
     this._getTranspilerInitOption = () =>
       typeof transpilerInitOption === 'function'
         ? transpilerInitOption()
@@ -149,6 +160,7 @@ export class DependencyManager<
         ? transpilerTransformOption(input)
         : transpilerTransformOption;
     this._onDependencyUpdate = onDependencyUpdate;
+    this._onModuleUpdate = onModuleUpdate;
     this._onRenderParamsUpdate = onRenderParamsUpdate;
     this._onSourceRevoke = onSourceRevoke;
     this.throwsOnTaskFail = throwsOnTaskFail;
@@ -215,6 +227,19 @@ export class DependencyManager<
     );
   }
 
+  async dispatchModuleUpdate(id: ID): Promise<void> {
+    return this.serialTask(
+      `dispatchModuleUpdate:${id}`,
+      async function dispatchModuleUpdate(this: DependencyManager<ID>) {
+        this._onModuleUpdate?.({
+          id,
+          module: this._moduleImportData[id],
+          error: this._moduleImportError[id],
+        });
+      }.bind(this),
+    );
+  }
+
   dispatchRenderParamsUpdate(id: ID): Promise<void> {
     return this.serialTask(
       `dispatchRenderParamsUpdate:${id}`,
@@ -246,6 +271,7 @@ export class DependencyManager<
     delete this._snippetTransformResult[id];
     delete this._snippetCode[id];
     delete this._moduleImportData[id];
+    delete this._moduleImportError[id];
     if (disposableSource) {
       this.dispatchSourceRevoke({ id, source: disposableSource });
     }
@@ -307,7 +333,10 @@ export class DependencyManager<
     });
   }
 
-  upsertModule(id: ID, code: string): Promise<void> {
+  upsertModule(
+    id: ID,
+    code: string | readonly ImportDefinition[],
+  ): Promise<void> {
     return this.serialTask(
       `moduleChange:${id}`,
       function upsertModule(this: DependencyManager<ID>) {
@@ -315,13 +344,46 @@ export class DependencyManager<
       }.bind(this),
     );
   }
-  private async _upsertModule(id: ID, code: string) {
-    const [imports] = await scanModuleSpecifier(code);
-    const importDefs = imports.flatMap(
-      (imp) => parseImportStatement(code, imp) ?? [],
-    );
-    this._moduleImportData[id] = { importDefs };
-    this.dispatchDependencyUpdate(id);
+  private async _upsertModule(
+    id: ID,
+    code: string | readonly ImportDefinition[],
+  ) {
+    try {
+      let importDefs: readonly ImportDefinition[];
+      if (typeof code === 'string') {
+        const [imports] = await scanModuleSpecifier(code);
+        importDefs = imports.flatMap(
+          (imp) => parseImportStatement(code, imp) ?? [],
+        );
+      } else {
+        importDefs = code;
+      }
+      importDefs = await Promise.all(
+        importDefs.map(async (def) => ({
+          ...def,
+          specifier: await this._moduleImportSpecifierBuilder(
+            id,
+            def.specifier,
+          ),
+        })),
+      );
+      const exportValues = new Set(
+        importDefs.flatMap((def) => [
+          ...Object.values(def.importBinding),
+          ...(def.namespaceImport ? [def.namespaceImport] : []),
+        ]),
+      );
+      this._moduleImportData[id] = { importDefs, exportValues };
+    } catch (error) {
+      if (error instanceof Error) {
+        this._moduleImportError[id] = error;
+      }
+      await this._calcDependency();
+      this.dispatchModuleUpdate(id);
+      throw error;
+    }
+    await this._calcDependency();
+    this.dispatchModuleUpdate(id);
   }
 
   deleteModule(id: ID): Promise<void> {
@@ -335,7 +397,7 @@ export class DependencyManager<
   private async _deleteModule(id: ID) {
     this.clear(id);
     await this._calcDependency();
-    this.dispatchDependencyUpdate(id);
+    this.dispatchModuleUpdate(id);
   }
 
   protected async calcDependency() {
@@ -519,13 +581,13 @@ export class DependencyManager<
     const importDefs = imports.flatMap(
       (imp) => parseImportStatement(code, imp) ?? [],
     );
-    const moduleDefinedValues = this._moduleDefinedValues;
+    const moduleExportValues = this._moduleExportValues;
     const namedExportVal = exports.filter((val) => val !== 'default');
 
     const anyAlreadyDefinedValue = namedExportVal.find(
       (val) =>
         (this._definedValues.has(val) && !prevExports.has(val)) ||
-        moduleDefinedValues.has(val),
+        moduleExportValues.has(val),
     );
     if (anyAlreadyDefinedValue) {
       throw new Error(`Value ${anyAlreadyDefinedValue} has already defined`);

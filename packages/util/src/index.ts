@@ -14,6 +14,7 @@ export { DependencyManager } from './dependency-manager';
 export type {
   SnippetData,
   DependencyUpdateEventData,
+  ModuleUpdateEventData,
   RenderParamsUpdateEventData,
   SourceRevokeEventData,
 } from './dependency-manager/types';

@@ -1,3 +1,4 @@
+import { ModuleUpdateEventData } from '@mirajs/util';
 import { useEffect, useRef } from 'react';
 import { useRecoilValue, useRecoilCallback } from 'recoil';
 import { useUniverseContext } from '../context';
@@ -12,7 +13,6 @@ import { codeFragmentsState, scriptFragmentsState } from '../state/code';
 import {
   EvaluateState,
   MiraWuiConfig,
-  ModuleImportInfo,
   RenderParamsUpdateInfo,
   RefreshModuleEvent,
   BrickId,
@@ -53,8 +53,11 @@ export const ProvidenceObserver = ({
 
   const onModuleUpdate = useRecoilCallback(
     ({ set }) =>
-      (module: ModuleImportInfo<BrickId>) => {
-        set(brickModuleImportErrorState, module.importError);
+      ({ id, error }: ModuleUpdateEventData<BrickId>) => {
+        set(brickModuleImportErrorState, (prev) => ({
+          ...prev,
+          [id]: error,
+        }));
       },
     [],
   );

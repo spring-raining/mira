@@ -1,9 +1,4 @@
-import {
-  parseImportStatement,
-  scanModuleSpecifier,
-  ImportDefinition,
-} from '@mirajs/util';
-import { ParsedImportStatement, ASTNode } from '../types';
+import { ImportDefinition } from '@mirajs/util';
 
 const isPathImport = (spec: string): boolean =>
   spec[0] === '.' || spec[0] === '/';
@@ -58,41 +53,6 @@ export const resolveImportSpecifier = ({
     '/-/node_modules',
     specifier,
   )}?import`;
-};
-
-export const collectEsmImports = async ({
-  node,
-  base,
-  depsContext,
-  importerContext,
-}: {
-  node: ASTNode[];
-  base: string;
-  depsContext: string;
-  importerContext: string;
-}): Promise<ParsedImportStatement[]> => {
-  const parseAll = node
-    .filter((node) => node.type === 'mdxjsEsm')
-    .map(async (node) =>
-      (await scanModuleSpecifier(node.value))[0]
-        .map((imp) => {
-          const def = parseImportStatement(node.value, imp);
-          return def && { ...def, statement: node.value.trim() };
-        })
-        .filter((_): _ is ParsedImportStatement => !!_),
-    );
-  const importDefs = await (await Promise.all(parseAll)).flat();
-
-  const rewrited = importDefs.map((def) => ({
-    ...def,
-    specifier: resolveImportSpecifier({
-      specifier: def.specifier,
-      base,
-      depsContext,
-      importerContext,
-    }),
-  }));
-  return rewrited;
 };
 
 export const loadModule = async <T = Record<string, unknown>>({

@@ -279,7 +279,10 @@ describe('Dependency manager tests', () => {
         namespaceImport: null,
       },
     ];
-    expect(dep._moduleImportData.M1.importDefs).toEqual(expectedImportDefs);
+    expect(dep._moduleImportData.M1).toEqual({
+      importDefs: expectedImportDefs,
+      exportValues: new Set(['a', 'b', 'C', 'D']),
+    });
 
     await dep.upsertSnippet('A', `export const x = [a, b, C, D]`);
     expect(dep._snippetData.A).toMatchObject({
@@ -329,5 +332,13 @@ describe('Dependency manager tests', () => {
       transformedCode: 'export const a = 1;\n',
       exportValues: new Set(['a']),
     });
+  });
+
+  it('Fails on import module with invalid syntax', async () => {
+    const dep = new DependencyManager({ transpiler, throwsOnTaskFail: true });
+    await expect(async () => {
+      await dep.upsertModule('M1', `"`);
+    }).rejects.toThrow();
+    expect(dep._moduleImportError.M1).toBeInstanceOf(Error);
   });
 });

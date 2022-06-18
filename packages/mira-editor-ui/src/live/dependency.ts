@@ -5,13 +5,9 @@ import {
   RenderParamsUpdateEventData,
 } from '@mirajs/util';
 import { EventTarget, Event } from 'event-target-shim';
-import {
-  ASTNode,
-  DependencyUpdateInfo,
-  ModuleImportInfo,
-  RenderParamsUpdateInfo,
-  RefreshModuleEvent,
-} from '../types';
+import { RenderParamsUpdateInfo, RefreshModuleEvent } from '../types';
+import { ModuleUpdateEventData } from './../../../util/src/dependency-manager/types';
+import { resolveImportSpecifier } from './../mdx/imports';
 
 // const stripUrlParam = (url: string): string => url.split('?', 1)[0];
 
@@ -25,12 +21,12 @@ class CustomEvent<T extends string = string, S = unknown> extends Event<T> {
 
 export type DependencyUpdateEvent<ID extends string> = CustomEvent<
   'dependencyUpdate',
-  DependencyUpdateInfo<ID>
+  DependencyUpdateEventData<ID>
 >;
 
 export type ModuleUpdateEvent<ID extends string> = CustomEvent<
   'moduleUpdate',
-  ModuleImportInfo<ID>
+  ModuleUpdateEventData<ID>
 >;
 
 export type RenderParamsUpdateEvent<ID extends string> = CustomEvent<
@@ -78,6 +74,13 @@ export class DependencyManager<ID extends string>
         const source = URL.createObjectURL(blob);
         return source;
       },
+      moduleImportSpecifierBuilder: (id, specifier) =>
+        resolveImportSpecifier({
+          specifier,
+          base,
+          depsContext,
+          importerContext,
+        }),
       transpilerInitOption: {
         transpilerPlatform: 'browser',
       },
@@ -93,6 +96,9 @@ export class DependencyManager<ID extends string>
       },
       onDependencyUpdate: (event) => {
         this.effectDependency(event);
+      },
+      onModuleUpdate: (event) => {
+        this.effectModule(event);
       },
       onRenderParamsUpdate: (event) => {
         this.effectRenderParams(event);
@@ -139,6 +145,13 @@ export class DependencyManager<ID extends string>
     this.dispatchEvent(event);
   }
 
+  async effectModule(data: ModuleUpdateEventData<ID>) {
+    const event: ModuleUpdateEvent<ID> = new CustomEvent('moduleUpdate', {
+      detail: data,
+    });
+    this.dispatchEvent(event);
+  }
+
   async effectRenderParams({ id }: RenderParamsUpdateEventData<ID>) {
     const params = new Map<string, unknown>();
     this._snippetData[id]?.defaultFunctionParams?.forEach((p) => {
@@ -156,129 +169,6 @@ export class DependencyManager<ID extends string>
       },
     );
     this.dispatchEvent(event);
-  }
-
-  effectModuleUpdate(): Promise<void> {
-    return this.serialTask(
-      'moduleUpdate',
-      function effectModuleUpdate(this: DependencyManager<ID>) {
-        return this._effectModuleUpdate();
-      }.bind(this),
-    );
-  }
-  private async _effectModuleUpdate() {
-    // TODO
-    // const event: ModuleUpdateEvent<ID> = new CustomEvent('moduleUpdate', {
-    //   detail: {
-    //     importMapping: { ...this.moduleImportMapping },
-    //     importDef: { ...this.miraBrickModuleImportDef },
-    //     importError: { ...this.miraBrickModuleImportError },
-    //   },
-    // })
-    // this.dispatchEvent(event);
-  }
-
-  upsertScript(id: ID, scriptNode: ASTNode[]) {
-    // TODO
-    // this.deferUpdateEvent(async () => {
-    //   let esmImports: ParsedImportStatement[] = [];
-    //   let mapping: ReturnType<typeof mapModuleValues> = {};
-    //   try {
-    //     esmImports = await collectEsmImports({
-    //       node: scriptNode,
-    //       base: this.base,
-    //       depsContext: this.depsContext,
-    //       importerContext: this.importerContext,
-    //     });
-    //     const importResults = await Promise.all(
-    //       esmImports.map(async (definition) => {
-    //         return {
-    //           definition,
-    //           mod: await loadModule({
-    //             specifier: definition.specifier,
-    //             moduleLoader: this.moduleLoader,
-    //           }),
-    //         };
-    //       }),
-    //     );
-    //     importResults.forEach(({ definition, mod }) => {
-    //       this.moduleProperties[stripUrlParam(definition.specifier)] = new Set(
-    //         Object.keys(mod),
-    //       );
-    //     });
-    //     mapping = importResults.reduce(
-    //       (acc, { definition }) => ({
-    //         ...acc,
-    //         ...mapModuleValues({
-    //           definition,
-    //           moduleProperties:
-    //             this.moduleProperties[stripUrlParam(definition.specifier)],
-    //         }),
-    //       }),
-    //       mapping,
-    //     );
-    //     delete this.miraBrickModuleImportError[id];
-    //   } catch (error) {
-    //     if (error instanceof Error) {
-    //       this.miraBrickModuleImportError[id] = error;
-    //     }
-    //   }
-    //   const prevModuleMappedName =
-    //     this.miraBrickModuleImportDef[id]?.mappedName ?? [];
-    //   this.miraBrickModuleImportDef[id] = {
-    //     mappedName: Object.keys(mapping),
-    //     importDefinition: esmImports,
-    //   };
-    //   if (
-    //     // Checking changes of moduleVal
-    //     Object.entries(mapping).some(
-    //       ([name, mapping]) =>
-    //         !(name in this.moduleImportMapping) ||
-    //         mapping.name !== this.moduleImportMapping[name].name ||
-    //         mapping.specifier !== this.moduleImportMapping[name].specifier,
-    //     ) ||
-    //     prevModuleMappedName.some((name) => !(name in mapping))
-    //   ) {
-    //     const prevImportMapping = { ...this.moduleImportMapping };
-    //     prevModuleMappedName.forEach((name) => {
-    //       delete prevImportMapping[name];
-    //     });
-    //     this.moduleImportMapping = Object.keys(mapping).reduce(
-    //       (acc, k) => ({
-    //         ...acc,
-    //         [k]: {
-    //           ...mapping[k],
-    //           url: stripUrlParam(mapping[k].specifier),
-    //         },
-    //       }),
-    //       prevImportMapping,
-    //     );
-    //   }
-    //   this.effectModuleUpdate();
-    //   (Object.keys(this.miraBrickSnippetSource) as ID[]).forEach((id) => {
-    //     this.effectDependency(id);
-    //   });
-    // });
-  }
-
-  deleteScript(id: ID) {
-    // TODO
-    // this.deferUpdateEvent(async () => {
-    //   const mappedName = this.miraBrickModuleImportDef[id]?.mappedName ?? [];
-    //   if (mappedName.every((name) => !(name in this.moduleImportMapping))) {
-    //     return;
-    //   }
-    //   const nextImportMapping = { ...this.moduleImportMapping };
-    //   mappedName.forEach((name) => {
-    //     delete nextImportMapping[name];
-    //   });
-    //   this.moduleImportMapping = nextImportMapping;
-    //   this.clearBrickItem(id);
-    //   this.effectModuleUpdate();
-    //   (Object.keys(this.miraBrickSnippetSource) as ID[]).forEach((id) => {
-    //     this.effectDependency(id);
-    //   });
-    // });
   }
 
   refreshModule({

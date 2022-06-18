@@ -98,11 +98,11 @@ export type ModuleImportMapping = {
   name: string | null;
 };
 
-export type ModuleImportInfo<ID extends string> = {
-  importMapping: Record<string, ModuleImportMapping>;
-  importDef: Record<ID, ModuleImportDefinition>;
-  importError: Record<ID, Error>;
-};
+// export type ModuleImportInfo<ID extends string> = {
+//   importMapping: Record<string, ModuleImportMapping>;
+//   importDef: Record<ID, ModuleImportDefinition>;
+//   importError: Record<ID, Error>;
+// };
 
 export type DependencyUpdateInfo<ID extends string> =
   DependencyUpdateEventData<ID>;

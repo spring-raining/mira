@@ -1,4 +1,4 @@
-import { ImportDefinition } from '@mirajs/util';
+import { DependencyUpdateEventData, ModuleUpdateEventData } from '@mirajs/util';
 import { ProvidenceStore } from '../hooks/providence/context';
 import {
   Mira,
@@ -6,12 +6,10 @@ import {
   EvaluateState,
   RuntimeEnvironment,
   ASTNode,
-  ModuleImportInfo,
   RenderParamsUpdateInfo,
   RefreshModuleEvent,
   BrickId,
   MiraId,
-  DependencyUpdateInfo,
 } from '../types';
 import {
   DependencyManager,
@@ -64,7 +62,7 @@ export const setupProvidence = ({
   depsContext: string;
   moduleLoader: (specifier: string) => Promise<unknown>;
   onEvaluatorUpdate: (e: EvaluateState) => void;
-  onModuleUpdate: (e: ModuleImportInfo<BrickId>) => void;
+  onModuleUpdate: (e: ModuleUpdateEventData<BrickId>) => void;
   onRenderParamsUpdate: (e: RenderParamsUpdateInfo<BrickId>) => void;
 }): Providence => {
   const _runtime = setupRuntime({
@@ -93,7 +91,7 @@ export const setupProvidence = ({
         ] as const);
         const environment = runtime.getRuntimeEnvironment();
 
-        if (detail.transform.errorObject) {
+        if (detail.transform?.errorObject) {
           return {
             id: miraId,
             environment,
@@ -105,8 +103,13 @@ export const setupProvidence = ({
         }
         const ret =
           detail.source &&
+          detail.transform &&
           (await run({
-            dependencyResult: { ...detail, source: detail.source },
+            dependencyResult: {
+              ...detail,
+              source: detail.source,
+              transform: detail.transform,
+            },
             miraId,
             environment,
           }));
@@ -148,7 +151,10 @@ export const setupProvidence = ({
     miraId,
     environment,
   }: {
-    dependencyResult: DependencyUpdateInfo<BrickId> & { source: string };
+    dependencyResult: DependencyUpdateEventData<BrickId> &
+      Required<
+        Pick<DependencyUpdateEventData<BrickId>, 'source' | 'transform'>
+      >;
     miraId: MiraId;
     environment: RuntimeEnvironment;
   }): Promise<EvaluatedResult | undefined> => {
@@ -224,10 +230,13 @@ export const setupProvidence = ({
     id: BrickId;
     scriptNode: ASTNode[] | undefined;
   }) => {
-    if (scriptNode) {
-      dependency.upsertScript(id, scriptNode);
+    const scriptCode = scriptNode
+      ?.filter((node) => node.type === 'mdxjsEsm')
+      .map((node) => node.value as string);
+    if (scriptCode && scriptCode.length > 0) {
+      await dependency.upsertModule(id, scriptCode.join('\n'));
     } else {
-      dependency.deleteScript(id);
+      dependency.deleteModule(id);
     }
   };
 

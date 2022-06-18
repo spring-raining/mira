@@ -50,7 +50,9 @@ export const brickParseErrorState = atom<
   default: {},
 });
 
-export const brickModuleImportErrorState = atom<Record<string, Error>>({
+export const brickModuleImportErrorState = atom<
+  Record<string, Error | undefined>
+>({
   key: 'brickModuleImportErrorState',
   default: {},
 });
