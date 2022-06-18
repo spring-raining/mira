@@ -311,17 +311,21 @@ importers:
 
   packages/util:
     specifiers:
+      '@types/murmurhash-js': ^1.0.3
       '@types/strip-comments': ^2.0.0
       es-module-lexer: 0.4.1
       esbuild: 0.14.38
+      murmurhash-js: ^1.0.0
       strip-comments: 2.0.1
       vitest: 0.13.1
     dependencies:
       es-module-lexer: 0.4.1
       strip-comments: 2.0.1
     devDependencies:
+      '@types/murmurhash-js': 1.0.3
       '@types/strip-comments': 2.0.1
       esbuild: 0.14.38
+      murmurhash-js: 1.0.0
       vitest: 0.13.1
 
 packages:
@@ -2625,6 +2629,10 @@ packages:
 
   /@types/ms/0.7.31:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
+
+  /@types/murmurhash-js/1.0.3:
+    resolution: {integrity: sha512-PxJwTlcFOBRPqv9pSoC3O1FpKN8GnM5hMJIkG6U3omH8b4GAh28fO1c+TMR4oxj0BG43/ICbrIK3KBfzad2heg==}
+    dev: true
 
   /@types/node/12.20.52:
     resolution: {integrity: sha512-cfkwWw72849SNYp3Zx0IcIs25vABmFh73xicxhCkTcvtZQeIez15PpwQN8fY3RD7gv1Wrxlc9MEtfMORZDEsGw==}
@@ -6844,6 +6852,10 @@ packages:
 
   /ms/2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  /murmurhash-js/1.0.0:
+    resolution: {integrity: sha512-TvmkNhkv8yct0SVBSy+o8wYzXjE4Zz3PCesbfs8HiCXXdcTuocApFv11UWlNFWKYsP2okqrhb7JNlSm9InBhIw==}
+    dev: true
 
   /nanoid/3.1.20:
     resolution: {integrity: sha512-a1cQNyczgKbLX9jwbS/+d7W8fX/RfgYR7lVWwWOGIPNgK2m0MWvrGF6/m4kk6U3QcFMnZf3RIhL0v2Jgh/0Uxw==}

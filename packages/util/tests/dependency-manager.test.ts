@@ -240,4 +240,94 @@ describe('Dependency manager tests', () => {
     expect(dep._exportVal).toEqual(new Map());
     expect(onSourceRevoke).lastCalledWith({ id: 'A', source: '#A:3' });
   });
+
+  it('Supports module import', async () => {
+    const dep = new DependencyManager({
+      transpiler,
+      throwsOnTaskFail: true,
+    });
+    await dep.upsertModule(
+      'M1',
+      `import a, {b, c as C} from './A'\nimport * as D from './B'\nimport './C'`,
+    );
+    const expectedImportDefs = [
+      {
+        specifier: './A',
+        all: false,
+        default: true,
+        namespace: false,
+        named: ['b', 'c'],
+        importBinding: { b: 'b', c: 'C', default: 'a' },
+        namespaceImport: null,
+      },
+      {
+        specifier: './B',
+        all: false,
+        default: false,
+        namespace: true,
+        named: [],
+        importBinding: {},
+        namespaceImport: 'D',
+      },
+      {
+        specifier: './C',
+        all: true,
+        default: false,
+        namespace: false,
+        named: [],
+        importBinding: {},
+        namespaceImport: null,
+      },
+    ];
+    expect(dep._moduleImportData.M1.importDefs).toEqual(expectedImportDefs);
+
+    await dep.upsertSnippet('A', `export const x = [a, b, C, D]`);
+    expect(dep._snippetData.A).toMatchObject({
+      transformedCode: `import a, { b, c as C } from "./A";\nimport * as D from "./B";\nimport "./C";\nexport const x = [a, b, C, D];\n`,
+      importDefs: expectedImportDefs,
+      exportValues: new Set(['x']),
+      dependentValues: new Set(),
+      dependentModuleSpecifiers: new Set(['./A', './B', './C']),
+    });
+
+    await dep.upsertSnippet('B', `export const y = 1`);
+    expect(dep._snippetData.B).toMatchObject({
+      transformedCode: 'import "./C";\nexport const y = 1;\n',
+      importDefs: [expectedImportDefs[2]],
+      exportValues: new Set(['y']),
+      dependentValues: new Set(),
+      dependentModuleSpecifiers: new Set(['./C']),
+    });
+
+    await dep.upsertSnippet('C', `export const z = x`);
+    expect(dep._snippetData.C).toMatchObject({
+      transformedCode: `import "./C";\nimport { x } from "#A";\nexport const z = x;\n`,
+      importDefs: [
+        expectedImportDefs[2],
+        {
+          specifier: '#A',
+          named: ['x'],
+          importBinding: { x: 'x' },
+        },
+      ],
+      exportValues: new Set(['z']),
+      dependentValues: new Set(['x']),
+      dependentModuleSpecifiers: new Set(['./C', '#A']),
+    });
+  });
+
+  it('Fails on define value already imported', async () => {
+    const dep = new DependencyManager({ transpiler });
+    await dep.upsertModule('M1', `import a from './A'`);
+    await dep.upsertSnippet('A', `export const a = 1;`);
+    expect(dep._snippetTransformResult.A).toMatchObject({
+      errorObject: new Error('Value a has already defined'),
+    });
+
+    await dep.deleteModule('M1');
+    expect(dep._snippetData.A).toMatchObject({
+      transformedCode: 'export const a = 1;\n',
+      exportValues: new Set(['a']),
+    });
+  });
 });

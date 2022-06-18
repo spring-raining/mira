@@ -36,8 +36,10 @@
     "strip-comments": "2.0.1"
   },
   "devDependencies": {
+    "@types/murmurhash-js": "^1.0.3",
     "@types/strip-comments": "^2.0.0",
     "esbuild": "0.14.38",
+    "murmurhash-js": "^1.0.0",
     "vitest": "0.13.1"
   }
 }

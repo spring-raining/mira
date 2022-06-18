@@ -6,8 +6,13 @@ export interface SnippetData {
   importDefs: readonly ImportDefinition[];
   exportValues: Set<string>;
   dependentValues: Set<string>;
+  dependentModuleSpecifiers: Set<string>;
   hasDefaultExport: boolean;
   defaultFunctionParams: readonly string[] | null;
+}
+
+export interface ModuleImportData {
+  importDefs: readonly ImportDefinition[];
 }
 
 export interface DependencyUpdateEventData<ID extends string> {

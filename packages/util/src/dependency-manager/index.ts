@@ -1,3 +1,4 @@
+import murmur from 'murmurhash-js';
 import { scanDeclarations } from '../declaration-parser';
 import { ExportDefaultDeclaration } from '../declaration-parser/types';
 import {
@@ -15,6 +16,7 @@ import {
 import { defaultInitOption, defaultTransformOption } from './transpiler';
 import {
   DependencyUpdateEventData,
+  ModuleImportData,
   RenderParamsUpdateEventData,
   SnippetData,
   SourceRevokeEventData,
@@ -56,9 +58,12 @@ export class DependencyManager<
     ID,
     TransformSuccess | TransformFailure
   >;
+  _moduleImportData = {} as Record<ID, ModuleImportData>;
   _exportVal: Map<string, unknown> = new Map();
   _valDependency: Record<string, Set<string>> = {};
   _definedValues: Set<string> = new Set();
+  _transformedCache: Map<number, TransformSuccess | TransformFailure> =
+    new Map();
 
   private _transpiler: Transpiler;
   private _snippetSourceBuilder: (
@@ -78,6 +83,26 @@ export class DependencyManager<
   ) => void;
   private _onSourceRevoke?: (arg: SourceRevokeEventData<ID>) => void;
   throwsOnTaskFail: boolean;
+
+  protected get _moduleSpecifiers(): Set<string> {
+    return new Set(
+      Object.values<ModuleImportData>(this._moduleImportData).flatMap(
+        ({ importDefs }) => importDefs.map((def) => def.specifier),
+      ),
+    );
+  }
+
+  protected get _moduleDefinedValues(): Set<string> {
+    return new Set(
+      Object.values<ModuleImportData>(this._moduleImportData).flatMap(
+        ({ importDefs }) =>
+          importDefs.flatMap((def) => [
+            ...Object.values(def.importBinding),
+            ...(def.namespaceImport ? [def.namespaceImport] : []),
+          ]),
+      ),
+    );
+  }
 
   constructor({
     transpiler,
@@ -214,12 +239,13 @@ export class DependencyManager<
     );
   }
 
-  protected clearSnippetData(id: ID) {
+  protected clear(id: ID) {
     const disposableSource = this._snippetSource[id];
     delete this._snippetData[id];
     delete this._snippetSource[id];
     delete this._snippetTransformResult[id];
     delete this._snippetCode[id];
+    delete this._moduleImportData[id];
     if (disposableSource) {
       this.dispatchSourceRevoke({ id, source: disposableSource });
     }
@@ -248,7 +274,7 @@ export class DependencyManager<
     );
   }
   private async _deleteSnippet(id: ID) {
-    this.clearSnippetData(id);
+    this.clear(id);
     await this._calcDependency();
     this.dispatchDependencyUpdate(id);
   }
@@ -281,6 +307,37 @@ export class DependencyManager<
     });
   }
 
+  upsertModule(id: ID, code: string): Promise<void> {
+    return this.serialTask(
+      `moduleChange:${id}`,
+      function upsertModule(this: DependencyManager<ID>) {
+        return this._upsertModule(id, code);
+      }.bind(this),
+    );
+  }
+  private async _upsertModule(id: ID, code: string) {
+    const [imports] = await scanModuleSpecifier(code);
+    const importDefs = imports.flatMap(
+      (imp) => parseImportStatement(code, imp) ?? [],
+    );
+    this._moduleImportData[id] = { importDefs };
+    this.dispatchDependencyUpdate(id);
+  }
+
+  deleteModule(id: ID): Promise<void> {
+    return this.serialTask(
+      `moduleChange:${id}`,
+      function deleteModule(this: DependencyManager<ID>) {
+        return this._deleteModule(id);
+      }.bind(this),
+    );
+  }
+  private async _deleteModule(id: ID) {
+    this.clear(id);
+    await this._calcDependency();
+    this.dispatchDependencyUpdate(id);
+  }
+
   protected async calcDependency() {
     return this.serialTask(
       `calcDependency`,
@@ -291,11 +348,16 @@ export class DependencyManager<
   }
   private async _calcDependency(firstCall = true): Promise<Set<ID>> {
     let affectedSnippet = new Set<ID>();
+    const codePre = this.getDependencyImportCode();
     const settled = await Promise.allSettled(
       Object.entries<string>(this._snippetCode).map(async ([_id, code]) => {
         const id = _id as ID;
         try {
-          const transformed = await this.transformWithDependencyContext(code);
+          let transformed = await this.transformCode(code);
+          // Transform again and three-shaking import definitions
+          if (!transformed.errorObject && codePre) {
+            transformed = await this.transformCode(`${codePre}\n${code}`);
+          }
           const inspectResult = await this.inspectSnippet(
             id,
             transformed.result.code,
@@ -380,11 +442,13 @@ export class DependencyManager<
     return affectedSnippet;
   }
 
-  protected async transformWithDependencyContext(
-    code: string,
-  ): Promise<TransformSuccess> {
-    const transpiler = await this.getInitializedTranspiler();
-    const codePre = Object.entries<SnippetData>(this._snippetData)
+  protected getDependencyImportCode(): string | null {
+    const moduleImports = Object.values<ModuleImportData>(
+      this._moduleImportData,
+    ).flatMap(({ importDefs }) =>
+      importDefs.map((v) => stringifyImportDefinition(v)),
+    );
+    const snippetImports = Object.entries<SnippetData>(this._snippetData)
       .filter(
         ([id, { exportValues }]) =>
           exportValues.size > 0 && this._snippetSource[id as ID],
@@ -395,21 +459,30 @@ export class DependencyManager<
           named: [...exportValues],
         }),
       );
-    const option = await this._getTranspilerTransformOption(code);
+    return [...moduleImports, ...snippetImports].join('\n') || null;
+  }
 
-    let transformed = await transpiler.transform(code, option);
-    // Transform again and three-shaking import definitions
-    if (!transformed.errorObject && codePre.length > 0) {
-      transformed = await transpiler.transform(
-        `${codePre.join('\n')}\n${code}`,
-        option,
-      );
+  protected async transformCode(code: string): Promise<TransformSuccess> {
+    const cacheKey = murmur.murmur3(code);
+    const cached = this._transformedCache.get(cacheKey);
+    if (cached) {
+      if (cached.errorObject) {
+        throw cached.errorObject;
+      } else {
+        return cached;
+      }
     }
+
+    const transpiler = await this.getInitializedTranspiler();
+    const option = await this._getTranspilerTransformOption(code);
+    const transformed = await transpiler.transform(code, option);
     if (transformed.errorObject) {
       (transformed.errorObject as any).errors = transformed.errors;
       (transformed.errorObject as any).warnings = transformed.warnings;
+      this._transformedCache.set(cacheKey, transformed);
       throw transformed.errorObject;
     }
+    this._transformedCache.set(cacheKey, transformed);
     return transformed;
   }
 
@@ -446,19 +519,27 @@ export class DependencyManager<
     const importDefs = imports.flatMap(
       (imp) => parseImportStatement(code, imp) ?? [],
     );
-    const namedImportVal = importDefs.flatMap((def) => def.named);
+    const moduleDefinedValues = this._moduleDefinedValues;
     const namedExportVal = exports.filter((val) => val !== 'default');
 
     const anyAlreadyDefinedValue = namedExportVal.find(
       (val) =>
         (this._definedValues.has(val) && !prevExports.has(val)) ||
-        namedImportVal.includes(val),
+        moduleDefinedValues.has(val),
     );
     if (anyAlreadyDefinedValue) {
       throw new Error(`Value ${anyAlreadyDefinedValue} has already defined`);
     }
+
+    const moduleSpecifiers = this._moduleSpecifiers;
+    const importSnippetVal = importDefs
+      .filter((def) => !moduleSpecifiers.has(def.specifier))
+      .flatMap((def) => def.named);
     const dependentValues = new Set(
-      traverseRef(namedImportVal, namedExportVal),
+      traverseRef(importSnippetVal, namedExportVal),
+    );
+    const dependentModuleSpecifiers = new Set(
+      importDefs.map((def) => def.specifier),
     );
 
     let defaultFunctionParams: readonly string[] | null = null;
@@ -500,6 +581,7 @@ export class DependencyManager<
       importDefs,
       exportValues: new Set(namedExportVal),
       dependentValues,
+      dependentModuleSpecifiers,
       hasDefaultExport,
       defaultFunctionParams,
     };
