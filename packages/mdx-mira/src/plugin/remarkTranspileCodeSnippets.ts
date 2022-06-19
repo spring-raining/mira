@@ -51,12 +51,6 @@ const calcDependency = async (snippets: Snippets) => {
   for (const name in snippets) {
     await dependency.upsertSnippet(name, snippets[name].value);
   }
-  const depError = Object.values(dependency._snippetDependencyError).some(
-    (e) => !!e,
-  );
-  if (depError) {
-    throw depError;
-  }
   return dependency;
 };
 

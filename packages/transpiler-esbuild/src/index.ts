@@ -1,7 +1,7 @@
-import {
-  BuildResult,
+import type {
+  BuildSuccess,
   BuildFailure,
-  TransformResult,
+  TransformSuccess,
   TransformFailure,
   MiraTranspilerBase,
 } from '@mirajs/util';
@@ -50,7 +50,7 @@ export class EsbuildTranspiler
     throw new Error(`Unknown transpilerPlatform: ${transpilerPlatform}`);
   }
 
-  async build(options: BuildOptions): Promise<BuildResult | BuildFailure> {
+  async build(options: BuildOptions): Promise<BuildSuccess | BuildFailure> {
     if (!this._esbuild) {
       throw new Error('Transpiler not initialized');
     }
@@ -77,7 +77,7 @@ export class EsbuildTranspiler
   async transform(
     input: string,
     options?: TransformOptions,
-  ): Promise<TransformResult | TransformFailure> {
+  ): Promise<TransformSuccess | TransformFailure> {
     if (!this._esbuild) {
       throw new Error('Transpiler not initialized');
     }

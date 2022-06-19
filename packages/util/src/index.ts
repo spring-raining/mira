@@ -4,8 +4,8 @@ export {
   scanModuleSpecifier,
   importModules,
   stringifyImportDefinition,
-} from './ecma-import';
-export * from './ecma-import/types';
+} from './es-module';
+export * from './es-module/types';
 
 export { parseModuleDeclarations } from './declaration-parser';
 export * as DeclarationParser from './declaration-parser/types';

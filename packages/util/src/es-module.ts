@@ -1,8 +1,8 @@
 import { init as initEsModuleLexer, parse } from 'es-module-lexer';
 import stripComments from 'strip-comments';
-import { parseModuleDeclarations } from '../declaration-parser';
-import { DestructuringPattern } from '../declaration-parser/types';
-import { ImportDefinition, ImportSpecifier } from './types';
+import { parseModuleDeclarations } from './declaration-parser';
+import { DestructuringPattern } from './declaration-parser/types';
+import { ImportDefinition, ImportSpecifier } from './es-module/types';
 
 // http://www.ecma-international.org/ecma-262/6.0/#sec-imports
 /* eslint-disable no-useless-escape */

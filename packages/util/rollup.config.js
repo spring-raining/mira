@@ -4,7 +4,12 @@ import * as packageJson from './package.json';
 
 const output = [
   {
-    input: [path.resolve(__dirname, 'src/index.ts')],
+    input: [
+      path.resolve(__dirname, 'src/index.ts'),
+      path.resolve(__dirname, 'src/declaration-parser.ts'),
+      path.resolve(__dirname, 'src/dependency-manager.ts'),
+      path.resolve(__dirname, 'src/es-module.ts'),
+    ],
     output: [
       {
         dir: path.resolve(__dirname, 'dist'),
@@ -15,7 +20,7 @@ const output = [
         sourcemap: true,
       },
     ],
-    external: Object.keys(packageJson.dependencies),
+    external: Object.keys(packageJson.dependencies || {}),
     plugins: commonPlugins,
   },
 ];

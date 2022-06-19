@@ -14,6 +14,15 @@
   "exports": {
     ".": {
       "default": "./dist/index.js"
+    },
+    "./declaration-parser.js": {
+      "default": "./dist/declaration-parser.js"
+    },
+    "./dependency-manager.js": {
+      "default": "./dist/dependency-manager.js"
+    },
+    "./es-module.js": {
+      "default": "./dist/es-module.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -31,15 +40,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "es-module-lexer": "0.10.5",
-    "strip-comments": "2.0.1"
-  },
   "devDependencies": {
     "@types/murmurhash-js": "^1.0.3",
     "@types/strip-comments": "^2.0.0",
     "esbuild": "0.14.38",
-    "murmurhash-js": "^1.0.0",
+    "es-module-lexer": "0.10.5",
+    "murmurhash-js": "1.0.0",
+    "strip-comments": "2.0.1",
     "vitest": "0.13.1"
   }
 }

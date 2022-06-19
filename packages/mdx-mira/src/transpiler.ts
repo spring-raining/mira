@@ -1,5 +1,5 @@
 import { EsbuildTranspiler } from '@mirajs/transpiler-esbuild';
-import type { BuildResult, BuildFailure, ImportDefinition } from '@mirajs/util';
+import type { BuildSuccess, BuildFailure } from '@mirajs/util';
 import type { OnLoadResult } from 'esbuild';
 
 const _transpiler = (async () => {
@@ -17,7 +17,7 @@ export const bundleCode = async ({
   code: string;
   loaderContents: { [path: string]: OnLoadResult };
   globalName: string;
-}): Promise<BuildResult | BuildFailure> => {
+}): Promise<BuildSuccess | BuildFailure> => {
   const transpiler = await _transpiler;
   return await transpiler.build({
     stdin: {

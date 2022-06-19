@@ -1,19 +1,8 @@
 import murmur from 'murmurhash-js';
-import { ExportDefaultDeclaration } from '../declaration-parser/types';
 import {
-  parseImportStatement,
-  scanExportDeclaration,
-  scanModuleSpecifier,
-  stringifyImportDefinition,
-} from '../ecma-import';
-import { ImportDefinition } from '../ecma-import/types';
-import {
-  Message,
-  MiraTranspilerBase,
-  TransformFailure,
-  TransformSuccess,
-} from '../types';
-import { defaultInitOption, defaultTransformOption } from './transpiler';
+  defaultInitOption,
+  defaultTransformOption,
+} from './dependency-manager/transpiler';
 import {
   DependencyUpdateEventData,
   ModuleImportData,
@@ -21,6 +10,19 @@ import {
   RenderParamsUpdateEventData,
   SnippetData,
   SourceRevokeEventData,
+} from './dependency-manager/types';
+import {
+  parseImportStatement,
+  scanExportDeclaration,
+  scanModuleSpecifier,
+  stringifyImportDefinition,
+} from './es-module';
+import { ImportDefinition } from './es-module/types';
+import {
+  Message,
+  MiraTranspilerBase,
+  TransformFailure,
+  TransformSuccess,
 } from './types';
 
 const intersection = <T extends string | number>(

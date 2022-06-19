@@ -1,4 +1,4 @@
-import { ImportDefinition } from '../ecma-import/types';
+import { ImportDefinition } from '../es-module/types';
 import { TransformFailure, TransformSuccess } from '../types';
 
 export interface SnippetData {

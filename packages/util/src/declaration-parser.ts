@@ -1,11 +1,11 @@
-import { parse } from '../vendor/sucrase/parser';
-import { Scanner } from './scanner';
+import { Scanner } from './declaration-parser/scanner';
 import {
   ExportAllDeclaration,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
   ImportDeclaration,
-} from './types';
+} from './declaration-parser/types';
+import { parse } from './vendor/sucrase/parser';
 
 export async function parseModuleDeclarations(source: string): Promise<{
   exportDeclarations: Array<
