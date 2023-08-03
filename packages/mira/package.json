@@ -59,7 +59,7 @@
     "koa-send": "5.0.1",
     "picomatch": "^2.2.2",
     "reflect-metadata": "0.1.13",
-    "vite": "2.9.5",
+    "vite": "2.9.16",
     "ws": "^7.5.6"
   }
 }
